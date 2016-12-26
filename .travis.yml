@@ -21,7 +21,7 @@ script:
   # Run the unit tests:
   # - nosetests
   # Run the demo notebook, to make demo.html:
-  - jupyter nbconvert --ExecutePreprocessor.kernel_name=python --ExecutePreprocessor.timeout=600 --to html --execute docs/notebooks/demo2.ipynb ; cp docs/notebooks/demo2.html .
+  - jupyter nbconvert --ExecutePreprocessor.kernel_name=python --ExecutePreprocessor.timeout=600 --execute docs/notebooks/demo2.ipynb# ; cp docs/notebooks/demo2.html .
   # Build the docs, the same way readthedocs does it:
   - cd docs ; sphinx-build -b html . _build/html ; cd -
 
@@ -32,7 +32,7 @@ after_success: |
     if [ -n "$GITHUB_API_KEY" ]; then
         git checkout --orphan html
         git rm -rf .
-        git add -f demo2.html
+        #git add -f demo2.html
         git -c user.name='travis' -c user.email='travis' commit -m init
-        git push -q -f https://drphilmarshall:$GITHUB_API_KEY@github.com/aimalz/chippr html
+        git push -q -f https://aimalz:$GITHUB_API_KEY@github.com/aimalz/chippr html
     fi
