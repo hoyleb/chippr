@@ -3,9 +3,6 @@ import os
 
 # Provide path to the python modules we want to run autodoc on
 sys.path.insert(0, os.path.abspath('../chippr'))
-# Avoid imports that may be unsatisfied when running sphinx, see:
-# http://stackoverflow.com/questions/15889621/sphinx-how-to-exclude-imports-in-automodule#15912502
-autodoc_mock_imports = ["scipy","scipy.interpolate"]
 
 extensions = [
     'sphinx.ext.autodoc',
