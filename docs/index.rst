@@ -13,16 +13,12 @@ See the following IPython Notebook for an example of using `chippr`:
 
 * `Basic Demo <http://htmlpreview.github.io/?https://github.com/aimalz/chippr/docs/notebooks/demo2.ipynb>`_
 
-API Documentation
-=================
+Simulation
+==========
 
-`chippr` provides a `z_dens` class object enabling estimation of the redshift
-density function.
+.. include:: simulation.rst
 
+Inference
+=========
 
-The z_dens Class
-----------------
-
-.. automodule:: z_dens
-    :members:
-    :undoc-members:
+.. include:: inference.rst
