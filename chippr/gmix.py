@@ -2,7 +2,7 @@ import numpy as np
 import sys
 
 import chippr
-from chipper import utils as u
+from chippr import utils as u
 
 class gmix(object):
 
@@ -85,6 +85,11 @@ class gmix(object):
     def sample(self, n_samps):
         """
         Function to take samples from Gaussian mixture probability distribution
+
+        Parameters
+        ----------
+        n_samps: int
+            number of samples to take
 
         Returns
         -------

@@ -44,7 +44,7 @@ def lf_params(in_info):
 
     return out_dict
 
-def int_pr_params(self, in_info):
+def int_pr_params(in_info):
     """
     Function reading in parameter file to define interim prior function
 
@@ -62,8 +62,8 @@ def int_pr_params(self, in_info):
 
     out_dict = {}
     if 'intp' in in_dict:
-        out_dict['int'] = in_dict['int']
+        out_dict['int_pr'] = in_dict['int_pr']
     else:
-        out_dict['int'] = 'flat'
+        out_dict['int_pr'] = 'flat'
 
     return out_dict

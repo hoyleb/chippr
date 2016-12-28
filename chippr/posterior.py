@@ -1,6 +1,6 @@
 import numpy as np
 
-class post_fun(object):
+class posterior(object):
     def __init__(self, lik_fun, int_pr_fun):
         """
         Object defining a posterior probability distribution in binned parametrization
@@ -46,9 +46,10 @@ class post_fun(object):
         self.x_coarse = np.arange(self.x_min+0.5*self.dx_coarse, self.x_max, self.dx_coarse)
         self.x_fine = np.arange(self.x_min+0.5*self.dx_fine, self.x_max, self.dx_fine)
 
+        self.binends = np.arange(self.x_min, self.x_max+self.dx_coarse, self.dx_coarse)
         self.binned = True
 
-    def bin_post(self, x):
+    def bin_posterior(self, x):
         """
         Function to calculate posterior probability distribution on coarse grid
 
@@ -66,13 +67,13 @@ class post_fun(object):
         if self.binned == False:
             self.setup_bins()
 
-        ps = self.int_pr.evaluate(self.x_fine)*self.lik.evaluate(x, self.x_fine)
+        ps = self.int_pr.evaluate(self.x_fine)*self.lik.evaluate_one(x, self.x_fine)
         ps /= np.sum(ps) * self.dx_fine
         cps = np.array([np.sum(ps[k*self.n_fine:(k+1)*self.n_fine])*self.dx_fine for k in range(self.n_coarse)])
         cps = cps/self.dx_coarse
         return cps
 
-    def make_rectangular(self, xs):
+    def make_data(self, xs):
         """
         Function to calculate many posterior probability distributions on coarse grid
 
@@ -88,5 +89,5 @@ class post_fun(object):
         """
         ps = np.zeros((len(xs), self.n_coarse))
         for n, x in enumerate(xs):
-            ps[n] = self.bin_post(x)
+            ps[n] = self.bin_posterior(x)
         return ps

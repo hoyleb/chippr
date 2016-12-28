@@ -3,19 +3,19 @@ import numpy as np
 import chippr
 from chippr import sim_utils as su
 
-class int_pr_fun(object):
+class interim_prior(object):
     def __init__(self, params):
         """
         Interim prior object for simulating individual probability distributions
 
         Parameters
         ----------
-        in_dict: dict
-            dict containing keywords and values for nontrivial interim priors
+        params: dict or string
+            dict containing keywords and values for nontrivial interim priors or string containing input parameter text file
         """
         self.in_dict = su.int_pr_params(params)
 
-        self.pr_type = self.in_dict['int']
+        self.pr_type = self.in_dict['int_pr']
 
     def evaluate(self, xs):
         """

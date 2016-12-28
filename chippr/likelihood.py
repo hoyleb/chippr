@@ -4,21 +4,21 @@ import chippr
 from chippr import sim_utils as su
 from chippr import gauss
 
-class glob_lik_fun(object):
+class likelihood(object):
     def __init__(self, params):
         """
         Likelihood object for simulating individual probability distributions
 
         Parameters
         ----------
-        in_dict: dict
-            dict containing keywords and values for nontrivial likelihoods
+        in_dict: dict or string
+            dict containing keywords and values for nontrivial likelihoods or string containing location of
         """
         self.in_dict = su.lf_params(params)
 
         self.true_sigma = self.in_dict['sigma']
 
-    def sample(self, x_true):
+    def sample(self, x_in):
         """
         Function to turn a true value into a sampled value
 
