@@ -5,11 +5,13 @@ import matplotlib as mpl
 mpl.use('PS')
 import matplotlib.pyplot as plt
 
-import utils as u
+import chippr
+from chippr import plot_utils as pu
+from chippr import utils as u
 
 class z_dens(object):
 
-    def __init__(self, data_list, hpvar, truth_fun=None, vb=True):
+    def __init__(self, data_list, hpvar, truth=None, vb=True):
         """
         An object representing the redshift density function (normalized redshift distribution function)
 
@@ -19,8 +21,8 @@ class z_dens(object):
             list containing bin endpoints, logged interim prior bin values, and logged interim posterior PDF bin values
         hpvar: ndarray
             array of covariance matrix for hyperprior distribution
-        truth_fun: function, optional
-            function taking ndarray of redshifts to ndarray of true redshift density function values
+        truth: chippr.gmix object, optional
+            true redshift density function expressed as Gaussian mixture
         vb: boolean
             True to print progress messages to stdout, False to suppress
         """
@@ -43,7 +45,7 @@ class z_dens(object):
 
         self.hyper_prior_var = hpvar
 
-        self.truth_fun = truth_fun
+        self.truth = truth
 
         return
 
@@ -136,21 +138,22 @@ class z_dens(object):
         sps_log = self.sps[0]
         sps = self.sps[1]
 
-        sps_log.set_xlim(self.bin_ends[0]-max(self.bin_difs), self.bin_ends[-1]+max(self.bin_difs))
+        sps_log.set_xlim(self.bin_ends[0], self.bin_ends[-1])
         sps_log.set_ylabel(r'$\ln n(z)$')
-        sps.set_xlim(self.bin_ends[0]-max(self.bin_difs), self.bin_ends[-1]+max(self.bin_difs))
+        sps.set_xlim(self.bin_ends[0], self.bin_ends[-1])
         sps.set_xlabel(r'$z$')
         sps.set_ylabel(r'$n(z)$')
         sps.ticklabel_format(style='sci',axis='y')
 
-        if self.truth_fun is not None:
+        if self.truth is not None:
             z = np.linspace(self.bin_ends[0], self.bin_ends[-1], self.n_bins**2)
-            fun = self.truth_fun(z)
-            log_fun = np.log(fun)
-            sps.plot(z, fun, linestyle=u.s_tru, color=u.c_tru, alpha=u.a_tru, linewidth=u.w_tru, label=u.l_tru+u.nz)
-            sps_log.plot(z, log_fun, linestyle=u.s_tru, color=u.c_tru, alpha=u.a_tru, linewidth=u.w_tru, label=u.l_tru+u.lnz)
+            fun = self.truth.evaluate(z)
+            log_fun = u.safe_log(fun)
+            pu.plot_step(sps, z, fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.nz)
+            pu.plot_step(sps_log, z, log_fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.lnz)
 
-        plt.legend()
-        plt.xlabel('x')
-        plt.ylabel('Probability density')
-        plt.savefig(plot_loc+'plot.png')
+        sps_log.legend()
+        sps.set_xlabel('x')
+        sps_log.set_ylabel('Log probability density')
+        sps.set_ylabel('Probability density')
+        self.f.savefig(plot_loc+'plot.png')
