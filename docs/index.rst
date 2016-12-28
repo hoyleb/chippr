@@ -1,6 +1,6 @@
 ============================================
-chippr : Cosmological Hierarchical Inference with Probabilistic Photometric
-Redshifts
+chippr : Cosmological Hierarchical Inference
+ with Probabilistic Photometric Redshifts
 ============================================
 
 This Python package enables estimation of cosmological quantities using
@@ -21,7 +21,7 @@ density function.
 
 
 The z_dens Class
--------------
+----------------
 
 .. automodule:: z_dens
     :members:
