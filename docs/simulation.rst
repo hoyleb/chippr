@@ -36,7 +36,7 @@ The posterior Class
     :undoc-members:
 
 Simulation Utilities
-------------------
+--------------------
 
 .. automodule:: sim_utils
     :members:
