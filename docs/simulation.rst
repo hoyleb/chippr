@@ -1,5 +1,12 @@
 `chippr` enables simulation of surveys of photo-z interim posteriors.
 
+The discrete Class
+------------------
+
+.. automodule:: discrete
+    :members:
+    :undoc-members:
+
 The gauss Class
 ----------------
 
@@ -14,24 +21,10 @@ The gmix Class
     :members:
     :undoc-members:
 
-The likelihood Class
---------------------
+The catalog Class
+-----------------
 
 .. automodule:: likelihood
-    :members:
-    :undoc-members:
-
-The interim_prior Class
------------------------
-
-.. automodule:: interim_prior
-    :members:
-    :undoc-members:
-
-The posterior Class
--------------------
-
-.. automodule:: posterior
     :members:
     :undoc-members:
 
