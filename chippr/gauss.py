@@ -6,7 +6,7 @@ from chippr import utils as u
 
 class gauss(object):
 
-    def __init__(self, mean, sigma):
+    def __init__(self, mean, var, limits=(-1./u.eps, 1./u.eps)):
         """
         A Gaussian probability distribution object
 
@@ -16,10 +16,39 @@ class gauss(object):
             mean of Gaussian probability distribution
         sigma: float
             standard deviation of Gaussian probability distribution
+        limits: tuple or list or numpy.ndarray, float, optional
+            minimum and maximum sample values to return
         """
-        self.epsilon = sys.float_info.epsilon
         self.mean = mean
-        self.sigma = sigma
+        self.var = var
+        self.sigma = self.norm_var()
+        self.invvar = self.invert_var()
+
+        if type(self.var) == np.ndarray:
+            assert np.linalg.eig(self.var) > 0.
+
+        self.min_x = limits[0]
+        self.max_x = limits[1]
+
+    def norm_var(self):
+        """
+        Function to normalize variance in the cases of float or matrix
+        """
+        if type(self.var) == np.float64 or type(self.var) == float:
+            return np.sqrt(self.var)
+
+        if type(self.var) == np.ndarray:
+            return np.linalg.det(self.var)
+
+    def invert_var(self):
+        """
+        Function to invert variance in the cases of float or matrix
+        """
+        if type(self.var) == np.float64 or type(self.var) == float:
+            return 1./self.var
+
+        if type(self.var) == np.ndarray:
+            return np.linalg.inv(self.var)
 
     def evaluate_one(self, x):
         """
@@ -29,10 +58,6 @@ class gauss(object):
         ----------
         x: float
             value at which to evaluate Gaussian probability distribution
-        xmin: float, optional
-            minimum value below which probability is set to epsilon
-        xmax: float, optional
-            maximum value above which probability is set to epsilon
 
         Returns
         -------
@@ -41,7 +66,7 @@ class gauss(object):
         """
         p = u.eps
         p += 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
-            np.exp(-0.5 * (x - self.mean) ** 2 / self.sigma ** 2)
+            np.exp(-0.5 * (x - self.mean) * self.invvar * (x - self.mean))
         return p
 
     def evaluate(self, xs):
@@ -58,7 +83,7 @@ class gauss(object):
         ps: float or ndarray, float
             output probabilities
         """
-        if type(zs) != np.ndarray:
+        if type(xs) != np.ndarray:
             ps = self.evaluate_one(xs)
         else:
             ps = np.zeros_like(xs)
@@ -75,7 +100,9 @@ class gauss(object):
         x: float
             single sample from Gaussian probability distribution
         """
-        x = self.mean + self.sigma * np.random.normal()
+        x = -1.
+        while x < self.min_x or x > self.max_x:
+            x = self.mean + self.sigma * np.random.normal()
         return x
 
     def sample(self, n_samps):

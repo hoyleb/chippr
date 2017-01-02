@@ -1,3 +1,7 @@
+import numpy as np
+import bisect
+import sys
+
 def ingest(in_info):
     """
     Function reading in parameter file to define functions necessary for generation of posterior probability distributions
@@ -20,50 +24,21 @@ def ingest(in_info):
         in_dict = in_info
     return in_dict
 
-def lf_params(in_info):
+def choice(weights):
     """
-    Function reading in parameter file to define likelihood function
+    Function sampling discrete distribution
 
     Parameters
     ----------
-    in_info: string or dict
-        string containing path to plaintext input file or dict containing likelihood input parameters
+    weights: numpy.ndarray
+        relative probabilities for each category
 
     Returns
     -------
-    out_dict: dict
-        dict containing keys and values necessary for likelihood function definition
+    index: int
+        chosen category
     """
-    in_dict = ingest(in_info)
-
-    out_dict = {}
-    if 'sigma' in in_dict:
-        out_dict['sigma'] = in_dict['sigma']
-    else:
-        out_dict['sigma'] = 0.1
-
-    return out_dict
-
-def int_pr_params(in_info):
-    """
-    Function reading in parameter file to define interim prior function
-
-    Parameters
-    ----------
-    in_info: string or dict
-        string containing path to plaintext input file or dict containing interim prior input parameters
-
-    Returns
-    -------
-    out_dict: dict
-        dict containing keys and values necessary for interim prior function definition
-    """
-    in_dict = ingest(in_info)
-
-    out_dict = {}
-    if 'intp' in in_dict:
-        out_dict['int_pr'] = in_dict['int_pr']
-    else:
-        out_dict['int_pr'] = 'flat'
-
-    return out_dict
+    cdf_vals = np.cumsum(weights) / np.sum(weights)
+    x = np.random.random()
+    index = bisect.bisect(cdf_vals, x)
+    return index
