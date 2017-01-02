@@ -6,7 +6,7 @@ from chippr import utils as u
 
 class gmix(object):
 
-    def __init__(self, amps, means, sigmas):
+    def __init__(self, amps, means, sigmas, limits=(-1./u.eps, 1./u.eps)):
         """
         Object to define a Gaussian mixture probability distribution
 
@@ -18,6 +18,8 @@ class gmix(object):
             array with one mean per component
         sigmas: ndarray, float
             array with one standard deviation per component
+        limits: tuple or list or numpy.ndarray, float, optional
+            minimum and maximum sample values to return
         """
 
         self.amps = amps/np.sum(amps)
@@ -26,7 +28,10 @@ class gmix(object):
         self.sigmas = sigmas
         self.n_comps = len(self.amps)
 
-        self.funcs = [chippr.gauss(self.means[c], self.sigmas[c]) for c in range(self.n_comps)]
+        self.funcs = [chippr.gauss(self.means[c], self.sigmas[c]**2, limits=limits) for c in range(self.n_comps)]
+
+        self.min_x = limits[0]
+        self.max_x = limits[1]
 
     def evaluate_one(self, x):
         """
@@ -61,7 +66,6 @@ class gmix(object):
         ps: ndarray, float
             values of Gaussian mixture probability distribution at xs
         """
-        n_vals = len(xs)
         ps = np.array([self.evaluate_one(x) for x in xs])
         return ps
 
@@ -79,7 +83,9 @@ class gmix(object):
         for k in range(1, self.n_comps):
             if r > self.cumamps[k-1]:
                 c = k
-        x = self.funcs[c].sample_one()
+        x = -1.
+        while x < self.min_x or x > self.max_x:
+            x = self.funcs[c].sample_one()
         return x
 
     def sample(self, n_samps):
