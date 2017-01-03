@@ -56,30 +56,6 @@ class log_z_dens(object):
 
         return
 
-    def stack(self, vb=True):
-        """
-        Calculates the stacked estimator of the redshift density function
-
-        Parameters
-        ----------
-        vb: boolean, optional
-            True to print progress messages to stdout, False to suppress
-
-        Returns
-        -------
-        log_stack: ndarray
-            array of logged redshift density function bin values
-        """
-        stack = np.sum(self.pdfs, axis=0)
-        stack /= np.dot(stack, self.bin_difs)
-        log_stack = np.log(stack)
-        self.stack_nz = log_stack
-
-        if vb:
-            print(np.dot(np.exp(self.stack_nz), self.bin_difs))
-
-        return log_stack
-
     def log_hyper_posterior(self, log_nz):
         """
         Function to evaluate log hyperposterior
@@ -109,7 +85,7 @@ class log_z_dens(object):
         Parameters
         ----------
         start: numpy.ndarray
-            array of redshift density function bin values at which to begin optimization
+            array of log redshift density function bin values at which to begin optimization
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
 
@@ -130,9 +106,38 @@ class log_z_dens(object):
             print(mmle)
             print(np.dot(np.exp(mmle.x), self.bin_difs))
 
-        self.mmle_nz = mmle.x
+        mmle_nz = np.exp(mmle.x)
+        norm_mmle = mmle_nz / np.dot(mmle_nz, self.bin_difs)
+        self.mmle_nz = np.log(norm_mmle)
 
-        return mmle.x
+        if vb:
+            print(np.dot(np.exp(self.mmle_nz), self.bin_difs))
+
+        return self.mmle_nz
+
+    def stack(self, vb=True):
+        """
+        Calculates the stacked estimator of the redshift density function
+
+        Parameters
+        ----------
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
+
+        Returns
+        -------
+        log_stack: ndarray
+            array of logged redshift density function bin values
+        """
+        stack = np.sum(self.pdfs, axis=0)
+        stack /= np.dot(stack, self.bin_difs)
+        log_stack = np.log(stack)
+        self.stack_nz = log_stack
+
+        if vb:
+            print(np.dot(np.exp(self.stack_nz), self.bin_difs))
+
+        return log_stack
 
     def mmap(self):
         """
