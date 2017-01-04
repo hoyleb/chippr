@@ -35,13 +35,13 @@ class log_z_dens(object):
         self.n_bins = len(self.bin_mids)
 
         self.int_pr = np.array(catalog['interim_prior'])
-        self.log_int_pr = np.log(self.int_pr)
+        self.log_int_pr = u.safe_log(self.int_pr)
 
         if vb:
             print(np.dot(np.exp(self.log_int_pr), self.bin_difs))
 
         self.pdfs = np.array(catalog['interim_posteriors'])
-        self.log_pdfs = np.log(self.pdfs)
+        self.log_pdfs = u.safe_log(self.pdfs)
         self.n_pdfs = len(self.log_pdfs)
 
         if vb:
@@ -70,10 +70,11 @@ class log_z_dens(object):
         log_prob: float
             log posterior probability associated with parameters in log_nz
         """
+
         norm_nz = np.exp(log_nz - np.max(log_nz))
         norm_nz /= np.sum(norm_nz)#, self.bin_difs)
         hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], axis=1)
-        log_hyper_lf = np.sum(np.log(hyper_lfs))
+        log_hyper_lf = np.sum(u.safe_log(hyper_lfs))
         log_hyper_pr = -0.5 * np.dot(np.dot(self.hyper_prior.invvar, log_nz), log_nz)
         log_hyper_post = log_hyper_lf + log_hyper_pr
         return log_hyper_post
@@ -108,7 +109,7 @@ class log_z_dens(object):
 
         mmle_nz = np.exp(mmle.x)
         norm_mmle = mmle_nz / np.dot(mmle_nz, self.bin_difs)
-        self.mmle_nz = np.log(norm_mmle)
+        self.mmle_nz = u.safe_log(norm_mmle)
 
         if vb:
             print(np.dot(np.exp(self.mmle_nz), self.bin_difs))
@@ -131,7 +132,7 @@ class log_z_dens(object):
         """
         stack = np.sum(self.pdfs, axis=0)
         stack /= np.dot(stack, self.bin_difs)
-        log_stack = np.log(stack)
+        log_stack = u.safe_log(stack)
         self.stack_nz = log_stack
 
         if vb:
@@ -212,6 +213,9 @@ class log_z_dens(object):
         sps.set_xlabel(r'$z$')
         sps.set_ylabel(r'$n(z)$')
         sps.ticklabel_format(style='sci',axis='y')
+
+        pu.plot_step(sps, self.bin_ends, self.int_pr, w=pu.w_int, s=pu.s_int, a=pu.a_int, c=pu.c_int, d=pu.d_int, l=pu.l_int+pu.nz)
+        pu.plot_step(sps_log, self.bin_ends, self.log_int_pr, w=pu.w_int, s=pu.s_int, a=pu.a_int, c=pu.c_int, d=pu.d_int, l=pu.l_int+pu.lnz)
 
         if self.truth is not None:
             z = np.linspace(self.bin_ends[0], self.bin_ends[-1], self.n_bins**2)

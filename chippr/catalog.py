@@ -106,12 +106,12 @@ class catalog(object):
         samp_range = range(n_items)
 
         true_sigma = self.params['constant_sigma']
-        true_lfs = [gauss(true_samps[n], true_sigma, limits=(0., 1.)) for n in samp_range]
+        true_lfs = [gauss(true_samps[n], true_sigma**2, limits=(0., 1.)) for n in samp_range]
         self.obs_samps = np.array([true_lfs[n].sample_one() for n in samp_range])
 
         self.proc_bins(bins)
 
-        self.obs_lfs = np.array([[gauss(self.x_fine[kk], true_sigma).evaluate(self.obs_samps[n]) for kk in range(self.n_tot)] for n in samp_range])
+        self.obs_lfs = np.array([[gauss(self.x_fine[kk], true_sigma**2).evaluate(self.obs_samps[n]) for kk in range(self.n_tot)] for n in samp_range])
         int_pr_fine = int_pr.evaluate(self.x_fine)
         int_pr_coarse = self.coarsify(int_pr_fine)
 
