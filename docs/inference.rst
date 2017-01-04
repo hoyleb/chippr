@@ -1,10 +1,10 @@
 `chippr` currently enables estimation of the redshift
 density function.
 
-The z_dens Class
+The log_z_dens Class
 ----------------
 
-.. automodule:: z_dens
+.. automodule:: log_z_dens
     :members:
     :undoc-members:
 

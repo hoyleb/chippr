@@ -12,10 +12,10 @@ class gauss(object):
 
         Parameters
         ----------
-        mean: float
+        mean: float or numpy.ndarray, float
             mean of Gaussian probability distribution
-        sigma: float
-            standard deviation of Gaussian probability distribution
+        var: float or numpy.ndarray, float
+            variance or covariance matrix of Gaussian probability distribution
         limits: tuple or list or numpy.ndarray, float, optional
             minimum and maximum sample values to return
         """

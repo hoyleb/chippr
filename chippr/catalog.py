@@ -6,7 +6,7 @@ from chippr import gauss
 
 class catalog(object):
 
-    def __init__(self, params=None):
+    def __init__(self, params=None, vb=True):
         """
         Object containing catalog of photo-z interim posteriors
 
@@ -14,6 +14,8 @@ class catalog(object):
         ----------
         params: dict or string, optional
             dictionary containing parameter values for catalog creation or string containing location of parameter file
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
         """
         if type(params) == str:
             self.params = su.ingest(params)
@@ -22,10 +24,12 @@ class catalog(object):
 
         if self.params is None:
             self.params = {}
-            self.params['const_likelihood_sigma'] = 0.05
-            self.params['interim_prior'] = 'flat'
+            self.params['constant_sigma'] = 0.05
 
-    def proc_bins(self, bins):
+        if vb:
+            print self.params
+
+    def proc_bins(self, bins, vb=True):
         """
         Function to process binning
 
@@ -33,6 +37,8 @@ class catalog(object):
         ----------
         bins: int
             number of evenly spaced bins
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
         """
         if type(bins) == int:
             self.n_coarse = bins
@@ -50,7 +56,10 @@ class catalog(object):
         self.x_coarse = np.arange(x_min+0.5*self.dx_coarse, x_max, self.dx_coarse)
         self.x_fine = np.arange(x_min+0.5*self.dx_fine, x_max, self.dx_fine)
 
-        self.binends = np.arange(x_min, x_max+self.dx_coarse, self.dx_coarse)
+        self.bin_ends = np.arange(x_min, x_max+self.dx_coarse, self.dx_coarse)
+
+        if vb:
+            print(self.bin_ends, np.shape(self.bin_ends))
 
         return
 
@@ -96,13 +105,13 @@ class catalog(object):
         n_items = len(true_samps)
         samp_range = range(n_items)
 
-        true_sigma = self.params['const_likelihood_sigma']
-        true_lfs = [gauss(true_samps[n], true_sigma, limits=(0., 1.)) for n in samp_range]
+        true_sigma = self.params['constant_sigma']
+        true_lfs = [gauss(true_samps[n], true_sigma**2, limits=(0., 1.)) for n in samp_range]
         self.obs_samps = np.array([true_lfs[n].sample_one() for n in samp_range])
 
         self.proc_bins(bins)
 
-        self.obs_lfs = np.array([[gauss(self.x_fine[kk], true_sigma).evaluate(self.obs_samps[n]) for kk in range(self.n_tot)] for n in samp_range])
+        self.obs_lfs = np.array([[gauss(self.x_fine[kk], true_sigma**2).evaluate(self.obs_samps[n]) for kk in range(self.n_tot)] for n in samp_range])
         int_pr_fine = int_pr.evaluate(self.x_fine)
         int_pr_coarse = self.coarsify(int_pr_fine)
 
@@ -113,9 +122,9 @@ class catalog(object):
             pfs[n] += pf
 
         self.cat = {}
-        self.cat['bin_ends'] = self.binends
-        self.cat['interim_pr'] = int_pr_coarse
-        self.cat['int_posts'] = pfs
+        self.cat['bin_ends'] = self.bin_ends
+        self.cat['interim_prior'] = int_pr_coarse
+        self.cat['interim_posteriors'] = pfs
 
         return self.cat
 

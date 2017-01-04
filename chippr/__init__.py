@@ -7,4 +7,4 @@ from gmix import *
 from catalog import *
 
 from plot_utils import *
-from z_dens import *
+from log_z_dens import *

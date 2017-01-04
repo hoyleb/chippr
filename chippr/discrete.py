@@ -24,7 +24,7 @@ class discrete(object):
 
         self.weights = weights
         self.normweights = np.cumsum(self.weights) / np.sum(self.weights)
-        self.distweights = np.cumsum(self.weights) / np.sum(self.weights * self.dbins)
+        self.distweights = np.cumsum(self.weights) / np.dot(self.weights, self.dbins)
 
     def evaluate_one(self, x):
         """
@@ -43,7 +43,7 @@ class discrete(object):
         p = u.eps
         for k in self.bin_range:
             if x > self.bin_ends[k] and x < self.bin_ends[k+1]:
-                p = self.weights[k]
+                p = self.distweights[k]
         return p
 
     def evaluate(self, xs):
