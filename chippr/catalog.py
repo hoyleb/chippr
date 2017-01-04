@@ -58,9 +58,6 @@ class catalog(object):
 
         self.bin_ends = np.arange(x_min, x_max+self.dx_coarse, self.dx_coarse)
 
-        if vb:
-            print(self.bin_ends, np.shape(self.bin_ends))
-
         return
 
     def coarsify(self, fine):
