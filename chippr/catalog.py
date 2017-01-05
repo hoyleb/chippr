@@ -113,7 +113,7 @@ class catalog(object):
         self.int_pr = int_pr
         self.proc_bins(bins, limits=(self.int_pr.bin_ends[0], self.int_pr.bin_ends[-1]))
 
-        lfs_fine = [gauss(self.x_fine[kk], true_sigma**2, limits=limits) for kk in range(self.n_tot)]
+        lfs_fine = [gauss(self.x_fine[kk], true_sigma**2) for kk in range(self.n_tot)]
 
         self.obs_lfs = np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)]).T
 
