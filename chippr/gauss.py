@@ -6,7 +6,7 @@ from chippr import utils as u
 
 class gauss(object):
 
-    def __init__(self, mean, var, limits=(-1./u.eps, 1./u.eps)):
+    def __init__(self, mean, var):
         """
         A univariate Gaussian probability distribution object
 
@@ -16,16 +16,11 @@ class gauss(object):
             mean of Gaussian probability distribution
         var: float
             variance of Gaussian probability distribution
-        limits: tuple or list, optional
-            minimum and maximum sample values to return
         """
         self.mean = mean
         self.var = var
         self.sigma = self.norm_var()
         self.invvar = self.invert_var()
-
-        self.min_x = limits[0]
-        self.max_x = limits[1]
 
     def norm_var(self):
         """
