@@ -39,34 +39,13 @@ class gauss(object):
         """
         return 1./self.var
 
-    def evaluate_one(self, x):
-        """
-        Function to evaluate univariate Gaussian probability distribution once
-
-        Parameters
-        ----------
-        x: float
-            value at which to evaluate Gaussian probability distribution
-
-        Returns
-        -------
-        p: float
-            probability associated with x
-        """
-        p = u.eps
-        if x > self.min_x and x < self.max_x:
-            p = 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
-                np.exp(-0.5 * (x - self.mean) * self.invvar * (x - self.mean))
-        p = max(u.eps, p)
-        return p
-
     def evaluate(self, xs):
         """
         Function to evaluate univariate Gaussian probability distribution at multiple points
 
         Parameters
         ----------
-        xs: float
+        xs: numpy.ndarray, float
             input values at which to evaluate probability
 
         Returns
@@ -75,8 +54,12 @@ class gauss(object):
             output probabilities
         """
         ps = np.zeros_like(xs)
-        for n, x in enumerate(xs):
-            ps[n] += self.evaluate_one(x)
+        ps += 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
+        np.exp(-0.5 * (self.mean - xs) * self.invvar * (self.mean - xs))
+
+        # ps = np.zeros_like(xs)
+        # for n, x in enumerate(xs):
+        #     ps[n] += self.evaluate_one(x)
         return ps
 
     def sample_one(self):
