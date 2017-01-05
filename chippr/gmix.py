@@ -28,29 +28,10 @@ class gmix(object):
         self.sigmas = sigmas
         self.n_comps = len(self.amps)
 
-        self.funcs = [chippr.gauss(self.means[c], self.sigmas[c]**2, limits=limits) for c in range(self.n_comps)]
+        self.funcs = [chippr.gauss(self.means[c], self.sigmas[c]**2) for c in range(self.n_comps)]
 
         self.min_x = limits[0]
         self.max_x = limits[1]
-
-    def evaluate_one(self, x):
-        """
-        Function to evaluate the Gaussian mixture probability distribution at one point
-
-        Parameters
-        ----------
-        x: float
-            value at which to evaluate Gaussian mixture probability distribution
-
-        Returns
-        -------
-        p: float
-            value of Gaussian mixture probability distribution at x
-        """
-        p = u.eps
-        for c in range(self.n_comps):
-            p += self.amps[c] * self.funcs[c].evaluate_one(x)
-        return p
 
     def evaluate(self, xs):
         """
@@ -66,7 +47,9 @@ class gmix(object):
         ps: ndarray, float
             values of Gaussian mixture probability distribution at xs
         """
-        ps = np.array([self.evaluate_one(x) for x in xs])
+        ps = np.zeros_like(xs)
+        for c in range(self.n_comps):
+            ps += self.amps[c] * self.funcs[c].evaluate(xs)
         return ps
 
     def sample_one(self):
@@ -78,13 +61,14 @@ class gmix(object):
         x: float
             a single point sampled from the Gaussian mixture probability distribution
         """
-        r = np.random.uniform(0., self.cumamps[-1])
-        c = 0
-        for k in range(1, self.n_comps):
-            if r > self.cumamps[k-1]:
-                c = k
+
         x = -1.
         while x < self.min_x or x > self.max_x:
+            r = np.random.uniform(0., self.cumamps[-1])
+            c = 0
+            for k in range(1, self.n_comps):
+                if r > self.cumamps[k-1]:
+                    c = k
             x = self.funcs[c].sample_one()
         return x
 

@@ -21,6 +21,13 @@ The gmix Class
     :members:
     :undoc-members:
 
+The mvn Class
+-------------
+
+.. automodule:: mvn
+    :members:
+    :undoc-members:
+
 The catalog Class
 -----------------
 

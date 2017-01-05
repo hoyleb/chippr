@@ -1,6 +1,8 @@
 import numpy as np
+import timeit
 
 import chippr
+from chippr import utils as u
 from chippr import sim_utils as su
 from chippr import gauss
 
@@ -29,7 +31,7 @@ class catalog(object):
         if vb:
             print self.params
 
-    def proc_bins(self, bins, vb=True):
+    def proc_bins(self, bins, limits=(-1./u.eps, 1./u.eps), vb=True):
         """
         Function to process binning
 
@@ -37,6 +39,8 @@ class catalog(object):
         ----------
         bins: int
             number of evenly spaced bins
+        limits: tuple or list or numpy.ndarray, float, optional
+            endpoints over which binning will be defined
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
@@ -44,8 +48,8 @@ class catalog(object):
             self.n_coarse = bins
         else:
             self.n_coarse = 10
-        x_min = np.min(self.obs_samps)
-        x_max = np.max(self.obs_samps)
+        x_min = limits[0]#np.min(self.obs_samps)
+        x_max = limits[-1]#np.max(self.obs_samps)
         self.n_fine = self.n_coarse
         self.n_tot = self.n_coarse * self.n_fine
         x_range = x_max-x_min
@@ -57,9 +61,6 @@ class catalog(object):
         self.x_fine = np.arange(x_min+0.5*self.dx_fine, x_max, self.dx_fine)
 
         self.bin_ends = np.arange(x_min, x_max+self.dx_coarse, self.dx_coarse)
-
-        if vb:
-            print(self.bin_ends, np.shape(self.bin_ends))
 
         return
 
@@ -83,7 +84,7 @@ class catalog(object):
 
         return coarse
 
-    def create(self, truth, int_pr, bins=10):
+    def create(self, truth, int_pr, bins=10, vb=True):
         """
         Function creating a catalog of interim posterior probability distributions, will split this up into helper functions
 
@@ -106,12 +107,16 @@ class catalog(object):
         samp_range = range(n_items)
 
         true_sigma = self.params['constant_sigma']
-        true_lfs = [gauss(true_samps[n], true_sigma**2, limits=(0., 1.)) for n in samp_range]
+        true_lfs = [gauss(true_samps[n], true_sigma**2) for n in samp_range]
         self.obs_samps = np.array([true_lfs[n].sample_one() for n in samp_range])
 
-        self.proc_bins(bins)
+        self.int_pr = int_pr
+        self.proc_bins(bins, limits=(self.int_pr.bin_ends[0], self.int_pr.bin_ends[-1]))
 
-        self.obs_lfs = np.array([[gauss(self.x_fine[kk], true_sigma**2).evaluate(self.obs_samps[n]) for kk in range(self.n_tot)] for n in samp_range])
+        lfs_fine = [gauss(self.x_fine[kk], true_sigma**2) for kk in range(self.n_tot)]
+
+        self.obs_lfs = np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)]).T
+
         int_pr_fine = int_pr.evaluate(self.x_fine)
         int_pr_coarse = self.coarsify(int_pr_fine)
 
