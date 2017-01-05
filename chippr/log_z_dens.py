@@ -20,10 +20,10 @@ class log_z_dens(object):
         ----------
         catalog: chippr.catalog object
             dict containing bin endpoints, interim prior bin values, and interim posterior PDF bin values
-        hyperprior: chippr.gauss object
-            multidimensional Gaussian function for hyperprior distribution
+        hyperprior: chippr.mvn object
+            multivariate Gaussian distribution for hyperprior distribution
         truth: chippr.gmix object, optional
-            true redshift density function expressed as Gaussian mixture
+            true redshift density function expressed as univariate Gaussian mixture
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
