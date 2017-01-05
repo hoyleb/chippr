@@ -28,7 +28,7 @@ class gmix(object):
         self.sigmas = sigmas
         self.n_comps = len(self.amps)
 
-        self.funcs = [chippr.gauss(self.means[c], self.sigmas[c]**2, limits=limits) for c in range(self.n_comps)]
+        self.funcs = [chippr.gauss(self.means[c], self.sigmas[c]**2) for c in range(self.n_comps)]
 
         self.min_x = limits[0]
         self.max_x = limits[1]
