@@ -2,6 +2,7 @@ import numpy as np
 import timeit
 
 import chippr
+from chippr import utils as u
 from chippr import sim_utils as su
 from chippr import gauss
 
