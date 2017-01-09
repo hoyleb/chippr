@@ -7,8 +7,8 @@ global s_int,w_int,a_int,c_int,d_int,l_int
 s_int,w_int,a_int,c_int,d_int,l_int = '--',0.5,0.5,'k',[(0,(1,0.0001))],'Interim '
 global s_stk,w_stk,a_stk,c_stk,d_stk,l_stk
 s_stk,w_stk,a_stk,c_stk,d_stk,l_stk = '--',1.5,1.,'k',[(0,(3,2))],'Stacked '#[(0,(2,1))]
-# global s_map, w_map, a_map, c_map, d_map, l_map
-# s_map, w_map, a_map, c_map, d_map, l_map = '--', 1., 1., 'k', [(0,(3,2))], 'MMAP '#[(0,(1,1,3,1))]
+global s_map, w_map, a_map, c_map, d_map, l_map
+s_map, w_map, a_map, c_map, d_map, l_map = '--', 1., 1., 'k', [(0,(3,2))], 'MMAP '#[(0,(1,1,3,1))]
 # global s_exp,w_exp,a_exp,c_exp,d_exp,l_exp
 # s_exp,w_exp,a_exp,c_exp,d_exp,l_exp = '--',1.,1.,'k',[(0,(1,1))],'MExp '#[(0,(3,3,1,3))]
 global s_mle,w_mle,a_mle,c_mle,d_mle,l_mle
