@@ -128,8 +128,8 @@ class catalog(object):
 
         self.cat = {}
         self.cat['bin_ends'] = self.bin_ends
-        self.cat['interim_prior'] = int_pr_coarse
-        self.cat['interim_posteriors'] = pfs
+        self.cat['log_interim_prior'] = u.safe_log(int_pr_coarse)
+        self.cat['log_interim_posteriors'] = u.safe_log(pfs)
 
         return self.cat
 
