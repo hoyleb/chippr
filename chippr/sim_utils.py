@@ -2,6 +2,8 @@ import numpy as np
 import bisect
 import sys
 
+np.random.seed(42)
+
 def ingest(in_info):
     """
     Function reading in parameter file to define functions necessary for generation of posterior probability distributions
