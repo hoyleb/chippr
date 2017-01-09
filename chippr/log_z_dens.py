@@ -35,13 +35,10 @@ class log_z_dens(object):
         self.n_bins = len(self.bin_mids)
 
         self.log_int_pr = np.array(catalog['log_interim_prior'])
-        self.int_pr = np.exp(self.int_pr)
-
-        if vb:
-            print(np.dot(np.exp(self.log_int_pr), self.bin_difs))
+        self.int_pr = np.exp(self.log_int_pr)
 
         self.log_pdfs = np.array(catalog['log_interim_posteriors'])
-        self.pdfs = np.exp(self.pdfs)
+        self.pdfs = np.exp(self.log_pdfs)
         self.n_pdfs = len(self.log_pdfs)
 
         if vb:
@@ -139,6 +136,8 @@ class log_z_dens(object):
 
         res = op.minimize(_objective, start, method="Nelder-Mead", options={"maxfev": 1e5, "maxiter":1e5})
 
+        if vb:
+            print(res)
         return res.x
 
     def calculate_mmle(self, start, vb=True):
@@ -179,8 +178,8 @@ class log_z_dens(object):
         log_stk_nz: ndarray
             array of logged redshift density function bin values
         """
-        stacked = np.sum(self.pdfs, axis=0)
-        self.stk_nz /= np.dot(stacked, self.bin_difs)
+        self.stk_nz = np.sum(self.pdfs, axis=0)
+        self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
         self.log_stk_nz = u.safe_log(self.stk_nz)
 
         return self.log_stk_nz
