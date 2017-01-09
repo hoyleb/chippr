@@ -31,7 +31,7 @@ class catalog(object):
         if vb:
             print self.params
 
-    def proc_bins(self, bins, limits=(-1./u.eps, 1./u.eps), vb=True):
+    def proc_bins(self, bins, limits=(0., 1.), vb=True):
         """
         Function to process binning
 
@@ -79,7 +79,7 @@ class catalog(object):
             vector of binned values of function
         """
         coarse = fine / (np.sum(fine) * self.dx_fine)
-        coarse = np.array([np.sum(coarse[k*self.n_fine:(k+1)*self.n_fine])*self.dx_fine for k in range(self.n_coarse)])
+        coarse = np.array([np.sum(coarse[k * self.n_fine : (k+1) * self.n_fine]) * self.dx_fine for k in range(self.n_coarse)])
         coarse /= self.dx_coarse
 
         return coarse

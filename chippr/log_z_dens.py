@@ -56,7 +56,46 @@ class log_z_dens(object):
 
         return
 
-    def log_hyper_posterior(self, log_nz):
+    def calc_log_hyper_lf(self, log_nz):
+        """
+        Function to evaluate log hyperlikelihood
+
+        Parameters
+        ----------
+        log_nz: numpy.ndarray, float
+            vector of logged redshift density bin values at which to evaluate the hyperlikelihood
+
+        Returns
+        -------
+        log_hyper_lf: float
+            log likelihood probability associated with parameters in log_nz
+        """
+        norm_nz = np.exp(log_nz - np.max(log_nz))
+        norm_nz /= np.sum(norm_nz)#, self.bin_difs)
+        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], axis=1)
+        log_hyper_lf = np.sum(u.safe_log(hyper_lfs))
+
+        return log_hyper_lf
+
+    def calc_log_hyper_pr(self, log_nz):
+        """
+        Function to evaluate log hyperprior
+
+        Parameters
+        ----------
+        log_nz: numpy.ndarray, float
+            vector of logged redshift density bin values at which to evaluate the hyperprior
+
+        Returns
+        -------
+        log_hyper_pr: float
+            log prior probability associated with parameters in log_nz
+        """
+        log_hyper_pr = -0.5 * np.dot(np.dot(self.hyper_prior.invvar, log_nz), log_nz)
+
+        return log_hyper_pr
+
+    def calc_log_hyper_posterior(self, log_nz):
         """
         Function to evaluate log hyperposterior
 
@@ -70,12 +109,8 @@ class log_z_dens(object):
         log_prob: float
             log posterior probability associated with parameters in log_nz
         """
-
-        norm_nz = np.exp(log_nz - np.max(log_nz))
-        norm_nz /= np.sum(norm_nz)#, self.bin_difs)
-        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], axis=1)
-        log_hyper_lf = np.sum(u.safe_log(hyper_lfs))
-        log_hyper_pr = -0.5 * np.dot(np.dot(self.hyper_prior.invvar, log_nz), log_nz)
+        log_hyper_lf = self.calc_log_hyper_lf(log_nz)
+        log_hyper_pr = self.calc_log_hyper_pr(log_nz)
         log_hyper_post = log_hyper_lf + log_hyper_pr
         return log_hyper_post
 
@@ -96,7 +131,7 @@ class log_z_dens(object):
             array of redshift density function bin values
         """
         def _objective(log_nz):
-            return -2. * self.log_hyper_posterior(log_nz)
+            return -2. * self.calc_log_hyper_posterior(log_nz)
 
         if vb:
             print("starting at", start, _objective(start))
@@ -111,8 +146,8 @@ class log_z_dens(object):
         norm_mmle = mmle_nz / np.dot(mmle_nz, self.bin_difs)
         self.mmle_nz = u.safe_log(norm_mmle)
 
-        if vb:
-            print(np.dot(np.exp(self.mmle_nz), self.bin_difs))
+        # if vb:
+        #     print(np.dot(np.exp(self.mmle_nz), self.bin_difs))
 
         return self.mmle_nz
 
