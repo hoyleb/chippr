@@ -103,9 +103,9 @@ class log_z_dens(object):
 
         mmle = op.minimize(_objective, start, method="Nelder-Mead", options={"maxfev": 1e5, "maxiter":1e5})
 
-        if vb:
-            print(mmle)
-            print(np.dot(np.exp(mmle.x), self.bin_difs))
+        # if vb:
+        #     print(mmle)
+        #     print(np.dot(np.exp(mmle.x), self.bin_difs))
 
         mmle_nz = np.exp(mmle.x)
         norm_mmle = mmle_nz / np.dot(mmle_nz, self.bin_difs)
@@ -135,10 +135,10 @@ class log_z_dens(object):
         log_stack = u.safe_log(stack)
         self.stack_nz = log_stack
 
-        if vb:
-            print(np.dot(np.exp(self.stack_nz), self.bin_difs))
+        # if vb:
+        #     print(np.dot(np.exp(self.stack_nz), self.bin_difs))
 
-        return log_stack
+        return self.stack_nz
 
     def mmap(self):
         """
@@ -149,8 +149,13 @@ class log_z_dens(object):
         mmap_dens: ndarray
             array of redshift density function bin values
         """
-
-        return
+        self.mmap_nz = np.zeros(self.n_bins)
+        mmappreps = [np.argmax(l) for l in self.log_pdfs]
+        for m in mmappreps:
+              self.mmap_nz[m] += 1.
+        self.mmap_nz /= self.bin_difs[m] * self.n_pdfs
+        self.mmap_nz = u.safe_log(self.mmap_nz)
+        return self.mmap_nz
 
     def mexp(self):
         """
@@ -223,6 +228,10 @@ class log_z_dens(object):
             log_fun = u.safe_log(fun)
             pu.plot_step(sps, z, fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.nz)
             pu.plot_step(sps_log, z, log_fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.lnz)
+
+        if self.mmap_nz is not None:
+            pu.plot_step(sps, self.bin_ends, np.exp(self.mmap_nz), w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.mmap_nz, w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.lnz)
 
         if self.stack_nz is not None:
             pu.plot_step(sps, self.bin_ends, np.exp(self.stack_nz), w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.nz)
