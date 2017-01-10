@@ -8,7 +8,7 @@ The discrete Class
     :undoc-members:
 
 The gauss Class
-----------------
+---------------
 
 .. automodule:: gauss
     :members:
@@ -31,13 +31,6 @@ The mvn Class
 The catalog Class
 -----------------
 
-.. automodule:: likelihood
-    :members:
-    :undoc-members:
-
-Simulation Utilities
---------------------
-
-.. automodule:: sim_utils
+.. automodule:: catalog
     :members:
     :undoc-members:

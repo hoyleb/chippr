@@ -2,6 +2,7 @@ import numpy as np
 import timeit
 
 import chippr
+from chippr import defaults as d
 from chippr import utils as u
 from chippr import sim_utils as su
 from chippr import gauss
@@ -19,19 +20,19 @@ class catalog(object):
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
-        if type(params) == str:
+        if params is None:
+            self.params = {}
+        elif type(params) == str:
             self.params = su.ingest(params)
         else:
             self.params = params
 
-        if self.params is None:
-            self.params = {}
-            self.params['constant_sigma'] = 0.05
+        self.params = d.check_sim_params(self.params)
 
         if vb:
             print self.params
 
-    def proc_bins(self, bins, limits=(0., 1.), vb=True):
+    def proc_bins(self, bins, limits=(d.min_x, d.max_x), vb=True):
         """
         Function to process binning
 
@@ -84,7 +85,7 @@ class catalog(object):
 
         return coarse
 
-    def create(self, truth, int_pr, bins=10, vb=True):
+    def create(self, truth, int_pr, bins=d.n_bins, vb=True):
         """
         Function creating a catalog of interim posterior probability distributions, will split this up into helper functions
 
@@ -102,26 +103,22 @@ class catalog(object):
         self.cat: dict
             dictionary comprising catalog information
         """
-        true_samps = truth
-        n_items = len(true_samps)
-        samp_range = range(n_items)
+        self.true_samps = truth
+        self.n_items = len(self.true_samps)
+        self.samp_range = range(self.n_items)
 
-        true_sigma = self.params['constant_sigma']
-        true_lfs = [gauss(true_samps[n], true_sigma**2) for n in samp_range]
-        self.obs_samps = np.array([true_lfs[n].sample_one() for n in samp_range])
+        self.obs_samps = self.sample_obs()
 
         self.int_pr = int_pr
         self.proc_bins(bins, limits=(self.int_pr.bin_ends[0], self.int_pr.bin_ends[-1]))
 
-        lfs_fine = [gauss(self.x_fine[kk], true_sigma**2) for kk in range(self.n_tot)]
-
-        self.obs_lfs = np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)]).T
+        self.obs_lfs = self.evaluate_lfs()
 
         int_pr_fine = int_pr.evaluate(self.x_fine)
         int_pr_coarse = self.coarsify(int_pr_fine)
 
-        pfs = np.zeros((n_items, self.n_coarse))
-        for n in samp_range:
+        pfs = np.zeros((self.n_items, self.n_coarse))
+        for n in self.samp_range:
             pf = int_pr_fine * self.obs_lfs[n]
             pf = self.coarsify(pf)
             pfs[n] += pf
@@ -132,6 +129,44 @@ class catalog(object):
         self.cat['log_interim_posteriors'] = u.safe_log(pfs)
 
         return self.cat
+
+    def sample_obs(self):
+        """
+        Samples observed values from true values
+
+        Returns
+        -------
+        obs_samps: numpy.ndarray, float
+            observed values
+        """
+        if not self.params['variable_sigma']:
+            true_lfs = [gauss(self.true_samps[n], self.params['constant_sigma']**2) for n in self.samp_range]
+        if self.params['catastrophic_outliers']:
+            outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
+        obs_samps = np.zeros(self.n_items)
+        for n in self.samp_range:
+            if np.random.uniform() < self.params['outlier_fraction']:
+                obs_samps[n] = outlier_lf.sample_one()
+            else:
+                obs_samps[n] = true_lfs[n].sample_one()
+        return obs_samps
+
+    def evaluate_lfs(self):
+        """
+        Evaluates likelihoods based on observed sample values
+
+        Returns
+        -------
+        obs_lfs: numpy.ndarray, float
+            array of likelihood values for each item as a function of fine binning
+        """
+        if not self.params['variable_sigma']:
+            lfs_fine = [gauss(self.x_fine[kk], self.params['constant_sigma']**2) for kk in range(self.n_tot)]
+            obs_lfs = (1.-self.params['outlier_fraction']) * np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)])
+        if self.params['catastrophic_outliers']:
+            outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
+            obs_lfs += self.params['outlier_fraction'] * outlier_lf.evaluate(self.obs_samps)
+        return obs_lfs.T
 
     def write(self, loc):
         """

@@ -1,12 +1,15 @@
-import sys
+# Module containing generally handy functions used by simulation and inference modules
+
 import numpy as np
 
-global eps
-eps = sys.float_info.epsilon
+import chippr
+from chippr import defaults as d
 
-def safe_log(arr, threshold=eps):
+np.random.seed(d.seed)
+
+def safe_log(arr, threshold=d.eps):
     """
-    Takes the natural logarithm of an array that might contain zeroes.
+    Takes the natural logarithm of an array that might contain zeros.
 
     Parameters
     ----------

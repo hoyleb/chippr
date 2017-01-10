@@ -1,8 +1,11 @@
+# Module containing generally handy functions used by simulation module
+
 import numpy as np
 import bisect
 import sys
 
-np.random.seed(42)
+import chippr
+from chippr import defaults as d
 
 def ingest(in_info):
     """
@@ -19,9 +22,9 @@ def ingest(in_info):
         dict containing keys and values necessary for posterior probability distributions
     """
     if type(in_info) == str:
-        with open(loc) as infile:
+        with open(in_info) as infile:
             lines = (line.split(None) for line in infile)
-            in_dict = {defn[0]:defn[1:] for defn in lines}
+            in_dict = {defn[0] : defn[1:] for defn in lines}
     else:
         in_dict = in_info
     return in_dict
