@@ -31,6 +31,6 @@ The mvn Class
 The catalog Class
 -----------------
 
-.. automodule:: likelihood
+.. automodule:: catalog
     :members:
     :undoc-members:
