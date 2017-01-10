@@ -8,7 +8,7 @@ The discrete Class
     :undoc-members:
 
 The gauss Class
-----------------
+---------------
 
 .. automodule:: gauss
     :members:
