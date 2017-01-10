@@ -34,10 +34,3 @@ The catalog Class
 .. automodule:: likelihood
     :members:
     :undoc-members:
-
-Simulation Utilities
---------------------
-
-.. automodule:: sim_utils
-    :members:
-    :undoc-members:

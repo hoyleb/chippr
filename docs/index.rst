@@ -22,3 +22,8 @@ Inference
 =========
 
 .. include:: inference.rst
+
+Utilities
+=========
+
+.. include :: utilities.rst
