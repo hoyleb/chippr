@@ -2,6 +2,7 @@ import numpy as np
 import sys
 
 import chippr
+from chippr import defaults as d
 from chippr import utils as u
 
 class mvn(object):
@@ -51,7 +52,7 @@ class mvn(object):
         p: float
             probability associated with x
         """
-        p = max(u.eps, 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
+        p = max(d.eps, 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
                 np.exp(-0.5 * (x - self.mean) * self.invvar * (x - self.mean)))
         return p
 
