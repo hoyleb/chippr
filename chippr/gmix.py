@@ -2,11 +2,12 @@ import numpy as np
 import sys
 
 import chippr
+from chippr import defaults as d
 from chippr import utils as u
 
 class gmix(object):
 
-    def __init__(self, amps, means, sigmas, limits=(-1./u.eps, 1./u.eps)):
+    def __init__(self, amps, means, sigmas, limits=(d.min_x, d.max_x)):
         """
         Object to define a Gaussian mixture probability distribution
 

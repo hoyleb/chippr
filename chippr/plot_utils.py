@@ -1,3 +1,5 @@
+# Module containing generally handy functions used for plotting
+
 global lnz, nz
 lnz, nz = r'$\ln[n(z)]$', r'$n(z)$'
 
