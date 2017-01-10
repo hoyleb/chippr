@@ -1,6 +1,7 @@
 # Module containing generally handy functions used by simulation and inference modules
 
 import numpy as np
+
 import chippr
 from chippr import defaults as d
 
