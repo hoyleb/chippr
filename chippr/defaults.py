@@ -2,13 +2,17 @@
 
 import sys
 
+global seed
 seed = 42
 
+global eps
 eps = sys.float_info.epsilon
 
+global min_x, max_x
 min_x = 0.
 max_x = 1.
 
+global n_bins
 n_bins = 10
 
 def check_sim_params(params={}):
