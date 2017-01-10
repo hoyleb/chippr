@@ -2,8 +2,8 @@ import numpy as np
 import bisect
 
 import chippr
+from chippr import defaults as d
 from chippr import sim_utils as su
-from chippr import utils as u
 
 class discrete(object):
     def __init__(self, bin_ends, weights):
@@ -40,7 +40,7 @@ class discrete(object):
         p: float
             value of discrete probability distribution at x
         """
-        p = u.eps
+        p = d.eps
         for k in self.bin_range:
             if x > self.bin_ends[k] and x < self.bin_ends[k+1]:
                 p = self.distweights[k]

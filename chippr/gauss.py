@@ -2,7 +2,6 @@ import numpy as np
 import sys
 
 import chippr
-from chippr import utils as u
 
 class gauss(object):
 
