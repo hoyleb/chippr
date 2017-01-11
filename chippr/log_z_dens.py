@@ -50,6 +50,7 @@ class log_z_dens(object):
 
         self.stk_nz = None
         self.map_nz = None
+        self.exp_nz = None
         self.mle_nz = None
 
         return
@@ -212,11 +213,18 @@ class log_z_dens(object):
 
         Returns
         -------
-        mexp_dens: ndarray
-            array of redshift density function bin values
+        log_exp_nz: ndarray
+            array of logged redshift density function bin values
         """
-
-        return
+        expprep = [sum(z) for z in self.bin_mids * self.pdfs * self.bin_difs]
+        self.exp_nz = np.zeros(self.n_bins)
+        for z in expprep:
+            for k in range(self.n_bins):
+                if z > self.bin_ends[k] and z < self.bin_ends[k+1]:
+                    self.exp_nz[k] += 1.
+        self.exp_nz /= self.bin_difs * self.n_pdfs
+        self.log_exp_nz = u.safe_log(self.exp_nz)
+        return self.log_exp_nz
 
     def calculate_samples(self, n_samps, vb=True):
         """
@@ -297,13 +305,17 @@ class log_z_dens(object):
             pu.plot_step(sps, z, fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.nz)
             pu.plot_step(sps_log, z, log_fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.lnz)
 
+        if self.stk_nz is not None:
+            pu.plot_step(sps, self.bin_ends, self.stk_nz, w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.log_stk_nz, w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.lnz)
+
         if self.map_nz is not None:
             pu.plot_step(sps, self.bin_ends, self.map_nz, w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.nz)
             pu.plot_step(sps_log, self.bin_ends, self.log_map_nz, w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.lnz)
 
-        if self.stk_nz is not None:
-            pu.plot_step(sps, self.bin_ends, self.stk_nz, w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.log_stk_nz, w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.lnz)
+        if self.exp_nz is not None:
+            pu.plot_step(sps, self.bin_ends, self.exp_nz, w=pu.w_exp, s=pu.s_exp, a=pu.a_exp, c=pu.c_exp, d=pu.d_exp, l=pu.l_exp+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.log_exp_nz, w=pu.w_exp, s=pu.s_exp, a=pu.a_exp, c=pu.c_exp, d=pu.d_exp, l=pu.l_exp+pu.lnz)
 
         if self.mle_nz is not None:
             pu.plot_step(sps, self.bin_ends, self.mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.nz)
