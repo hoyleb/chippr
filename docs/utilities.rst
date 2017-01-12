@@ -21,6 +21,13 @@ Simulation Utilities
     :members:
     :undoc-members:
 
+Statistics
+----------
+
+.. automodule:: stats
+    :members:
+    :undoc-members:
+
 Plotting Utilities
 ------------------
 
