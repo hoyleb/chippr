@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import scipy.optimize as op
+import emcee
 
 import matplotlib as mpl
 mpl.use('PS')
@@ -9,6 +10,7 @@ import matplotlib.pyplot as plt
 import chippr
 from chippr import plot_utils as pu
 from chippr import utils as u
+from chippr import stats as stats
 
 class log_z_dens(object):
 
@@ -165,7 +167,7 @@ class log_z_dens(object):
 
         return self.log_mle_nz
 
-    def calculate_stack(self, vb=True):
+    def calculate_stacked(self, vb=True):
         """
         Calculates the stacked estimator of the redshift density function
 
@@ -226,26 +228,7 @@ class log_z_dens(object):
         self.log_exp_nz = u.safe_log(self.exp_nz)
         return self.log_exp_nz
 
-    def calculate_samples(self, n_samps, vb=True):
-        """
-        Calculates samples estimating the redshift density function
-
-        Parameters
-        ----------
-        n_samps: int
-            number of samples to accept before stopping
-        vb: boolean, optional
-            True to print progress messages to stdout, False to suppress
-
-        Returns
-        -------
-        log_samples_nz: ndarray
-            array of sampled log redshift density function bin values
-        """
-
-        return
-
-    def sample(self, n_samps, vb=True):
+    def sample(self, ivals, n_samps, vb=True):
         """
         Samples the redshift density hyperposterior
 
@@ -261,12 +244,43 @@ class log_z_dens(object):
         samples: ndarray
             array of sampled redshift density function bin values
         """
+        pos, prob, state = self.sampler.run_mcmc(ivals, n_samps)
+        chains = self.sampler.chain
+        return chains
 
-        return
+    def calculate_samples(self, ivals, n_samps=None, vb=True):
+        """
+        Calculates samples estimating the redshift density function
+
+        Parameters
+        ----------
+        n_samps: int, optional
+            number of samples to accept before stopping
+        ivals:
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
+
+        Returns
+        -------
+        log_samples_nz: ndarray
+            array of sampled log redshift density function bin values
+        """
+        self.n_walkers = len(ivals)
+        self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
+        if n_samps is None:
+            n_samps = self.n_pdfs
+        self.log_samples_nz = self.sample(ivals, n_samps)
+        self.samples_nz = np.exp(self.log_samples_nz)
+        return self.log_samples_nz
 
     def plot(self, plot_loc=''):
         """
         Plots all available estimators of the redshift density function.
+
+        Parameters
+        ----------
+        plot_loc: string
+            destination where plot should be stored
         """
 
         # set up for better looking plots
@@ -321,7 +335,13 @@ class log_z_dens(object):
             pu.plot_step(sps, self.bin_ends, self.mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.nz)
             pu.plot_step(sps_log, self.bin_ends, self.log_mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.lnz)
 
-        sps_log.legend()
+        if self.samples_nz is not None:
+            self.log_bfe_nz = stats.mean(self.log_samples_nz)
+            self.bfe_nz = np.exp(self.log_bfe_nz)
+            pu.plot_step(sps, self.bin_ends, self.bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.log_bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.lnz)
+
+        sps_log.legend(fontsize='x-small')
         sps.set_xlabel('x')
         sps_log.set_ylabel('Log probability density')
         sps.set_ylabel('Probability density')
