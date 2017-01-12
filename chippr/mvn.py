@@ -84,7 +84,7 @@ class mvn(object):
         x: numpy.ndarray, float
             single sample from multivariate Gaussian probability distribution
         """
-        x = self.mean + self.var * np.array([np.random.normal() for k in range(self.dim)])
+        x = self.mean + np.dot(self.var, np.random.normal(size = self.dim))
         return x
 
     def sample(self, n_samps):
