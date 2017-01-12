@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import chippr
 from chippr import plot_utils as pu
 from chippr import utils as u
+from chippr import stats as stats
 
 class log_z_dens(object):
 
@@ -268,9 +269,9 @@ class log_z_dens(object):
         self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
         if n_samps is None:
             n_samps = self.n_pdfs
-        samples = self.sample(ivals, n_samps)
-
-        return samples
+        self.log_samples_nz = self.sample(ivals, n_samps)
+        self.samples_nz = np.exp(self.log_samples_nz)
+        return self.log_samples_nz
 
     def plot(self, plot_loc=''):
         """
@@ -328,6 +329,12 @@ class log_z_dens(object):
         if self.mle_nz is not None:
             pu.plot_step(sps, self.bin_ends, self.mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.nz)
             pu.plot_step(sps_log, self.bin_ends, self.log_mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.lnz)
+
+        if self.samples_nz is not None:
+            self.log_bfe_nz = stats.mean(self.log_samples_nz)
+            self.bfe_nz = np.exp(self.log_bfe_nz)
+            pu.plot_step(sps, self.bin_ends, self.bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.log_bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.lnz)
 
         sps_log.legend()
         sps.set_xlabel('x')
