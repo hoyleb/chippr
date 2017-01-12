@@ -169,7 +169,7 @@ class catalog(object):
             obs_lfs += self.params['outlier_fraction'] * outlier_lf.evaluate(self.obs_samps)
         return obs_lfs.T
 
-    def write(self, loc):
+    def write(self, loc, style='plaintext'):
         """
         Function to write newly-created catalog to file
 
@@ -177,11 +177,14 @@ class catalog(object):
         ----------
         loc: string
             location into which to save catalog files
+        style: string, optional
+            file format in which to save the catalog
         """
-        with open(loc, 'wb') as csvfile:
-            out = csv.writer(csvfile, delimiter=' ')
-            out.writerow(self.cat['bin_ends'])
-            out.writerow(self.cat['log_interim_prior'])
-            for line in self.cat['log_interim_posteriors']:
-                out.writerow(line)
+        if style == 'plaintext':
+            with open(loc, 'wb') as csvfile:
+                out = csv.writer(csvfile, delimiter=' ')
+                out.writerow(self.cat['bin_ends'])
+                out.writerow(self.cat['log_interim_prior'])
+                for line in self.cat['log_interim_posteriors']:
+                    out.writerow(line)
         return
