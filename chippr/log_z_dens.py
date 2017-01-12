@@ -276,6 +276,11 @@ class log_z_dens(object):
     def plot(self, plot_loc=''):
         """
         Plots all available estimators of the redshift density function.
+
+        Parameters
+        ----------
+        plot_loc: string
+            destination where plot should be stored
         """
 
         # set up for better looking plots
@@ -336,7 +341,7 @@ class log_z_dens(object):
             pu.plot_step(sps, self.bin_ends, self.bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.nz)
             pu.plot_step(sps_log, self.bin_ends, self.log_bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.lnz)
 
-        sps_log.legend()
+        sps_log.legend(fontsize='x-small')
         sps.set_xlabel('x')
         sps_log.set_ylabel('Log probability density')
         sps.set_ylabel('Probability density')
