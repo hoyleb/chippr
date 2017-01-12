@@ -1,4 +1,5 @@
 import numpy as np
+import csv
 import timeit
 
 import chippr
@@ -177,15 +178,10 @@ class catalog(object):
         loc: string
             location into which to save catalog files
         """
-        return
-
-    def read(self, loc):
-        """
-        Function to read in catalog file
-
-        Parameters
-        ----------
-        loc: string
-            location of catalog file(s)
-        """
+        with open(loc, 'wb') as csvfile:
+            out = csv.writer(csvfile, delimiter=' ')
+            out.writerow(self.cat['bin_ends'])
+            out.writerow(self.cat['log_interim_prior'])
+            for line in self.cat['log_interim_posteriors']:
+                out.writerow(line)
         return
