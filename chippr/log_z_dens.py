@@ -360,7 +360,7 @@ class log_z_dens(object):
         sps.set_ylabel('Probability density')
         self.f.savefig(plot_loc+'plot.png')
 
-    def read(self, loc, style='pickle'):
+    def read(self, loc, style='pickle', vb=True):
         """
         Function to load inferred quantities from files.
 
@@ -370,15 +370,23 @@ class log_z_dens(object):
             filepath where inferred redshift density function is stored
         style: string, optional
             keyword for file format
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
 
         Returns
         -------
-        self: log_z_dens object
-            returns the redshift density function object itself
+        self.info: dict
+            returns the log_z_dens information dictionary object
         """
-        return self
+        with open(loc, 'rb') as file_location:
+            self.info = cpkl.load(file_location)
+        if vb:
+            print('The following quantities were read from '+loc+' in the '+style+' format:')
+            for key in self.info:
+                print(key)
+        return self.info
 
-    def write(self, loc, style='pickle'):
+    def write(self, loc, style='pickle', vb=True):
         """
         Function to write results of inference to files.
 
@@ -388,7 +396,13 @@ class log_z_dens(object):
             filepath where results of inference should be saved.
         style: string, optional
             keyword for file format
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
         """
-        with open(loc) as file_location:
-            cpkl.dump(self.info, loc)
+        with open(loc, 'wb') as file_location:
+            cpkl.dump(self.info, file_location)
+        if vb:
+            print('The following quantities were written to '+loc+' in the '+style+' format:')
+            for key in self.info:
+                print(key)
         return
