@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import scipy.optimize as op
+import cPickle as cpkl
 import emcee
 
 import matplotlib as mpl
@@ -29,19 +30,23 @@ class log_z_dens(object):
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
+        self.info = {}
 
         self.bin_ends = np.array(catalog['bin_ends'])
         self.bin_range = self.bin_ends[:-1]-self.bin_ends[0]
         self.bin_mids = (self.bin_ends[1:]+self.bin_ends[:-1])/2.
         self.bin_difs = self.bin_ends[1:]-self.bin_ends[:-1]
         self.n_bins = len(self.bin_mids)
+        self.info['bin_ends'] = self.bin_ends
 
         self.log_int_pr = np.array(catalog['log_interim_prior'])
         self.int_pr = np.exp(self.log_int_pr)
+        self.info['log_interim_prior'] = self.log_int_pr
 
         self.log_pdfs = np.array(catalog['log_interim_posteriors'])
         self.pdfs = np.exp(self.log_pdfs)
         self.n_pdfs = len(self.log_pdfs)
+        self.info['log_interim_posteriors'] = self.log_pdfs
 
         if vb:
             print(str(len(self.bin_ends)-1)+' bins, '+str(len(self.log_pdfs))+' interim posterior PDFs')
@@ -164,6 +169,7 @@ class log_z_dens(object):
         mle_nz = np.exp(log_mle)
         self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
         self.log_mle_nz = u.safe_log(self.mle_nz)
+        self.info['log_mmle_nz'] = self.log_mle_nz
 
         return self.log_mle_nz
 
@@ -184,6 +190,7 @@ class log_z_dens(object):
         self.stk_nz = np.sum(self.pdfs, axis=0)
         self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
         self.log_stk_nz = u.safe_log(self.stk_nz)
+        self.info['log_stacked_nz'] = self.log_stk_nz
 
         return self.log_stk_nz
 
@@ -207,6 +214,8 @@ class log_z_dens(object):
               self.map_nz[m] += 1.
         self.map_nz /= self.bin_difs[m] * self.n_pdfs
         self.log_map_nz = u.safe_log(self.map_nz)
+        self.info['log_mmap_nz'] = self.log_map_nz
+
         return self.log_map_nz
 
     def calculate_mexp(self, vb=True):
@@ -226,6 +235,8 @@ class log_z_dens(object):
                     self.exp_nz[k] += 1.
         self.exp_nz /= self.bin_difs * self.n_pdfs
         self.log_exp_nz = u.safe_log(self.exp_nz)
+        self.info['log_mexp_nz'] = self.log_exp_nz
+
         return self.log_exp_nz
 
     def sample(self, ivals, n_samps, vb=True):
@@ -271,6 +282,8 @@ class log_z_dens(object):
             n_samps = self.n_pdfs
         self.log_samples_nz = self.sample(ivals, n_samps)
         self.samples_nz = np.exp(self.log_samples_nz)
+        self.info['log_sampled_nz'] = self.log_samples_nz
+
         return self.log_samples_nz
 
     def plot(self, plot_loc=''):
@@ -346,3 +359,36 @@ class log_z_dens(object):
         sps_log.set_ylabel('Log probability density')
         sps.set_ylabel('Probability density')
         self.f.savefig(plot_loc+'plot.png')
+
+    def read(self, loc, style='pickle'):
+        """
+        Function to load inferred quantities from files.
+
+        Parameters
+        ----------
+        loc: string
+            filepath where inferred redshift density function is stored
+        style: string, optional
+            keyword for file format
+
+        Returns
+        -------
+        self: log_z_dens object
+            returns the redshift density function object itself
+        """
+        return self
+
+    def write(self, loc, style='pickle'):
+        """
+        Function to write results of inference to files.
+
+        Parameters
+        ----------
+        loc: string
+            filepath where results of inference should be saved.
+        style: string, optional
+            keyword for file format
+        """
+        with open(loc) as file_location:
+            cpkl.dump(self.info, loc)
+        return
