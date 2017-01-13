@@ -188,3 +188,21 @@ class catalog(object):
                 for line in self.cat['log_interim_posteriors']:
                     out.writerow(line)
         return
+
+    def read(self, loc, style='plaintext'):
+        """
+        Function to read in catalog file
+
+        Parameters
+        ----------
+        loc: string
+            location of catalog file(s)
+        """
+        if style == 'plaintext':
+            with open(loc, 'rb') as csvfile:
+                tuples = (line.split(None) for line in csvfile)
+                alldata = [[float(pair[k]) for k in range(0,len(pair))] for pair in tuples]
+        self.cat['bin_ends'] = np.array(alldata[0])
+        self.cat['log_interim_prior'] = np.array(alldata[1])
+        self.cat['log_interim_posteriors'] = np.array(alldata[2:])
+        return
