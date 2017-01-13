@@ -33,6 +33,8 @@ class catalog(object):
         if vb:
             print self.params
 
+        self.cat = {}
+
     def proc_bins(self, bins, limits=(d.min_x, d.max_x), vb=True):
         """
         Function to process binning
@@ -124,7 +126,6 @@ class catalog(object):
             pf = self.coarsify(pf)
             pfs[n] += pf
 
-        self.cat = {}
         self.cat['bin_ends'] = self.bin_ends
         self.cat['log_interim_prior'] = u.safe_log(int_pr_coarse)
         self.cat['log_interim_posteriors'] = u.safe_log(pfs)
@@ -188,3 +189,21 @@ class catalog(object):
                 for line in self.cat['log_interim_posteriors']:
                     out.writerow(line)
         return
+
+    def read(self, loc, style='plaintext'):
+        """
+        Function to read in catalog file
+
+        Parameters
+        ----------
+        loc: string
+            location of catalog file(s)
+        """
+        if style == 'plaintext':
+            with open(loc, 'rb') as csvfile:
+                tuples = (line.split(None) for line in csvfile)
+                alldata = [[float(pair[k]) for k in range(0,len(pair))] for pair in tuples]
+        self.cat['bin_ends'] = np.array(alldata[0])
+        self.cat['log_interim_prior'] = np.array(alldata[1])
+        self.cat['log_interim_posteriors'] = np.array(alldata[2:])
+        return self.cat
