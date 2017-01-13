@@ -206,4 +206,4 @@ class catalog(object):
         self.cat['bin_ends'] = np.array(alldata[0])
         self.cat['log_interim_prior'] = np.array(alldata[1])
         self.cat['log_interim_posteriors'] = np.array(alldata[2:])
-        return
+        return self.cat
