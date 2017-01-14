@@ -164,13 +164,16 @@ class log_z_dens(object):
         log_mle_nz: numpy.ndarray
             array of logged redshift density function bin values maximizing hyperposterior
         """
-
-        log_mle = self.optimize(start)
-        mle_nz = np.exp(log_mle)
-        self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
-        self.log_mle_nz = u.safe_log(self.mle_nz)
-        self.info['log_mmle_nz'] = self.log_mle_nz
-
+        if 'log_mmle_nz' not in self.info:
+            log_mle = self.optimize(start)
+            mle_nz = np.exp(log_mle)
+            self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
+            self.log_mle_nz = u.safe_log(self.mle_nz)
+            self.info['log_mmle_nz'] = self.log_mle_nz
+        else:
+            self.log_mle_nz = self.info['log_mmle_nz']
+            self.mle_nz = np.exp(self.log_mle_nz)
+            
         return self.log_mle_nz
 
     def calculate_stacked(self, vb=True):
@@ -187,10 +190,14 @@ class log_z_dens(object):
         log_stk_nz: ndarray
             array of logged redshift density function bin values
         """
-        self.stk_nz = np.sum(self.pdfs, axis=0)
-        self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
-        self.log_stk_nz = u.safe_log(self.stk_nz)
-        self.info['log_stacked_nz'] = self.log_stk_nz
+        if 'log_stacked_nz' not in self.info:
+            self.stk_nz = np.sum(self.pdfs, axis=0)
+            self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
+            self.log_stk_nz = u.safe_log(self.stk_nz)
+            self.info['log_stacked_nz'] = self.log_stk_nz
+        else:
+            self.log_stk_nz = self.info['log_stacked_nz']
+            self.stk_nz = np.exp(self.log_stk_nz)
 
         return self.log_stk_nz
 
@@ -208,13 +215,17 @@ class log_z_dens(object):
         log_map_nz: ndarray
             array of logged redshift density function bin values
         """
-        self.map_nz = np.zeros(self.n_bins)
-        mappreps = [np.argmax(l) for l in self.log_pdfs]
-        for m in mappreps:
-              self.map_nz[m] += 1.
-        self.map_nz /= self.bin_difs[m] * self.n_pdfs
-        self.log_map_nz = u.safe_log(self.map_nz)
-        self.info['log_mmap_nz'] = self.log_map_nz
+        if 'log_mmap_nz' not in self.info:
+            self.map_nz = np.zeros(self.n_bins)
+            mappreps = [np.argmax(l) for l in self.log_pdfs]
+            for m in mappreps:
+                self.map_nz[m] += 1.
+            self.map_nz /= self.bin_difs[m] * self.n_pdfs
+            self.log_map_nz = u.safe_log(self.map_nz)
+            self.info['log_mmap_nz'] = self.log_map_nz
+        else:
+            self.log_map_nz = self.info['log_mmap_nz']
+            self.map_nz = np.exp(self.log_map_nz)
 
         return self.log_map_nz
 
@@ -227,15 +238,19 @@ class log_z_dens(object):
         log_exp_nz: ndarray
             array of logged redshift density function bin values
         """
-        expprep = [sum(z) for z in self.bin_mids * self.pdfs * self.bin_difs]
-        self.exp_nz = np.zeros(self.n_bins)
-        for z in expprep:
-            for k in range(self.n_bins):
-                if z > self.bin_ends[k] and z < self.bin_ends[k+1]:
-                    self.exp_nz[k] += 1.
-        self.exp_nz /= self.bin_difs * self.n_pdfs
-        self.log_exp_nz = u.safe_log(self.exp_nz)
-        self.info['log_mexp_nz'] = self.log_exp_nz
+        if 'log_mexp_nz' not in self.info:
+            expprep = [sum(z) for z in self.bin_mids * self.pdfs * self.bin_difs]
+            self.exp_nz = np.zeros(self.n_bins)
+            for z in expprep:
+                for k in range(self.n_bins):
+                    if z > self.bin_ends[k] and z < self.bin_ends[k+1]:
+                        self.exp_nz[k] += 1.
+            self.exp_nz /= self.bin_difs * self.n_pdfs
+            self.log_exp_nz = u.safe_log(self.exp_nz)
+            self.info['log_mexp_nz'] = self.log_exp_nz
+        else:
+            self.log_exp_nz = self.info['log_mexp_nz']
+            self.exp_nz = np.exp(self.log_exp_nz)
 
         return self.log_exp_nz
 
@@ -276,13 +291,17 @@ class log_z_dens(object):
         log_samples_nz: ndarray
             array of sampled log redshift density function bin values
         """
-        self.n_walkers = len(ivals)
-        self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
-        if n_samps is None:
-            n_samps = self.n_pdfs
-        self.log_samples_nz = self.sample(ivals, n_samps)
-        self.samples_nz = np.exp(self.log_samples_nz)
-        self.info['log_sampled_nz'] = self.log_samples_nz
+        if 'log_sampled_nz' not in self.info:
+            self.n_walkers = len(ivals)
+            self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
+            if n_samps is None:
+                n_samps = self.n_pdfs
+                self.log_samples_nz = self.sample(ivals, n_samps)
+                self.samples_nz = np.exp(self.log_samples_nz)
+                self.info['log_sampled_nz'] = self.log_samples_nz
+        else:
+            self.log_samples_nz = self.info['log_sampled_nz']
+            self.samples_nz = np.exp(self.log_samples_nz)
 
         return self.log_samples_nz
 
