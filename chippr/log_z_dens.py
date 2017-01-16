@@ -277,7 +277,7 @@ class log_z_dens(object):
         chains = self.sampler.chain
         probs = self.sampler.lnprobability
         fracs = self.sampler.acceptance_fraction
-        acors = stats.acors(chains, mode='bins')
+        acors = stats.acors(chains)
         mcmc_outputs = {}
         mcmc_outputs['chains'] = chains
         mcmc_outputs['probs'] = probs

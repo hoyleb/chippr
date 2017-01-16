@@ -48,7 +48,7 @@ def check_catastrophic_outliers(params):
     if 'catastrophic_outliers' not in params:
         params['catastrophic_outliers'] = 0
     else:
-        params['catastrophic_outliers']  = bool(params['catastrophic_outliers'][0])
+        params['catastrophic_outliers']  = params['catastrophic_outliers'][0]
     if params['catastrophic_outliers']:
         params['outlier_fraction'] = float(params['outlier_fraction'][0])
         params['outlier_mean'] = float(params['outlier_mean'][0])

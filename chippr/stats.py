@@ -92,33 +92,90 @@ def gr_test(sample, threshold=d.gr_threshold):
     gr = multi_parameter_gr_stat(sample)
     return np.max(gr) > threshold
 
-def cft(xtimes,lag):
-    """calculate autocorrelation times since emcee sometimes fails"""
-    lent = len(xtimes)-lag
+def cft(xtimes, lag):
+    """
+    Helper function to calculate autocorrelation time for chain of MCMC samples
+
+    Parameters
+    ----------
+    xtimes: numpy.ndarray, float
+        single parameter values for a single walker over all iterations
+    lag: int
+        maximum lag time in number of iterations
+
+    Returns
+    -------
+    ans: numpy.ndarray, float
+        autocorrelation time for one time lag for one parameter of one walker
+    """
+    lent = len(xtimes) - lag
     allt = xrange(lent)
-    ans = np.array([xtimes[t+lag]*xtimes[t] for t in allt])
+    ans = np.array([xtimes[t+lag] * xtimes[t] for t in allt])
     return ans
 
 def cf(xtimes):#xtimes has ntimes elements
-    cf0 = np.dot(xtimes,xtimes)
-    allt = xrange(len(xtimes)/2)
-    cf = np.array([sum(cft(xtimes,lag)[len(xtimes)/2:]) for lag in allt])/cf0
+    """
+    Helper function to calculate autocorrelation time for chain of MCMC samples
+
+    Parameters
+    ----------
+    xtimes: numpy.ndarray, float
+        single parameter values for a single walker over all iterations
+
+    Returns
+    -------
+    cf: numpy.ndarray, float
+        autocorrelation time over all time lags for one parameter of one walker
+    """
+    cf0 = np.dot(xtimes, xtimes)
+    allt = xrange(len(xtimes) / 2)
+    cf = np.array([sum(cft(xtimes,lag)[len(xtimes) / 2:]) for lag in allt]) / cf0
     return cf
 
-def cfs(x,mode):#xbinstimes has nbins by ntimes elements
+def cfs(x, mode):#xbinstimes has nbins by ntimes elements
+    """
+    Helper function for calculating autocorrelation time for MCMC chains
+
+    Parameters
+    ----------
+    x: numpy.ndarray, float
+        input parameter values of length number of iterations by number of walkers if mode='walkers' or dimension of parameters if mode='bins'
+    mode: string
+        'bins' for one autocorrelation time per parameter, 'walkers' for one autocorrelation time per walker
+
+    Returns
+    -------
+    cfs: numpy.ndarray, float
+        autocorrelation times for all walkers if mode='walkers' or all parameters if mode='bins'
+    """
     if mode == 'walkers':
         xbinstimes = x
-        cfs = np.array([sum(cf(xtimes)) for xtimes in xbinstimes])/len(xbinstimes)
+        cfs = np.array([sum(cf(xtimes)) for xtimes in xbinstimes]) / len(xbinstimes)
     if mode == 'bins':
         xwalkerstimes = x
-        cfs = np.array([sum(cf(xtimes)) for xtimes in xwalkerstimes])/len(xwalkerstimes)
+        cfs = np.array([sum(cf(xtimes)) for xtimes in xwalkerstimes]) / len(xwalkerstimes)
     return cfs
 
-def acors(xtimeswalkersbins,mode):
+def acors(xtimeswalkersbins, mode='bins'):
+    """
+    Calculates autocorrelation time for MCMC chains
+
+    Parameters
+    ----------
+    xtimeswalkersbins: numpy.ndarray, float
+        emcee chain values of dimensions (n_iterations, n_walkers, n_parameters)
+    mode: string, optional
+        'bins' for one autocorrelation time per parameter, 'walkers' for one autocorrelation time per walker
+
+    Returns
+    -------
+    taus: numpy.ndarray, float
+        autocorrelation times by bin or by walker depending on mode
+    """
     if mode == 'walkers':
-        xwalkersbinstimes = np.swapaxes(xtimeswalkersbins,1,2)#nwalkers by nbins by nsteps
-        taus = np.array([1. + 2.*sum(cfs(xbinstimes,mode)) for xbinstimes in xwalkersbinstimes])#/len(xwalkersbinstimes)# 1+2*sum(...)
+        xwalkersbinstimes = np.swapaxes(xtimeswalkersbins, 1, 2)#nwalkers by nbins by nsteps
+        taus = np.array([1. + 2. * sum(cfs(xbinstimes, mode)) for xbinstimes in xwalkersbinstimes])#/len(xwalkersbinstimes)# 1+2*sum(...)
     if mode == 'bins':
         xbinswalkerstimes = xtimeswalkersbins.T#nbins by nwalkers by nsteps
-        taus = np.array([1. + 2.*sum(cfs(xwalkerstimes,mode)) for xwalkerstimes in xbinswalkerstimes])#/len(xwalkersbinstimes)# 1+2*sum(...)
+        taus = np.array([1. + 2. * sum(cfs(xwalkerstimes, mode)) for xwalkerstimes in xbinswalkerstimes])#/len(xwalkersbinstimes)# 1+2*sum(...)
     return taus
