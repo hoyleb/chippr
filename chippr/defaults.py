@@ -1,19 +1,18 @@
-# Module containing hardcoded default values in central location for easy modification later
-
 import sys
 
-global seed
 seed = 42
 
-global eps
 eps = sys.float_info.epsilon
 
-global min_x, max_x
 min_x = 0.
 max_x = 1.
 
-global n_bins
 n_bins = 10
+
+gr_threshold = 1.1
+
+n_accepted = 10**4
+n_burned = 10**3
 
 def check_sim_params(params={}):
     """

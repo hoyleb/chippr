@@ -9,6 +9,7 @@ mpl.use('PS')
 import matplotlib.pyplot as plt
 
 import chippr
+from chippr import defaults as d
 from chippr import plot_utils as pu
 from chippr import utils as u
 from chippr import stats as stats
@@ -267,25 +268,38 @@ class log_z_dens(object):
 
         Returns
         -------
-        samples: ndarray
+        mcmc_outputs: ndarray
             array of sampled redshift density function bin values
         """
+        self.sampler.reset()
         pos, prob, state = self.sampler.run_mcmc(ivals, n_samps)
         chains = self.sampler.chain
-        return chains
+        probs = self.sampler.lnprobability
+        fracs = self.sampler.acceptance_fraction
+        acors = self.sampler.acor
+        mcmc_outputs = {}
+        mcmc_outputs['chains'] = chains
+        mcmc_outputs['probs'] = probs
+        mcmc_outputs['fracs'] = fracs
+        mcmc_outputs['acors'] = acors
+        return mcmc_outputs
 
-    def calculate_samples(self, ivals, n_samps=None, vb=True):
+    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burn_test=d.n_burned, vb=True, save=True):
         """
         Calculates samples estimating the redshift density function
 
         Parameters
         ----------
-        n_samps: int, optional
-            number of samples to accept before stopping
+        n_accepted: int, optional
+            number of samples to accept per walker
+        n_intermediate: int, optional
+            duration of interval between burn-in tests
         ivals: numpy.ndarray, float
             initial values of log n(z) for each walker
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
+        save: boolean, optional
+            True to save burn-in state, False to only save final state
 
         Returns
         -------
@@ -295,11 +309,24 @@ class log_z_dens(object):
         if 'log_sampled_nz' not in self.info:
             self.n_walkers = len(ivals)
             self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
-            if n_samps is None:
-                n_samps = self.n_pdfs
-                self.log_samples_nz = self.sample(ivals, n_samps)
-                self.samples_nz = np.exp(self.log_samples_nz)
-                self.info['log_sampled_nz'] = self.log_samples_nz
+            self.burn_ins = 0
+            self.tot_runs = 0
+            self.burning_in = True
+            vals = ivals
+            while self.burning_in:
+                self.burn_ins += 1
+                burn_in_mcmc_outputs = self.sample(vals, n_burn_test)
+                self.burning_in = stats.gr_test(burn_in_mcmc_outputs['chains'])
+                if save:
+                    with open('mcmc'+str(self.burn_ins)+'.p', 'wb') as file_location:
+                        cpkl.dump(burn_in_mcmc_outputs, file_location)
+                vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
+
+            mcmc_products = self.sample(vals, n_accepted)
+            self.log_samples_nz = mcmc_products['chains']
+            self.samples_nz = np.exp(self.log_samples_nz)
+            self.info['log_sampled_nz'] = self.log_samples_nz
+            self.info['log_sampled_nz_meta_data'] = mcmc_products
         else:
             self.log_samples_nz = self.info['log_sampled_nz']
             self.samples_nz = np.exp(self.log_samples_nz)
