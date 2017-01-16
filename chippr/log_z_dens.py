@@ -173,7 +173,7 @@ class log_z_dens(object):
         else:
             self.log_mle_nz = self.info['log_mmle_nz']
             self.mle_nz = np.exp(self.log_mle_nz)
-            
+
         return self.log_mle_nz
 
     def calculate_stacked(self, vb=True):
@@ -282,7 +282,8 @@ class log_z_dens(object):
         ----------
         n_samps: int, optional
             number of samples to accept before stopping
-        ivals:
+        ivals: numpy.ndarray, float
+            initial values of log n(z) for each walker
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
 
@@ -305,7 +306,7 @@ class log_z_dens(object):
 
         return self.log_samples_nz
 
-    def plot(self, plot_loc=''):
+    def plot(self, plot_loc):
         """
         Plots all available estimators of the redshift density function.
 
@@ -377,18 +378,18 @@ class log_z_dens(object):
         sps.set_xlabel('x')
         sps_log.set_ylabel('Log probability density')
         sps.set_ylabel('Probability density')
-        self.f.savefig(plot_loc+'plot.png')
+        self.f.savefig(plot_loc)
 
-    def read(self, loc, style='pickle', vb=True):
+    def read(self, read_loc, style='pickle', vb=True):
         """
         Function to load inferred quantities from files.
 
         Parameters
         ----------
-        loc: string
+        read_loc: string
             filepath where inferred redshift density function is stored
         style: string, optional
-            keyword for file format
+            keyword for file format, currently only 'pickle' supported
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
 
@@ -397,31 +398,31 @@ class log_z_dens(object):
         self.info: dict
             returns the log_z_dens information dictionary object
         """
-        with open(loc, 'rb') as file_location:
+        with open(read_loc, 'rb') as file_location:
             self.info = cpkl.load(file_location)
         if vb:
-            print('The following quantities were read from '+loc+' in the '+style+' format:')
+            print('The following quantities were read from '+read_loc+' in the '+style+' format:')
             for key in self.info:
                 print(key)
         return self.info
 
-    def write(self, loc, style='pickle', vb=True):
+    def write(self, write_loc, style='pickle', vb=True):
         """
         Function to write results of inference to files.
 
         Parameters
         ----------
-        loc: string
+        write_loc: string
             filepath where results of inference should be saved.
         style: string, optional
-            keyword for file format
+            keyword for file format, currently only 'pickle' supported
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
-        with open(loc, 'wb') as file_location:
+        with open(write_loc, 'wb') as file_location:
             cpkl.dump(self.info, file_location)
         if vb:
-            print('The following quantities were written to '+loc+' in the '+style+' format:')
+            print('The following quantities were written to '+write_loc+' in the '+style+' format:')
             for key in self.info:
                 print(key)
         return
