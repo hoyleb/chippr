@@ -10,7 +10,9 @@ This repository is the home of `chippr`, a Python package for estimating quantit
 
 You can browse the (un-executed) notebooks here in this repo:
 
-* **[Basic  Demo for Python 2 (raw notebook)](https://github.com/aimalz/chippr/blob/master/docs/notebooks/demo2.ipynb)
+* [Basic  Demo for Python 2 (raw notebook)](https://github.com/aimalz/chippr/blob/master/docs/notebooks/demo2.ipynb)
+
+Documentation can be found on [ReadTheDocs](http://chippr.readthedocs.io/en/latest/).
 
 ## People
 
