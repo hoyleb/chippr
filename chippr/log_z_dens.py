@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import scipy.optimize as op
+import cPickle as cpkl
 import emcee
 
 import matplotlib as mpl
@@ -29,19 +30,23 @@ class log_z_dens(object):
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
+        self.info = {}
 
         self.bin_ends = np.array(catalog['bin_ends'])
         self.bin_range = self.bin_ends[:-1]-self.bin_ends[0]
         self.bin_mids = (self.bin_ends[1:]+self.bin_ends[:-1])/2.
         self.bin_difs = self.bin_ends[1:]-self.bin_ends[:-1]
         self.n_bins = len(self.bin_mids)
+        self.info['bin_ends'] = self.bin_ends
 
         self.log_int_pr = np.array(catalog['log_interim_prior'])
         self.int_pr = np.exp(self.log_int_pr)
+        self.info['log_interim_prior'] = self.log_int_pr
 
         self.log_pdfs = np.array(catalog['log_interim_posteriors'])
         self.pdfs = np.exp(self.log_pdfs)
         self.n_pdfs = len(self.log_pdfs)
+        self.info['log_interim_posteriors'] = self.log_pdfs
 
         if vb:
             print(str(len(self.bin_ends)-1)+' bins, '+str(len(self.log_pdfs))+' interim posterior PDFs')
@@ -159,11 +164,15 @@ class log_z_dens(object):
         log_mle_nz: numpy.ndarray
             array of logged redshift density function bin values maximizing hyperposterior
         """
-
-        log_mle = self.optimize(start)
-        mle_nz = np.exp(log_mle)
-        self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
-        self.log_mle_nz = u.safe_log(self.mle_nz)
+        if 'log_mmle_nz' not in self.info:
+            log_mle = self.optimize(start)
+            mle_nz = np.exp(log_mle)
+            self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
+            self.log_mle_nz = u.safe_log(self.mle_nz)
+            self.info['log_mmle_nz'] = self.log_mle_nz
+        else:
+            self.log_mle_nz = self.info['log_mmle_nz']
+            self.mle_nz = np.exp(self.log_mle_nz)
 
         return self.log_mle_nz
 
@@ -181,9 +190,14 @@ class log_z_dens(object):
         log_stk_nz: ndarray
             array of logged redshift density function bin values
         """
-        self.stk_nz = np.sum(self.pdfs, axis=0)
-        self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
-        self.log_stk_nz = u.safe_log(self.stk_nz)
+        if 'log_stacked_nz' not in self.info:
+            self.stk_nz = np.sum(self.pdfs, axis=0)
+            self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
+            self.log_stk_nz = u.safe_log(self.stk_nz)
+            self.info['log_stacked_nz'] = self.log_stk_nz
+        else:
+            self.log_stk_nz = self.info['log_stacked_nz']
+            self.stk_nz = np.exp(self.log_stk_nz)
 
         return self.log_stk_nz
 
@@ -201,12 +215,18 @@ class log_z_dens(object):
         log_map_nz: ndarray
             array of logged redshift density function bin values
         """
-        self.map_nz = np.zeros(self.n_bins)
-        mappreps = [np.argmax(l) for l in self.log_pdfs]
-        for m in mappreps:
-              self.map_nz[m] += 1.
-        self.map_nz /= self.bin_difs[m] * self.n_pdfs
-        self.log_map_nz = u.safe_log(self.map_nz)
+        if 'log_mmap_nz' not in self.info:
+            self.map_nz = np.zeros(self.n_bins)
+            mappreps = [np.argmax(l) for l in self.log_pdfs]
+            for m in mappreps:
+                self.map_nz[m] += 1.
+            self.map_nz /= self.bin_difs[m] * self.n_pdfs
+            self.log_map_nz = u.safe_log(self.map_nz)
+            self.info['log_mmap_nz'] = self.log_map_nz
+        else:
+            self.log_map_nz = self.info['log_mmap_nz']
+            self.map_nz = np.exp(self.log_map_nz)
+
         return self.log_map_nz
 
     def calculate_mexp(self, vb=True):
@@ -218,14 +238,20 @@ class log_z_dens(object):
         log_exp_nz: ndarray
             array of logged redshift density function bin values
         """
-        expprep = [sum(z) for z in self.bin_mids * self.pdfs * self.bin_difs]
-        self.exp_nz = np.zeros(self.n_bins)
-        for z in expprep:
-            for k in range(self.n_bins):
-                if z > self.bin_ends[k] and z < self.bin_ends[k+1]:
-                    self.exp_nz[k] += 1.
-        self.exp_nz /= self.bin_difs * self.n_pdfs
-        self.log_exp_nz = u.safe_log(self.exp_nz)
+        if 'log_mexp_nz' not in self.info:
+            expprep = [sum(z) for z in self.bin_mids * self.pdfs * self.bin_difs]
+            self.exp_nz = np.zeros(self.n_bins)
+            for z in expprep:
+                for k in range(self.n_bins):
+                    if z > self.bin_ends[k] and z < self.bin_ends[k+1]:
+                        self.exp_nz[k] += 1.
+            self.exp_nz /= self.bin_difs * self.n_pdfs
+            self.log_exp_nz = u.safe_log(self.exp_nz)
+            self.info['log_mexp_nz'] = self.log_exp_nz
+        else:
+            self.log_exp_nz = self.info['log_mexp_nz']
+            self.exp_nz = np.exp(self.log_exp_nz)
+
         return self.log_exp_nz
 
     def sample(self, ivals, n_samps, vb=True):
@@ -256,7 +282,8 @@ class log_z_dens(object):
         ----------
         n_samps: int, optional
             number of samples to accept before stopping
-        ivals:
+        ivals: numpy.ndarray, float
+            initial values of log n(z) for each walker
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
 
@@ -265,15 +292,21 @@ class log_z_dens(object):
         log_samples_nz: ndarray
             array of sampled log redshift density function bin values
         """
-        self.n_walkers = len(ivals)
-        self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
-        if n_samps is None:
-            n_samps = self.n_pdfs
-        self.log_samples_nz = self.sample(ivals, n_samps)
-        self.samples_nz = np.exp(self.log_samples_nz)
+        if 'log_sampled_nz' not in self.info:
+            self.n_walkers = len(ivals)
+            self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
+            if n_samps is None:
+                n_samps = self.n_pdfs
+                self.log_samples_nz = self.sample(ivals, n_samps)
+                self.samples_nz = np.exp(self.log_samples_nz)
+                self.info['log_sampled_nz'] = self.log_samples_nz
+        else:
+            self.log_samples_nz = self.info['log_sampled_nz']
+            self.samples_nz = np.exp(self.log_samples_nz)
+
         return self.log_samples_nz
 
-    def plot(self, plot_loc=''):
+    def plot(self, plot_loc):
         """
         Plots all available estimators of the redshift density function.
 
@@ -345,4 +378,51 @@ class log_z_dens(object):
         sps.set_xlabel('x')
         sps_log.set_ylabel('Log probability density')
         sps.set_ylabel('Probability density')
-        self.f.savefig(plot_loc+'plot.png')
+        self.f.savefig(plot_loc)
+
+    def read(self, read_loc, style='pickle', vb=True):
+        """
+        Function to load inferred quantities from files.
+
+        Parameters
+        ----------
+        read_loc: string
+            filepath where inferred redshift density function is stored
+        style: string, optional
+            keyword for file format, currently only 'pickle' supported
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
+
+        Returns
+        -------
+        self.info: dict
+            returns the log_z_dens information dictionary object
+        """
+        with open(read_loc, 'rb') as file_location:
+            self.info = cpkl.load(file_location)
+        if vb:
+            print('The following quantities were read from '+read_loc+' in the '+style+' format:')
+            for key in self.info:
+                print(key)
+        return self.info
+
+    def write(self, write_loc, style='pickle', vb=True):
+        """
+        Function to write results of inference to files.
+
+        Parameters
+        ----------
+        write_loc: string
+            filepath where results of inference should be saved.
+        style: string, optional
+            keyword for file format, currently only 'pickle' supported
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
+        """
+        with open(write_loc, 'wb') as file_location:
+            cpkl.dump(self.info, file_location)
+        if vb:
+            print('The following quantities were written to '+write_loc+' in the '+style+' format:')
+            for key in self.info:
+                print(key)
+        return
