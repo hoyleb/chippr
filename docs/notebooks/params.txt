@@ -1,6 +1,6 @@
 variable_sigmas 0
 constant_sigma 0.05
-catastrophic_outliers 1
+catastrophic_outliers 0
 outlier_fraction 0.2
 outlier_mean 0.4
 outlier_sigma 0.075

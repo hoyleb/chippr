@@ -1,19 +1,18 @@
-# Module containing hardcoded default values in central location for easy modification later
-
 import sys
 
-global seed
 seed = 42
 
-global eps
 eps = sys.float_info.epsilon
 
-global min_x, max_x
 min_x = 0.
 max_x = 1.
 
-global n_bins
 n_bins = 10
+
+gr_threshold = 1.1
+
+n_accepted = 10**3
+n_burned = 10**2
 
 def check_sim_params(params={}):
     """
@@ -49,7 +48,7 @@ def check_catastrophic_outliers(params):
     if 'catastrophic_outliers' not in params:
         params['catastrophic_outliers'] = 0
     else:
-        params['catastrophic_outliers']  = bool(params['catastrophic_outliers'][0])
+        params['catastrophic_outliers']  = params['catastrophic_outliers'][0]
     if params['catastrophic_outliers']:
         params['outlier_fraction'] = float(params['outlier_fraction'][0])
         params['outlier_mean'] = float(params['outlier_mean'][0])
