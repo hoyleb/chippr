@@ -1,6 +1,7 @@
 import numpy as np
 
 import chippr
+from chippr import defaults as d
 from chippr import utils as u
 
 def mean(population):
@@ -72,7 +73,7 @@ def multi_parameter_gr_stat(sample):
         Rs[i] = single_parameter_gr_stat(chains)
     return Rs
 
-def gr_test(sample, threshold=u.gr_threshold):
+def gr_test(sample, threshold=d.gr_threshold):
     """
     Performs the Gelman-Rubin test of convergence of an MCMC chain
 
@@ -88,5 +89,36 @@ def gr_test(sample, threshold=u.gr_threshold):
     test_result: boolean
         True if burning in, False if post-burn in
     """
-    gr = multi_parameter_gr_test(sample)
+    gr = multi_parameter_gr_stat(sample)
     return np.max(gr) > threshold
+
+def cft(xtimes,lag):
+    """calculate autocorrelation times since emcee sometimes fails"""
+    lent = len(xtimes)-lag
+    allt = xrange(lent)
+    ans = np.array([xtimes[t+lag]*xtimes[t] for t in allt])
+    return ans
+
+def cf(xtimes):#xtimes has ntimes elements
+    cf0 = np.dot(xtimes,xtimes)
+    allt = xrange(len(xtimes)/2)
+    cf = np.array([sum(cft(xtimes,lag)[len(xtimes)/2:]) for lag in allt])/cf0
+    return cf
+
+def cfs(x,mode):#xbinstimes has nbins by ntimes elements
+    if mode == 'walkers':
+        xbinstimes = x
+        cfs = np.array([sum(cf(xtimes)) for xtimes in xbinstimes])/len(xbinstimes)
+    if mode == 'bins':
+        xwalkerstimes = x
+        cfs = np.array([sum(cf(xtimes)) for xtimes in xwalkerstimes])/len(xwalkerstimes)
+    return cfs
+
+def acors(xtimeswalkersbins,mode):
+    if mode == 'walkers':
+        xwalkersbinstimes = np.swapaxes(xtimeswalkersbins,1,2)#nwalkers by nbins by nsteps
+        taus = np.array([1. + 2.*sum(cfs(xbinstimes,mode)) for xbinstimes in xwalkersbinstimes])#/len(xwalkersbinstimes)# 1+2*sum(...)
+    if mode == 'bins':
+        xbinswalkerstimes = xtimeswalkersbins.T#nbins by nwalkers by nsteps
+        taus = np.array([1. + 2.*sum(cfs(xwalkerstimes,mode)) for xwalkerstimes in xbinswalkerstimes])#/len(xwalkersbinstimes)# 1+2*sum(...)
+    return taus

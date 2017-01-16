@@ -60,6 +60,7 @@ class log_z_dens(object):
         self.map_nz = None
         self.exp_nz = None
         self.mle_nz = None
+        self.smp_nz = None
 
         return
 
@@ -276,7 +277,7 @@ class log_z_dens(object):
         chains = self.sampler.chain
         probs = self.sampler.lnprobability
         fracs = self.sampler.acceptance_fraction
-        acors = self.sampler.acor
+        acors = stats.acors(chains, mode='bins')
         mcmc_outputs = {}
         mcmc_outputs['chains'] = chains
         mcmc_outputs['probs'] = probs
@@ -315,6 +316,8 @@ class log_z_dens(object):
             vals = ivals
             while self.burning_in:
                 self.burn_ins += 1
+                if vb:
+                    print('beginning sampling '+str(self.burn_ins))
                 burn_in_mcmc_outputs = self.sample(vals, n_burn_test)
                 self.burning_in = stats.gr_test(burn_in_mcmc_outputs['chains'])
                 if save:
@@ -323,15 +326,15 @@ class log_z_dens(object):
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
 
             mcmc_products = self.sample(vals, n_accepted)
-            self.log_samples_nz = mcmc_products['chains']
-            self.samples_nz = np.exp(self.log_samples_nz)
-            self.info['log_sampled_nz'] = self.log_samples_nz
+            self.log_smp_nz = mcmc_products['chains']
+            self.smp_nz = np.exp(self.log_smp_nz)
+            self.info['log_sampled_nz'] = self.log_smp_nz
             self.info['log_sampled_nz_meta_data'] = mcmc_products
         else:
-            self.log_samples_nz = self.info['log_sampled_nz']
-            self.samples_nz = np.exp(self.log_samples_nz)
+            self.log_smp_nz = self.info['log_sampled_nz']
+            self.smp_nz = np.exp(self.log_smp_nz)
 
-        return self.log_samples_nz
+        return self.log_smp_nz
 
     def plot(self, plot_loc):
         """
@@ -395,8 +398,8 @@ class log_z_dens(object):
             pu.plot_step(sps, self.bin_ends, self.mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.nz)
             pu.plot_step(sps_log, self.bin_ends, self.log_mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.lnz)
 
-        if self.samples_nz is not None:
-            self.log_bfe_nz = stats.mean(self.log_samples_nz)
+        if self.smp_nz is not None:
+            self.log_bfe_nz = stats.mean(self.log_smp_nz)
             self.bfe_nz = np.exp(self.log_bfe_nz)
             pu.plot_step(sps, self.bin_ends, self.bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.nz)
             pu.plot_step(sps_log, self.bin_ends, self.log_bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.lnz)
