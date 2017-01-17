@@ -336,15 +336,25 @@ class log_z_dens(object):
             self.smp_nz = np.exp(self.log_smp_nz)
             self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
             self.info['estimators']['log_sampled_nz_meta_data'] = mcmc_products
+            self.log_bfe_nz = s.mean(self.log_smp_nz)
+            self.bfe_nz = np.exp(self.log_bfe_nz)
+            self.info['estimators']['log_mean_sampled_nz'] = self.log_bfe_nz
         else:
             self.log_smp_nz = self.info['estimators']['log_sampled_nz']
             self.smp_nz = np.exp(self.log_smp_nz)
+            self.log_bfe_nz = self.info['estimators']['log_mean_sampled_nz']
+            self.bfe_nz = np.exp(self.log_smp_nz)
 
         return self.log_smp_nz
 
-    def compare(self):
+    def compare(self, vb=True):
         """
         Calculates all available goodness of fit measures
+
+        Parameters
+        ----------
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
 
         Returns
         -------
@@ -356,10 +366,14 @@ class log_z_dens(object):
             for key in self.info['estimators']:
                 self.info['stats']['kld'][key] = s.calculate_kld(self.tru_nz, self.info['estimators'][key])
 
-        self.info['stats']['rms'] = {}
+        self.info['stats']['rms'], self.info['stats']['log_rms'] = {}, {}
         for key_1 in self.info['estimators']:
             for key_2 in self.info['estimators']:
-                self.info['stats'][key_1 + '__' + key_2] = s.calculate_rms(self.info['estimators'][key_1], self.info['estimators'][key_2])
+                self.info['stats']['log_rms'][key_1 + '__' + key_2] = s.calculate_rms(self.info['estimators'][key_1], self.info['estimators'][key_2])
+                self.info['stats']['rms'][key_1[4:] + '__' + key_2[4:]] = s.calculate_rms(np.exp(self.info['estimators'][key_1]), np.exp(self.info['estimators'][key_2]))
+
+        if vb:
+            print(self.info['stats'])
         return self.info['stats']
 
     def plot(self, plot_loc):
@@ -408,27 +422,25 @@ class log_z_dens(object):
             pu.plot_step(sps, self.fine_z, fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.nz)
             pu.plot_step(sps_log, self.fine_z, log_fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.lnz)
 
-        if self.stk_nz is not None:
-            pu.plot_step(sps, self.bin_ends, self.stk_nz, w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.log_stk_nz, w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.lnz)
+        if 'log_stacked_nz' in self.info['estimators']:
+            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_stacked_nz']), w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_stacked_nz'], w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.lnz)
 
-        if self.map_nz is not None:
-            pu.plot_step(sps, self.bin_ends, self.map_nz, w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.log_map_nz, w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.lnz)
+        if 'log_mmap_nz' in self.info['estimators']:
+            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_mmap_nz']), w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_mmap_nz'], w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.lnz)
 
-        if self.exp_nz is not None:
-            pu.plot_step(sps, self.bin_ends, self.exp_nz, w=pu.w_exp, s=pu.s_exp, a=pu.a_exp, c=pu.c_exp, d=pu.d_exp, l=pu.l_exp+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.log_exp_nz, w=pu.w_exp, s=pu.s_exp, a=pu.a_exp, c=pu.c_exp, d=pu.d_exp, l=pu.l_exp+pu.lnz)
+        if 'log_mexp_nz' in self.info['estimators']:
+            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_mexp_nz']), w=pu.w_exp, s=pu.s_exp, a=pu.a_exp, c=pu.c_exp, d=pu.d_exp, l=pu.l_exp+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_mexp_nz'], w=pu.w_exp, s=pu.s_exp, a=pu.a_exp, c=pu.c_exp, d=pu.d_exp, l=pu.l_exp+pu.lnz)
 
-        if self.mle_nz is not None:
-            pu.plot_step(sps, self.bin_ends, self.mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.log_mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.lnz)
+        if 'log_mmle_nz' in self.info['estimators']:
+            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_mmle_nz']), w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_mmle_nz'], w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.lnz)
 
-        if self.smp_nz is not None:
-            self.log_bfe_nz = s.mean(self.log_smp_nz)
-            self.bfe_nz = np.exp(self.log_bfe_nz)
-            pu.plot_step(sps, self.bin_ends, self.bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.log_bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.lnz)
+        if 'log_mean_sampled_nz' in self.info['estimators']:
+            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_mean_sampled_nz']), w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.nz)
+            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_mean_sampled_nz'], w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.lnz)
 
         sps_log.legend(fontsize='x-small')
         sps.set_xlabel('x')
