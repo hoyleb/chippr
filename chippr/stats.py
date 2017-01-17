@@ -23,6 +23,55 @@ def mean(population):
     mean = np.mean(flat, axis=0)
     return mean
 
+def calculate_kl_divergence(pe, qe, vb=True):
+    """
+    Calculates the Kullback-Leibler Divergence between two PDFs.
+    Parameters
+    ----------
+    pe: numpy.ndarray, float
+        probability distribution evaluated on a grid whose distance _from_ `q` will be calculated.
+    qe: numpy.ndarray, float
+        probability distribution evaluated on a grid whose distance _to_ `p` will be calculated.
+    vb: boolean
+        report on progress to stdout?
+    Returns
+    -------
+    Dpq: float
+        the value of the Kullback-Leibler Divergence from `q` to `p`
+    """
+    # Normalize the evaluations, so that the integrals can be done
+    # (very approximately!) by simple summation:
+    pn = pe / np.sum(pe)
+    qn = qe / np.sum(qe)
+    # Compute the log of the normalized PDFs
+    logp = safelog(pn)
+    logq = safelog(qn)
+    # Calculate the KLD from q to p
+    Dpq = np.sum(pn * (logp - logq))
+    return Dpq
+
+def calculate_rms(pe, qe, vb=True):
+    """
+    Calculates the Root Mean Square Error between two PDFs.
+    Parameters
+    ----------
+    pe: numpy.ndarray, float
+        probability distribution evaluated on a grid whose distance _from_ `q` will be calculated.
+    qe: numpy.ndarray, float
+        probability distribution evaluated on a grid whose distance _to_ `p` will be calculated.
+    vb: boolean
+        report on progress to stdout?
+    Returns
+    -------
+    rms: float
+        the value of the RMS error between `q` and `p`
+    """
+    npoints = len(pe)
+    assert len(pe) == len(qe)
+    # Calculate the RMS between p and q
+    rms = np.sqrt(np.sum((pe - qe) ** 2) / npoints)
+    return rms
+
 def single_parameter_gr_stat(chain):
     """
     Calculates the Gelman-Rubin test statistic of convergence of an MCMC chain over one parameter
