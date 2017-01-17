@@ -12,7 +12,7 @@ import chippr
 from chippr import defaults as d
 from chippr import plot_utils as pu
 from chippr import utils as u
-from chippr import stats as stats
+from chippr import stats as s
 
 class log_z_dens(object):
 
@@ -50,17 +50,23 @@ class log_z_dens(object):
         self.info['log_interim_posteriors'] = self.log_pdfs
 
         if vb:
-            print(str(len(self.bin_ends)-1)+' bins, '+str(len(self.log_pdfs))+' interim posterior PDFs')
+            print(str(self.n_bins)+' bins, '+str(len(self.log_pdfs))+' interim posterior PDFs')
 
         self.hyper_prior = hyperprior
 
         self.truth = truth
+        if self.truth is not None:
+            self.tru_nz = np.zeros(self.n_bins)
+            for b in self.bin_range:
+                fine_z = np.linspace(self.bin_ends[b], self.bin_ends[b+1], self.n_bins)
+                fine_dz = (self.bin_ends[b+1] - self.bin_ends[b]) / self.n_bins
+                coarse_nz = np.sum(self.truth.evaluate(fine_z)) * fine_dz
+                self.tru_nz[b] += coarse_nz
+            self.log_tru_nz = u.safe_log(self.tru_nz)
+            self.info['log_tru_nz'] = self.log_tru_nz
 
-        self.stk_nz = None
-        self.map_nz = None
-        self.exp_nz = None
-        self.mle_nz = None
-        self.smp_nz = None
+        self.info['estimators'] = {}
+        self.info['stats'] = {}
 
         return
 
@@ -166,14 +172,14 @@ class log_z_dens(object):
         log_mle_nz: numpy.ndarray
             array of logged redshift density function bin values maximizing hyperposterior
         """
-        if 'log_mmle_nz' not in self.info:
+        if 'log_mmle_nz' not in self.info['estimators']:
             log_mle = self.optimize(start)
             mle_nz = np.exp(log_mle)
             self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
             self.log_mle_nz = u.safe_log(self.mle_nz)
-            self.info['log_mmle_nz'] = self.log_mle_nz
+            self.info['estimators']['log_mmle_nz'] = self.log_mle_nz
         else:
-            self.log_mle_nz = self.info['log_mmle_nz']
+            self.log_mle_nz = self.info['estimators']['log_mmle_nz']
             self.mle_nz = np.exp(self.log_mle_nz)
 
         return self.log_mle_nz
@@ -192,13 +198,13 @@ class log_z_dens(object):
         log_stk_nz: ndarray
             array of logged redshift density function bin values
         """
-        if 'log_stacked_nz' not in self.info:
+        if 'log_stacked_nz' not in self.info['estimators']:
             self.stk_nz = np.sum(self.pdfs, axis=0)
             self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
             self.log_stk_nz = u.safe_log(self.stk_nz)
-            self.info['log_stacked_nz'] = self.log_stk_nz
+            self.info['estimators']['log_stacked_nz'] = self.log_stk_nz
         else:
-            self.log_stk_nz = self.info['log_stacked_nz']
+            self.log_stk_nz = self.info['estimators']['log_stacked_nz']
             self.stk_nz = np.exp(self.log_stk_nz)
 
         return self.log_stk_nz
@@ -217,16 +223,16 @@ class log_z_dens(object):
         log_map_nz: ndarray
             array of logged redshift density function bin values
         """
-        if 'log_mmap_nz' not in self.info:
+        if 'log_mmap_nz' not in self.info['estimators']:
             self.map_nz = np.zeros(self.n_bins)
             mappreps = [np.argmax(l) for l in self.log_pdfs]
             for m in mappreps:
                 self.map_nz[m] += 1.
             self.map_nz /= self.bin_difs[m] * self.n_pdfs
             self.log_map_nz = u.safe_log(self.map_nz)
-            self.info['log_mmap_nz'] = self.log_map_nz
+            self.info['estimators']['log_mmap_nz'] = self.log_map_nz
         else:
-            self.log_map_nz = self.info['log_mmap_nz']
+            self.log_map_nz = self.info['estimators']['log_mmap_nz']
             self.map_nz = np.exp(self.log_map_nz)
 
         return self.log_map_nz
@@ -240,7 +246,7 @@ class log_z_dens(object):
         log_exp_nz: ndarray
             array of logged redshift density function bin values
         """
-        if 'log_mexp_nz' not in self.info:
+        if 'log_mexp_nz' not in self.info['estimators']:
             expprep = [sum(z) for z in self.bin_mids * self.pdfs * self.bin_difs]
             self.exp_nz = np.zeros(self.n_bins)
             for z in expprep:
@@ -249,9 +255,9 @@ class log_z_dens(object):
                         self.exp_nz[k] += 1.
             self.exp_nz /= self.bin_difs * self.n_pdfs
             self.log_exp_nz = u.safe_log(self.exp_nz)
-            self.info['log_mexp_nz'] = self.log_exp_nz
+            self.info['estimators']['log_mexp_nz'] = self.log_exp_nz
         else:
-            self.log_exp_nz = self.info['log_mexp_nz']
+            self.log_exp_nz = self.info['estimators']['log_mexp_nz']
             self.exp_nz = np.exp(self.log_exp_nz)
 
         return self.log_exp_nz
@@ -277,7 +283,7 @@ class log_z_dens(object):
         chains = self.sampler.chain
         probs = self.sampler.lnprobability
         fracs = self.sampler.acceptance_fraction
-        acors = stats.acors(chains)
+        acors = s.acors(chains)
         mcmc_outputs = {}
         mcmc_outputs['chains'] = chains
         mcmc_outputs['probs'] = probs
@@ -307,7 +313,7 @@ class log_z_dens(object):
         log_samples_nz: ndarray
             array of sampled log redshift density function bin values
         """
-        if 'log_sampled_nz' not in self.info:
+        if 'log_sampled_nz' not in self.info['estimators']:
             self.n_walkers = len(ivals)
             self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
             self.burn_ins = 0
@@ -319,7 +325,7 @@ class log_z_dens(object):
                 if vb:
                     print('beginning sampling '+str(self.burn_ins))
                 burn_in_mcmc_outputs = self.sample(vals, n_burn_test)
-                self.burning_in = stats.gr_test(burn_in_mcmc_outputs['chains'])
+                self.burning_in = s.gr_test(burn_in_mcmc_outputs['chains'])
                 if save:
                     with open('mcmc'+str(self.burn_ins)+'.p', 'wb') as file_location:
                         cpkl.dump(burn_in_mcmc_outputs, file_location)
@@ -328,13 +334,33 @@ class log_z_dens(object):
             mcmc_products = self.sample(vals, n_accepted)
             self.log_smp_nz = mcmc_products['chains']
             self.smp_nz = np.exp(self.log_smp_nz)
-            self.info['log_sampled_nz'] = self.log_smp_nz
-            self.info['log_sampled_nz_meta_data'] = mcmc_products
+            self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
+            self.info['estimators']['log_sampled_nz_meta_data'] = mcmc_products
         else:
-            self.log_smp_nz = self.info['log_sampled_nz']
+            self.log_smp_nz = self.info['estimators']['log_sampled_nz']
             self.smp_nz = np.exp(self.log_smp_nz)
 
         return self.log_smp_nz
+
+    def compare(self):
+        """
+        Calculates all available goodness of fit measures
+
+        Returns
+        -------
+        info['stats']: dict
+            dictionary of all available statistics
+        """
+        self.info['stats']['kld'] = {}
+        if self.truth is not None:
+            for key in self.info['estimators']:
+                self.info['stats']['kld'][key] = s.calculate_kld(self.tru_nz, self.info['estimators'][key])
+
+        self.info['stats']['rms'] = {}
+        for key_1 in self.info['estimators']:
+            for key_2 in self.info['estimators']:
+                self.info['stats'][key_1 + '__' + key_2] = s.calculate_rms(self.info['estimators'][key_1], self.info['estimators'][key_2])
+        return self.info['stats']
 
     def plot(self, plot_loc):
         """
@@ -376,11 +402,11 @@ class log_z_dens(object):
         pu.plot_step(sps_log, self.bin_ends, self.log_int_pr, w=pu.w_int, s=pu.s_int, a=pu.a_int, c=pu.c_int, d=pu.d_int, l=pu.l_int+pu.lnz)
 
         if self.truth is not None:
-            z = np.linspace(self.bin_ends[0], self.bin_ends[-1], self.n_bins**2)
-            fun = self.truth.evaluate(z)
+            self.fine_z = np.linspace(self.bin_ends[0], self.bin_ends[-1], self.n_bins ** 2)
+            fun = self.truth.evaluate(self.fine_z)
             log_fun = u.safe_log(fun)
-            pu.plot_step(sps, z, fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.nz)
-            pu.plot_step(sps_log, z, log_fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.lnz)
+            pu.plot_step(sps, self.fine_z, fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.nz)
+            pu.plot_step(sps_log, self.fine_z, log_fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.lnz)
 
         if self.stk_nz is not None:
             pu.plot_step(sps, self.bin_ends, self.stk_nz, w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.nz)
@@ -399,7 +425,7 @@ class log_z_dens(object):
             pu.plot_step(sps_log, self.bin_ends, self.log_mle_nz, w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.lnz)
 
         if self.smp_nz is not None:
-            self.log_bfe_nz = stats.mean(self.log_smp_nz)
+            self.log_bfe_nz = s.mean(self.log_smp_nz)
             self.bfe_nz = np.exp(self.log_bfe_nz)
             pu.plot_step(sps, self.bin_ends, self.bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.nz)
             pu.plot_step(sps_log, self.bin_ends, self.log_bfe_nz, w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.lnz)
