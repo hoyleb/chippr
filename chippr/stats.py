@@ -23,17 +23,19 @@ def mean(population):
     mean = np.mean(flat, axis=0)
     return mean
 
-def calculate_kl_divergence(pe, qe, vb=True):
+def calculate_kld(pe, qe, vb=True):
     """
     Calculates the Kullback-Leibler Divergence between two PDFs.
+
     Parameters
     ----------
     pe: numpy.ndarray, float
-        probability distribution evaluated on a grid whose distance _from_ `q` will be calculated.
+        probability distribution evaluated on a grid whose distance from `q` will be calculated.
     qe: numpy.ndarray, float
-        probability distribution evaluated on a grid whose distance _to_ `p` will be calculated.
+        probability distribution evaluated on a grid whose distance to `p` will be calculated.
     vb: boolean
         report on progress to stdout?
+
     Returns
     -------
     Dpq: float
@@ -44,8 +46,8 @@ def calculate_kl_divergence(pe, qe, vb=True):
     pn = pe / np.sum(pe)
     qn = qe / np.sum(qe)
     # Compute the log of the normalized PDFs
-    logp = safelog(pn)
-    logq = safelog(qn)
+    logp = u.safe_log(pn)
+    logq = u.safe_log(qn)
     # Calculate the KLD from q to p
     Dpq = np.sum(pn * (logp - logq))
     return Dpq
@@ -53,6 +55,7 @@ def calculate_kl_divergence(pe, qe, vb=True):
 def calculate_rms(pe, qe, vb=True):
     """
     Calculates the Root Mean Square Error between two PDFs.
+
     Parameters
     ----------
     pe: numpy.ndarray, float
@@ -61,6 +64,7 @@ def calculate_rms(pe, qe, vb=True):
         probability distribution evaluated on a grid whose distance _to_ `p` will be calculated.
     vb: boolean
         report on progress to stdout?
+
     Returns
     -------
     rms: float
