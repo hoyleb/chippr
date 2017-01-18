@@ -13,6 +13,7 @@ from chippr import defaults as d
 from chippr import plot_utils as pu
 from chippr import utils as u
 from chippr import stats as s
+from chippr import log_z_dens_plots as p
 
 class log_z_dens(object):
 
@@ -55,15 +56,24 @@ class log_z_dens(object):
         self.hyper_prior = hyperprior
 
         self.truth = truth
+        self.info['truth'] = None
         if self.truth is not None:
+            self.info['truth'] = {}
             self.tru_nz = np.zeros(self.n_bins)
-            for b in self.bin_range:
+            self.fine_zs = []
+            self.fine_nz = []
+            for b in range(self.n_bins):
                 fine_z = np.linspace(self.bin_ends[b], self.bin_ends[b+1], self.n_bins)
+                self.fine_zs.extend(fine_z)
                 fine_dz = (self.bin_ends[b+1] - self.bin_ends[b]) / self.n_bins
-                coarse_nz = np.sum(self.truth.evaluate(fine_z)) * fine_dz
+                fine_n = self.truth.evaluate(fine_z)
+                self.fine_nz.extend(fine_n)
+                coarse_nz = np.sum(fine_n) * fine_dz
                 self.tru_nz[b] += coarse_nz
             self.log_tru_nz = u.safe_log(self.tru_nz)
             self.info['log_tru_nz'] = self.log_tru_nz
+            self.info['truth']['z_grid'] = np.array(self.fine_zs)
+            self.info['truth']['nz_grid'] = np.array(self.fine_nz)
 
         self.info['estimators'] = {}
         self.info['stats'] = {}
@@ -241,6 +251,11 @@ class log_z_dens(object):
         """
         Calculates the marginalized expected value estimator of the redshift density function
 
+        Parameters
+        ----------
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
+
         Returns
         -------
         log_exp_nz: ndarray
@@ -376,7 +391,7 @@ class log_z_dens(object):
             print(self.info['stats'])
         return self.info['stats']
 
-    def plot(self, plot_loc):
+    def plot_estimators(self, plot_loc):
         """
         Plots all available estimators of the redshift density function.
 
@@ -385,68 +400,8 @@ class log_z_dens(object):
         plot_loc: string
             destination where plot should be stored
         """
-
-        # set up for better looking plots
-        title = 10
-        label = 10
-        mpl.rcParams['text.usetex'] = True
-        mpl.rcParams['axes.titlesize'] = title
-        mpl.rcParams['axes.labelsize'] = label
-        mpl.rcParams['figure.subplot.left'] = 0.2
-        mpl.rcParams['figure.subplot.right'] = 0.9
-        mpl.rcParams['figure.subplot.bottom'] = 0.2
-        mpl.rcParams['figure.subplot.top'] = 0.9
-        mpl.rcParams['figure.subplot.wspace'] = 0.5
-        mpl.rcParams['figure.subplot.hspace'] = 0.5
-
-        self.f = plt.figure(figsize=(5, 10))
-        self.sps = [self.f.add_subplot(2, 1, l+1) for l in xrange(0, 2)]
-        self.f.subplots_adjust(hspace=0, wspace=0)
-        sps_log = self.sps[0]
-        sps = self.sps[1]
-
-        sps_log.set_xlim(self.bin_ends[0], self.bin_ends[-1])
-        sps_log.set_ylabel(r'$\ln n(z)$')
-        sps.set_xlim(self.bin_ends[0], self.bin_ends[-1])
-        sps.set_xlabel(r'$z$')
-        sps.set_ylabel(r'$n(z)$')
-        sps.ticklabel_format(style='sci',axis='y')
-
-        pu.plot_step(sps, self.bin_ends, self.int_pr, w=pu.w_int, s=pu.s_int, a=pu.a_int, c=pu.c_int, d=pu.d_int, l=pu.l_int+pu.nz)
-        pu.plot_step(sps_log, self.bin_ends, self.log_int_pr, w=pu.w_int, s=pu.s_int, a=pu.a_int, c=pu.c_int, d=pu.d_int, l=pu.l_int+pu.lnz)
-
-        if self.truth is not None:
-            self.fine_z = np.linspace(self.bin_ends[0], self.bin_ends[-1], self.n_bins ** 2)
-            fun = self.truth.evaluate(self.fine_z)
-            log_fun = u.safe_log(fun)
-            pu.plot_step(sps, self.fine_z, fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.nz)
-            pu.plot_step(sps_log, self.fine_z, log_fun, w=pu.w_tru, s=pu.s_tru, a=pu.a_tru, c=pu.c_tru, d=pu.d_tru, l=pu.l_tru+pu.lnz)
-
-        if 'log_stacked_nz' in self.info['estimators']:
-            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_stacked_nz']), w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_stacked_nz'], w=pu.w_stk, s=pu.s_stk, a=pu.a_stk, c=pu.c_stk, d=pu.d_stk, l=pu.l_stk+pu.lnz)
-
-        if 'log_mmap_nz' in self.info['estimators']:
-            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_mmap_nz']), w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_mmap_nz'], w=pu.w_map, s=pu.s_map, a=pu.a_map, c=pu.c_map, d=pu.d_map, l=pu.l_map+pu.lnz)
-
-        if 'log_mexp_nz' in self.info['estimators']:
-            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_mexp_nz']), w=pu.w_exp, s=pu.s_exp, a=pu.a_exp, c=pu.c_exp, d=pu.d_exp, l=pu.l_exp+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_mexp_nz'], w=pu.w_exp, s=pu.s_exp, a=pu.a_exp, c=pu.c_exp, d=pu.d_exp, l=pu.l_exp+pu.lnz)
-
-        if 'log_mmle_nz' in self.info['estimators']:
-            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_mmle_nz']), w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_mmle_nz'], w=pu.w_mle, s=pu.s_mle, a=pu.a_mle, c=pu.c_mle, d=pu.d_mle, l=pu.l_mle+pu.lnz)
-
-        if 'log_mean_sampled_nz' in self.info['estimators']:
-            pu.plot_step(sps, self.bin_ends, np.exp(self.info['estimators']['log_mean_sampled_nz']), w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.nz)
-            pu.plot_step(sps_log, self.bin_ends, self.info['estimators']['log_mean_sampled_nz'], w=pu.w_bfe, s=pu.s_bfe, a=pu.a_bfe, c=pu.c_bfe, d=pu.d_bfe, l=pu.l_bfe+pu.lnz)
-
-        sps_log.legend(fontsize='x-small')
-        sps.set_xlabel('x')
-        sps_log.set_ylabel('Log probability density')
-        sps.set_ylabel('Probability density')
-        self.f.savefig(plot_loc)
+        f = p.plot_estimators(self.info)
+        f.savefig(plot_loc)
 
     def read(self, read_loc, style='pickle', vb=True):
         """

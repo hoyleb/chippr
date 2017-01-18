@@ -2,6 +2,10 @@ import numpy as np
 import csv
 import timeit
 
+import matplotlib as mpl
+mpl.use('PS')
+import matplotlib.pyplot as plt
+
 import chippr
 from chippr import defaults as d
 from chippr import utils as u
@@ -100,6 +104,8 @@ class catalog(object):
             interim prior distribution object
         bins: int, optional
             number of evenly spaced bins
+        vb: boolean, optional
+            True to print progress messages to stdout, False to suppress
 
         Returns
         -------

@@ -1,6 +1,7 @@
 from defaults import *
 
 from utils import *
+from plot_utils import *
 
 from sim_utils import *
 from discrete import *
@@ -10,5 +11,5 @@ from mvn import *
 from catalog import *
 
 from stats import *
-from plot_utils import *
 from log_z_dens import *
+from log_z_dens_plots import *
