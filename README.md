@@ -4,13 +4,15 @@ Cosmological Hierarchical Inference with Probabilistic Photometric Redshifts.
 
 ## Motivation
 
-This repository is the home of `chippr`, a Python package for estimating quantities of cosmological interest from surveys of photometric redshift posterior probability distributions.
+This repository is the home of `chippr`, a Python package for estimating quantities of cosmological interest from surveys of photometric redshift posterior probability distributions.  It is a refactoring of my previous [work](https://github.com/aimalz/prob-z) on probabilistic photometric redshifts.
 
 ## Examples
 
 You can browse the (un-executed) notebooks here in this repo:
 
 * [Basic  Demo for Python 2 (raw notebook)](https://github.com/aimalz/chippr/blob/master/docs/notebooks/demo2.ipynb)
+
+## Documentation
 
 Documentation can be found on [ReadTheDocs](http://chippr.readthedocs.io/en/latest/).
 
