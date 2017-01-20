@@ -11,10 +11,11 @@ from chippr import defaults as d
 from chippr import utils as u
 from chippr import sim_utils as su
 from chippr import gauss
+from chippr import catalog_plots as plots
 
 class catalog(object):
 
-    def __init__(self, params=None, vb=True):
+    def __init__(self, params={}, vb=True):
         """
         Object containing catalog of photo-z interim posteriors
 
@@ -25,9 +26,7 @@ class catalog(object):
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
-        if params is None:
-            self.params = {}
-        elif type(params) == str:
+        if type(params) == str:
             self.params = su.ingest(params)
         else:
             self.params = params
@@ -113,10 +112,14 @@ class catalog(object):
             dictionary comprising catalog information
         """
         self.true_samps = truth
+        if vb:
+            plots.plot_true_histogram(self.true_samps)
         self.n_items = len(self.true_samps)
         self.samp_range = range(self.n_items)
 
         self.obs_samps = self.sample_obs()
+        if vb:
+            plots.plot_obs_scatter(self.true_samps, self.obs_samps)
 
         self.int_pr = int_pr
         self.proc_bins(bins, limits=(self.int_pr.bin_ends[0], self.int_pr.bin_ends[-1]))
