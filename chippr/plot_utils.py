@@ -1,15 +1,22 @@
-# Module containing generally handy functions used for plotting
+import matplotlib as mpl
+mpl.use('PS')
+import matplotlib.pyplot as plt
 
-lnz, nz = r'$\ln[n(z)]$', r'$n(z)$'
-
-s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '--', 0.5, 1., 'k', [(0, (1, 1))], 'True '
-s_int, w_int, a_int, c_int, d_int, l_int = '--', 0.5, 0.5, 'k', [(0, (1, 1))], 'Interim '
-s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 1.5, 1., 'k', [(0, (7.5, 7.5))], 'Stacked '
-s_map, w_map, a_map, c_map, d_map, l_map = '--', 1., 1., 'k', [(0, (7.5, 7.5))], 'MMAP '
-s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 1., 1., 'k', [(0, (2.5, 2.5))], 'MExp '
-s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '--', 2., 1., 'k', [(0, (2.5, 2.5))], 'MMLE '
-# s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '--', 1., 1., 'k', [(0, (1, 1))], 'Sampled '
-s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '--', 2., 1., 'k', [(0, (1, 1))], 'Mean of\n Samples '
+def set_up_plot():
+    """
+    Sets up plots to look decent
+    """
+    title = 10
+    label = 10
+    mpl.rcParams['text.usetex'] = True
+    mpl.rcParams['axes.titlesize'] = title
+    mpl.rcParams['axes.labelsize'] = label
+    mpl.rcParams['figure.subplot.left'] = 0.2
+    mpl.rcParams['figure.subplot.right'] = 0.9
+    mpl.rcParams['figure.subplot.bottom'] = 0.2
+    mpl.rcParams['figure.subplot.top'] = 0.9
+    mpl.rcParams['figure.subplot.wspace'] = 0.5
+    mpl.rcParams['figure.subplot.hspace'] = 0.5
 
 def plot_step(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], l=None, r=False):
     """
@@ -80,6 +87,7 @@ def plot_h(sub_plot, bin_ends,plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))],
                    alpha=a,
                    label=l,
                    rasterized=r)
+
 def plot_v(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], r=False):
     """
     Helper function to plot vertical lines of a step function
