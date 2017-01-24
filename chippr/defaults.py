@@ -4,8 +4,8 @@ seed = 42
 
 eps = sys.float_info.epsilon
 
-# min_x = 0.
-# max_x = 1.
+min_x = 0.
+max_x = 1.
 
 n_bins = 10
 # n_items = 4
@@ -58,14 +58,14 @@ def check_basic_setup(params):
         params['n_bins'] = n_bins
     else:
         params['n_bins'] = int(params['n_bins'][0])
-    # if 'bin_min' not in params:
-    #     params['bin_min'] = min_x
-    # else:
-    #     params['bin_min'] = int(params['bin_min'][0])
-    # if 'bin_max' not in params:
-    #     params['bin_max'] = max_x
-    # else:
-    #     params['bin_max'] = int(params['bin_max'][0])
+    if 'bin_min' not in params:
+        params['bin_min'] = min_x
+    else:
+        params['bin_min'] = int(params['bin_min'][0])
+    if 'bin_max' not in params:
+        params['bin_max'] = max_x
+    else:
+        params['bin_max'] = int(params['bin_max'][0])
     return params
 
 def check_variable_sigmas(params):

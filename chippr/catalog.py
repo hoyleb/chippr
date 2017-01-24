@@ -38,25 +38,18 @@ class catalog(object):
 
         self.cat = {}
 
-    def proc_bins(self, bins, limits=(d.min_x, d.max_x), vb=True):
+    def proc_bins(self, vb=True):
         """
         Function to process binning
 
         Parameters
         ----------
-        bins: int
-            number of evenly spaced bins
-        limits: tuple or list or numpy.ndarray, float, optional
-            endpoints over which binning will be defined
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
-        if type(bins) == int:
-            self.n_coarse = bins
-        else:
-            self.n_coarse = 10
-        x_min = limits[0]#np.min(self.obs_samps)
-        x_max = limits[-1]#np.max(self.obs_samps)
+        self.n_coarse = self.params['n_bins']
+        x_min = self.params['bin_min']
+        x_max = self.params['min_max']
         self.n_fine = self.n_coarse
         self.n_tot = self.n_coarse * self.n_fine
         x_range = x_max-x_min
@@ -122,7 +115,7 @@ class catalog(object):
             plots.plot_obs_scatter(self.true_samps, self.obs_samps)
 
         self.int_pr = int_pr
-        self.proc_bins(self.params['n_bins'], limits=(self.int_pr.bin_ends[0], self.int_pr.bin_ends[-1]))
+        self.proc_bins()
 
         self.obs_lfs = self.evaluate_lfs()
 
