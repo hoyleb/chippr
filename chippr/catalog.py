@@ -91,7 +91,7 @@ class catalog(object):
 
         return coarse
 
-    def create(self, truth, int_pr, bins=d.n_bins, vb=True):
+    def create(self, truth, int_pr, vb=True):
         """
         Function creating a catalog of interim posterior probability distributions, will split this up into helper functions
 
@@ -99,7 +99,7 @@ class catalog(object):
         ----------
         truth: numpy.ndarray, float
             vector of true redshifts
-        int_pr: chippr.gmix object or chippr.gauss object or chippr.binned object
+        int_pr: chippr.gmix object or chippr.gauss object or chippr.discrete object
             interim prior distribution object
         bins: int, optional
             number of evenly spaced bins
@@ -122,7 +122,7 @@ class catalog(object):
             plots.plot_obs_scatter(self.true_samps, self.obs_samps)
 
         self.int_pr = int_pr
-        self.proc_bins(bins, limits=(self.int_pr.bin_ends[0], self.int_pr.bin_ends[-1]))
+        self.proc_bins(self.params['n_bins'], limits=(self.int_pr.bin_ends[0], self.int_pr.bin_ends[-1]))
 
         self.obs_lfs = self.evaluate_lfs()
 
