@@ -1,6 +1,7 @@
 import numpy as np
 import csv
 import timeit
+import os
 
 import matplotlib as mpl
 mpl.use('PS')
@@ -15,7 +16,7 @@ from chippr import catalog_plots as plots
 
 class catalog(object):
 
-    def __init__(self, params={}, vb=True):
+    def __init__(self, params={}, vb=True, loc=''):
         """
         Object containing catalog of photo-z interim posteriors
 
@@ -25,6 +26,8 @@ class catalog(object):
             dictionary containing parameter values for catalog creation or string containing location of parameter file
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
+        loc: string, optional
+            directory into which to save plots made along the way
         """
         if type(params) == str:
             self.params = su.ingest(params)
@@ -37,6 +40,10 @@ class catalog(object):
             print self.params
 
         self.cat = {}
+
+        self.dir = loc
+        self.plot_dir = os.path.join(loc, 'plots')
+        self.data_dir = os.path.join(loc, 'data')
 
     def proc_bins(self, vb=True):
         """
@@ -106,13 +113,13 @@ class catalog(object):
         """
         self.true_samps = truth
         if vb:
-            plots.plot_true_histogram(self.true_samps)
+            plots.plot_true_histogram(self.true_samps, plot_loc=self.plot_dir)
         self.n_items = len(self.true_samps)
         self.samp_range = range(self.n_items)
 
         self.obs_samps = self.sample_obs()
         if vb:
-            plots.plot_obs_scatter(self.true_samps, self.obs_samps)
+            plots.plot_obs_scatter(self.true_samps, self.obs_samps, plot_loc=self.plot_dir)
 
         self.int_pr = int_pr
         self.proc_bins()
@@ -172,19 +179,19 @@ class catalog(object):
             obs_lfs += self.params['outlier_fraction'] * outlier_lf.evaluate(self.obs_samps)
         return obs_lfs.T
 
-    def write(self, loc, style='plaintext'):
+    def write(self, loc='data', style='.txt'):
         """
         Function to write newly-created catalog to file
 
         Parameters
         ----------
-        loc: string
-            location into which to save catalog files
+        loc: string, optional
+            file name into which to save catalog
         style: string, optional
             file format in which to save the catalog
         """
-        if style == 'plaintext':
-            with open(loc, 'wb') as csvfile:
+        if style == '.txt':
+            with open(self.data_dir + loc + style, 'wb') as csvfile:
                 out = csv.writer(csvfile, delimiter=' ')
                 out.writerow(self.cat['bin_ends'])
                 out.writerow(self.cat['log_interim_prior'])
@@ -192,17 +199,17 @@ class catalog(object):
                     out.writerow(line)
         return
 
-    def read(self, loc, style='plaintext'):
+    def read(self, loc='data', style='.txt'):
         """
         Function to read in catalog file
 
         Parameters
         ----------
-        loc: string
-            location of catalog file(s)
+        loc: string, optional
+            location of catalog file
         """
-        if style == 'plaintext':
-            with open(loc, 'rb') as csvfile:
+        if style == '.txt':
+            with open(self.data_dir + loc + style, 'rb') as csvfile:
                 tuples = (line.split(None) for line in csvfile)
                 alldata = [[float(pair[k]) for k in range(0,len(pair))] for pair in tuples]
         self.cat['bin_ends'] = np.array(alldata[0])

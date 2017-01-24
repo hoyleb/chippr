@@ -1,31 +1,41 @@
 import numpy as np
+import os
 
 import chippr
 from chippr import *
 
 # I will write another script to automate this process. . .
-tru_amps = np.array([0.20, 0.35, 0.55])
-tru_means = np.array([0.5, 0.2, 0.75])
-tru_sigmas = np.array([0.4, 0.2, 0.1])
+true_amps = np.array([0.20, 0.35, 0.55])
+true_means = np.array([0.5, 0.2, 0.75])
+true_sigmas = np.array([0.4, 0.2, 0.1])
 
-tru_nz = gmix(tru_amps, tru_means, tru_sigmas, limits=(0., 1.))
+true_nz = chippr.gmix(true_amps, true_means, true_sigmas, limits=(0., 1.))
 
 N =10**4
 
-tru_zs = tru_nz.sample(N)
+true_zs = true_nz.sample(N)
 
-params = 'params.txt'
-params = sim_utils.ingest(params)
+result_dir = os.path.join('..', 'results')
+name_file = 'which_tests.txt'
 
-bin_ends = np.array([0., 1.])
-weights = np.array([1.])
+with open(name_file) as tests_to_run:
+    for test_name in tests_to_run:
+        params = test_name + '.txt'
+        params = chippr.sim_utils.ingest(params)
 
-int_prior = discrete(bin_ends, weights)
+        bin_ends = np.array([params['bin_min'], params['bin_max']])
+        weights = np.array([1.])
 
-posteriors = catalog(params)
-output = posteriors.create(tru_zs, int_prior)
+        interim_prior = chippr.discrete(bin_ends, weights)
 
-data = np.exp(output['log_interim_posteriors'])
+        test_dir = os.path.join(resut_dir, test_name)
+        if os.path.exists(test_dir):
+            shutil.rmtree(test_dir)
+        os.makedirs(test_dir)
 
-saved_location = 'data.txt'
-posteriors.write(saved_location)
+        posteriors = chippr.catalog(params, loc=test_dir)
+        output = posteriors.create(true_zs, interim_prior)
+
+        data = np.exp(output['log_interim_posteriors'])
+
+        posteriors.write()
