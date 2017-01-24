@@ -42,8 +42,14 @@ class catalog(object):
         self.cat = {}
 
         self.dir = loc
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
         self.plot_dir = os.path.join(loc, 'plots')
+        if not os.path.exists(self.plot_dir):
+            os.makedirs(self.plot_dir)
         self.data_dir = os.path.join(loc, 'data')
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
 
     def proc_bins(self, vb=True):
         """
