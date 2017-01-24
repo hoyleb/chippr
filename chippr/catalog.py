@@ -34,7 +34,9 @@ class catalog(object):
         else:
             self.params = params
 
+        print('this far, first')
         self.params = d.check_sim_params(self.params)
+        print('this far, second')
 
         if vb:
             print self.params
@@ -70,10 +72,10 @@ class catalog(object):
         self.dx_coarse = x_range / self.n_coarse
         self.dx_fine = x_range / self.n_tot
 
-        self.x_coarse = np.arange(x_min+0.5*self.dx_coarse, x_max, self.dx_coarse)
-        self.x_fine = np.arange(x_min+0.5*self.dx_fine, x_max, self.dx_fine)
+        self.x_coarse = np.arange(x_min + 0.5 * self.dx_coarse, x_max, self.dx_coarse)
+        self.x_fine = np.arange(x_min + 0.5 * self.dx_fine, x_max, self.dx_fine)
 
-        self.bin_ends = np.arange(x_min, x_max+self.dx_coarse, self.dx_coarse)
+        self.bin_ends = np.arange(x_min, x_max + self.dx_coarse, self.dx_coarse)
 
         return
 
@@ -156,9 +158,9 @@ class catalog(object):
         obs_samps: numpy.ndarray, float
             observed values
         """
-        if not self.params['variable_sigma']:
+        if not self.params['variable_sigmas']:
             true_lfs = [gauss(self.true_samps[n], self.params['constant_sigma']**2) for n in self.samp_range]
-        if self.params['catastrophic_outliers']:
+        if self.params['outlier_fraction'] > 0.:
             outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
         obs_samps = np.zeros(self.n_items)
         for n in self.samp_range:
@@ -177,10 +179,10 @@ class catalog(object):
         obs_lfs: numpy.ndarray, float
             array of likelihood values for each item as a function of fine binning
         """
-        if not self.params['variable_sigma']:
+        if not self.params['variable_sigmas']:
             lfs_fine = [gauss(self.x_fine[kk], self.params['constant_sigma']**2) for kk in range(self.n_tot)]
             obs_lfs = (1.-self.params['outlier_fraction']) * np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)])
-        if self.params['catastrophic_outliers']:
+        if self.params['outlier_fraction'] > 0.:
             outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
             obs_lfs += self.params['outlier_fraction'] * outlier_lf.evaluate(self.obs_samps)
         return obs_lfs.T

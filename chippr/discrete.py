@@ -12,7 +12,7 @@ class discrete(object):
 
         Parameters
         ----------
-        binends: numpy.ndarray, float
+        bin_ends: numpy.ndarray, float
             endpoints of bins
         weights: numpy.ndarray, float
             relative weights associated with each bin
