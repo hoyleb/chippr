@@ -61,11 +61,11 @@ def check_basic_setup(params):
     if 'bin_min' not in params:
         params['bin_min'] = min_x
     else:
-        params['bin_min'] = int(params['bin_min'][0])
+        params['bin_min'] = float(params['bin_min'][0])
     if 'bin_max' not in params:
         params['bin_max'] = max_x
     else:
-        params['bin_max'] = int(params['bin_max'][0])
+        params['bin_max'] = float(params['bin_max'][0])
     return params
 
 def check_variable_sigmas(params):
@@ -82,11 +82,11 @@ def check_variable_sigmas(params):
     params: dict
         dictionary containing key/value pairs for simulation
     """
-    if 'variable_sigma' not in params:
-        params['variable_sigma'] = 0
+    if 'variable_sigmas' not in params:
+        params['variable_sigmas'] = 0
     else:
-        params['variable_sigma'] = bool(params['variable_sigmas'][0])
-    if not params['variable_sigma']:
+        params['variable_sigmas'] = int(params['variable_sigmas'][0])
+    if not params['variable_sigmas']:
         if 'constant_sigma' not in params:
             params['constant_sigma'] = constant_sigma
         else:
@@ -107,12 +107,11 @@ def check_catastrophic_outliers(params):
     params: dict
         dictionary containing key/value pairs for simulation
     """
-    if 'catastrophic_outliers' not in params:
-        params['catastrophic_outliers'] = 0
+    if 'outlier_fraction' not in params:
+        params['outlier_fraction'] = 0.
     else:
-        params['catastrophic_outliers']  = params['catastrophic_outliers'][0]
-    if params['catastrophic_outliers']:
-        params['outlier_fraction'] = float(params['outlier_fraction'][0])
+        params['outlier_fraction']  = float(params['outlier_fraction'][0])
+    if params['outlier_fraction'] > 0.:
         params['outlier_mean'] = float(params['outlier_mean'][0])
         params['outlier_sigma'] = float(params['outlier_sigma'][0])
     else:
