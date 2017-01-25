@@ -34,7 +34,6 @@ def check_sim_params(params={}):
     params = check_basic_setup(params)
     params = check_variable_sigmas(params)
     params = check_catastrophic_outliers(params)
-    print('this far')
     return params
 
 def check_basic_setup(params):

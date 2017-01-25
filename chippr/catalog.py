@@ -16,7 +16,7 @@ from chippr import catalog_plots as plots
 
 class catalog(object):
 
-    def __init__(self, params={}, vb=True, loc=''):
+    def __init__(self, params={}, vb=True, loc='data'):
         """
         Object containing catalog of photo-z interim posteriors
 
@@ -34,9 +34,7 @@ class catalog(object):
         else:
             self.params = params
 
-        print('this far, first')
         self.params = d.check_sim_params(self.params)
-        print('this far, second')
 
         if vb:
             print self.params
@@ -199,7 +197,7 @@ class catalog(object):
             file format in which to save the catalog
         """
         if style == '.txt':
-            with open(self.data_dir + loc + style, 'wb') as csvfile:
+            with open(os.path.join(self.data_dir, loc + style), 'wb') as csvfile:
                 out = csv.writer(csvfile, delimiter=' ')
                 out.writerow(self.cat['bin_ends'])
                 out.writerow(self.cat['log_interim_prior'])
@@ -217,7 +215,7 @@ class catalog(object):
             location of catalog file
         """
         if style == '.txt':
-            with open(self.data_dir + loc + style, 'rb') as csvfile:
+            with open(os.path.join(self.data_dir, loc + style), 'rb') as csvfile:
                 tuples = (line.split(None) for line in csvfile)
                 alldata = [[float(pair[k]) for k in range(0,len(pair))] for pair in tuples]
         self.cat['bin_ends'] = np.array(alldata[0])
