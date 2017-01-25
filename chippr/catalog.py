@@ -16,7 +16,7 @@ from chippr import catalog_plots as plots
 
 class catalog(object):
 
-    def __init__(self, params={}, vb=True, loc='data'):
+    def __init__(self, params={}, vb=True, loc=''):
         """
         Object containing catalog of photo-z interim posteriors
 
@@ -27,7 +27,7 @@ class catalog(object):
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         loc: string, optional
-            directory into which to save plots made along the way
+            directory into which to save data and plots made along the way
         """
         if type(params) == str:
             self.params = su.ingest(params)

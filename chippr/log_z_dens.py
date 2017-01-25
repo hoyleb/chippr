@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+import os
 import scipy.optimize as op
 import cPickle as cpkl
 import emcee
@@ -13,11 +14,11 @@ from chippr import defaults as d
 from chippr import plot_utils as pu
 from chippr import utils as u
 from chippr import stats as s
-from chippr import log_z_dens_plots as p
+from chippr import log_z_dens_plots as plots
 
 class log_z_dens(object):
 
-    def __init__(self, catalog, hyperprior, truth=None, vb=True):
+    def __init__(self, catalog, hyperprior, truth=None, loc='', vb=True):
         """
         An object representing the redshift density function (normalized redshift distribution function)
 
@@ -29,6 +30,8 @@ class log_z_dens(object):
             multivariate Gaussian distribution for hyperprior distribution
         truth: chippr.gmix object, optional
             true redshift density function expressed as univariate Gaussian mixture
+        loc: string, optional
+            directory into which to save results and plots made along the way
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
@@ -77,6 +80,15 @@ class log_z_dens(object):
 
         self.info['estimators'] = {}
         self.info['stats'] = {}
+
+        self.dir = loc
+        self.data_dir = os.path.join(loc, 'data')
+        self.plot_dir = os.path.join(loc, 'plots')
+        if not os.path.exists(self.plot_dir):
+            os.makedirs(self.plot_dir)
+        self.res_dir = os.path.join(loc, 'results')
+        if not os.path.exists(self.res_dir):
+            os.makedirs(self.res_dir)
 
         return
 
@@ -400,8 +412,8 @@ class log_z_dens(object):
         plot_loc: string
             destination where plot should be stored
         """
-        f = p.plot_estimators(self.info)
-        f.savefig(plot_loc)
+        f = plots.plot_estimators(self.info)
+        f.savefig(os.path.join(self.plot_dir, plot_loc))
 
     def read(self, read_loc, style='pickle', vb=True):
         """
@@ -421,7 +433,7 @@ class log_z_dens(object):
         self.info: dict
             returns the log_z_dens information dictionary object
         """
-        with open(read_loc, 'rb') as file_location:
+        with open(os.path.join(self.res_dir, read_loc), 'rb') as file_location:
             self.info = cpkl.load(file_location)
         if vb:
             print('The following quantities were read from '+read_loc+' in the '+style+' format:')
@@ -442,7 +454,7 @@ class log_z_dens(object):
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
-        with open(write_loc, 'wb') as file_location:
+        with open(os.path.join(self.res_dir, write_loc), 'wb') as file_location:
             cpkl.dump(self.info, file_location)
         if vb:
             print('The following quantities were written to '+write_loc+' in the '+style+' format:')
