@@ -11,7 +11,7 @@ Tutorials
 
 See the following IPython Notebook for an example of using `chippr`:
 
-* `Basic Demo <http://htmlpreview.github.io/?https://github.com/aimalz/chippr/docs/notebooks/demo2.ipynb>`_
+* `Basic Demo <http://htmlpreview.github.io/?https://github.com/aimalz/chippr/blob/master/docs/notebooks/demo2.html>`_
 
 Simulation
 ==========
