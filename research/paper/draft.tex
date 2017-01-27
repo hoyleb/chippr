@@ -18,7 +18,7 @@
 \newcommand{\myemail}{aimalz@nyu.edu}
 \newcommand{\textul}{\underline}
 
-\shorttitle{How to estimate the redshift density distribution}
+\shorttitle{How to estimate the redshift density function}
 \shortauthors{Malz and Hogg}
 
 \begin{document}
@@ -35,6 +35,11 @@
 \altaffiltext{4}{Max-Planck-Institut f\"ur Astronomie, K\"onigstuhl 17, D-69117 Heidelberg, Germany}
 
 \begin{abstract}
+The redshift density function $n(z)$ is a crucial ingredient for weak lensing cosmology.  Spectroscopically confirmed redshifts for the dim and numerous galaxies observed by past, present, and future weak lensing surveys are inaccessible, making photometric redshifts (photo-$z$s) the next best alternative.  Due to their intrinsic scatter and susceptibility to catastrophic outliers, photo-$z$ point estimates are being superseded by photo-$z$ probability distribution functions (PDFs).  However, analytic methods for utilizing these new data products in cosmological inference are still evolving.
+
+This paper presents a novel approach to estimating the posterior distribution of $n(z)$ from a survey of galaxy photo-$z$ PDFs based upon a probabilistic graphical model.  We present the Cosmological Hierarchical Inference with Probabilistic Photometric Redshifts (CHIPPR) code implementing this technique, as well as its validation on mock data and testing on a subset of BOSS DR10.  The code and method are easily extensible to other one-point statistics of redshift that are informative to galaxy evolution and large-scale structure.
+
+%Ongoing and upcoming galaxy surveys aiming to constrain cosmological parameters will produce photometric redshift (photo-$z$) probability distribution functions (PDFs), which are, generally, posteriors under an interim prior.  It is desirable to use this highly informative data product to estimate redshift-dependent distribution functions such as the redshift density function, stellar mass function, or We present a mathematically rigorous approach to obtain the posterior distribution on a one-point statistic of redshift from a survey providing photo-$z$ PDFs and their interim prior by way of a probabilistic graphical model corresponding to a hierarchical Bayesian relation of photo-$z$ PDFs to a posterior distribution over the one-point statistic.  This fully consistent method is applied to the redshift density function $n(z)$ necessary for the calculation of cosmological parameters from weak lensing surveys, validated on synthetic data and tested on a small subset of BOSS DR10 data.  It is demonstrated that this method improves accuracy, both qualitatively and as quantified by the Kullback-Leibler Divergence, compared to popular alternatives (such as stacking of photo-$z$ PDFs and conversion of photo-$z$ PDFs to point estimators of redshift).  The method can be straightforwardly generalized to other one-point statistics of redshift including distribution functions over luminosity, mass, star formation rate, etc.  We publicly release the Cosmological Hierarchical Inference with Probabilistic Photometric Redshifts (CHIPPR) code that provides a general framework for estimating the posterior distribution of a general one-point statistic of redshift.
 \end{abstract}
 
 \keywords{methods: analytical "\_\_\_" methods: data analysis "\_\_\_" methods: statistical "\_\_\_" techniques: photometric "\_\_\_" galaxies: statistics}
