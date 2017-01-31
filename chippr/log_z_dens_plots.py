@@ -1,4 +1,7 @@
 import numpy as np
+import os
+import scipy as sp
+from scipy import stats
 
 import matplotlib as mpl
 mpl.use('PS')
@@ -18,6 +21,111 @@ s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 1., 1., 'k', [(0, (2.5, 2.5))],
 s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '--', 2., 1., 'k', [(0, (2.5, 2.5))], 'MMLE '
 # s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '--', 1., 1., 'k', [(0, (1, 1))], 'Sampled '
 s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '--', 2., 1., 'k', [(0, (1, 1))], 'Mean of\n Samples '
+
+def plot_ivals(info):
+    """
+    Plots the initial values given to the sampler
+
+    Parameters
+    ----------
+    info: dict
+        dictionary of stored information from log_z_dens object
+
+    Returns
+    -------
+    f: matplotlib figure
+        figure object
+    """
+    return f
+
+def set_up_burn_in_plots():
+    """
+    Creates plotting objects for sampler progress
+    """
+    f_autocorrelation_times = plt.figure(figsize=(5, 5))
+    sps_autocorrelation_times = f_autocorrelation_times.add_subplot(1, 1, 1)
+    f_autocorrelation_times.subplots_adjust(hspace=0, wspace=0)
+    sps_autocorrelation_times.set_ylabel(r'autocorrelation time')
+    sps_autocorrelation_times.set_xlabel(r'accepted sample number')
+    sps_autocorrelation_times.set_ylim(0, 100)
+    autocorrelation_times_plot = [f_autocorrelation_times, sps_autocorrelation_times]
+
+    f_acceptance_fractions = plt.figure(figsize=(5, 5))
+    sps_acceptance_fractions = f_acceptance_fractions.add_subplot(1, 1, 1)
+    f_acceptance_fractions.subplots_adjust(hspace=0, wspace=0)
+    sps_acceptance_fractions.set_ylim(0, 1)
+    sps_acceptance_fractions.set_ylabel('acceptance fraction per bin')
+    sps_acceptance_fractions.set_xlabel('number of iterations')
+    acceptance_fractions_plot = [f_acceptance_fractions, sps_acceptance_fractions]
+
+    f_posterior_probabilities = plt.figure(figsize=(5, 5))
+    sps_posterior_probabilities = f_posterior_probabilities.add_subplot(1, 1, 1)
+    f_posterior_probabilities.subplots_adjust(hspace=0, wspace=0)
+    sps_posterior_probabilities.set_ylabel(r'log probability per walker')
+    sps_posterior_probabilities.set_xlabel(r'accepted sample number')
+    posterior_probabilities_plot = [f_posterior_probabilities, sps_posterior_probabilities]
+
+    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot)
+    return plot_information
+
+def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_ins, n_walkers, n_bins, plot_dir):
+    """
+    Plots new information into burn-in progress plots
+    """
+    burn_test_range = range(n_burn_test)
+
+    (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot) = plot_information
+
+    [f_autocorrelation_times, sps_autocorrelation_times] = autocorrelation_times_plot
+    autocorrelation_times = sampler_output['acors']
+    # default to bins mode for autocorrelation times, will need to fix this later
+    # if something == 'bins':
+    x_some = [(burn_ins + 1) * n_burn_test] * n_bins
+    # if something == 'walkers':
+    #     x_some = [(burn_ins + 1) * n_burn_test] * n_walkers
+    sps_autocorrelation_times.scatter(x_some,
+                           autocorrelation_times,
+                           c='k',
+                           alpha=0.5,
+                           linewidth=0.1,
+                           s=2)
+    autocorrelation_times_plot = [f_autocorrelation_times, sps_autocorrelation_times]
+    f_autocorrelation_times.savefig(os.path.join(plot_dir, 'autocorrelation_times.png'), bbox_inches='tight', pad_inches = 0)
+
+    [f_acceptance_fractions, sps_acceptance_fractions] = acceptance_fractions_plot
+    acceptance_fractions = sampler_output['fracs'].T
+    sps_acceptance_fractions.scatter([(burn_ins + 1) * n_burn_test] * n_walkers,
+                                   acceptance_fractions,
+                                   c='k',
+                                   alpha=0.5,
+                                   linewidth=0.1,
+                                   s=n_bins,
+                                   rasterized=True)
+    acceptance_fractions_plot = [f_acceptance_fractions, sps_acceptance_fractions]
+    f_acceptance_fractions.savefig(os.path.join(plot_dir, 'acceptance_fractions.png'), bbox_inches='tight', pad_inches = 0)
+
+    [f_posterior_probabilities, sps_posterior_probabilities] = posterior_probabilities_plot
+    posterior_probabilities = np.swapaxes(sampler_output['probs'], 0, 1)
+    max_posterior_probabilities = np.max(posterior_probabilities)
+    locs, scales = [], []
+    for x in burn_test_range:
+        loc, scale = sp.stats.norm.fit_loc_scale(posterior_probabilities[x])
+        locs.append(loc)
+        scales.append(scale)
+    locs = np.array(locs)
+    scales = np.array(scales)
+    x_all = np.arange(burn_ins * n_burn_test, (burn_ins + 1) * n_burn_test + 1)
+    pu.plot_step(sps_posterior_probabilities, x_all, locs)
+    x_cor = [x_all[:-1], x_all[:-1], x_all[1:], x_all[1:]]
+    y_cor = np.array([locs - scales, locs + scales, locs + scales, locs - scales])
+    y_cor2 = np.array([locs - 2. * scales, locs + 2. * scales, locs + 2. * scales, locs - 2. * scales])
+    sps_posterior_probabilities.fill(x_cor, y_cor, color='k', alpha=0.5, linewidth=0.)
+    sps_posterior_probabilities.fill(x_cor, y_cor2, color='k', alpha=0.25, linewidth=0.)
+    posterior_probabilities_plot = [f_posterior_probabilities, sps_posterior_probabilities]
+    f_posterior_probabilities.savefig(os.path.join(plot_dir, 'posterior_probabilities.png'), bbox_inches='tight', pad_inches = 0)
+
+    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot)
+    return plot_information
 
 def plot_estimators(info):
     """
