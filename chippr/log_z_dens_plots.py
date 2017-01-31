@@ -6,8 +6,10 @@ from scipy import stats
 import matplotlib as mpl
 mpl.use('PS')
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 import chippr
+from chippr import defaults as d
 from chippr import utils as u
 from chippr import plot_utils as pu
 
@@ -19,8 +21,11 @@ s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 1.5, 1., 'k', [(0, (7.5, 7.5))]
 s_map, w_map, a_map, c_map, d_map, l_map = '--', 1., 1., 'k', [(0, (7.5, 7.5))], 'MMAP '
 s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 1., 1., 'k', [(0, (2.5, 2.5))], 'MExp '
 s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '--', 2., 1., 'k', [(0, (2.5, 2.5))], 'MMLE '
-# s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '--', 1., 1., 'k', [(0, (1, 1))], 'Sampled '
+s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '--', 1., 1., 'k', [(0, (1, 1))], 'Sampled '
 s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '--', 2., 1., 'k', [(0, (1, 1))], 'Mean of\n Samples '
+
+cmap = np.linspace(0., 1., d.plot_colors)
+colors = [cm.viridis(i) for i in cmap]
 
 def plot_ivals(info):
     """
@@ -41,7 +46,14 @@ def plot_ivals(info):
 def set_up_burn_in_plots():
     """
     Creates plotting objects for sampler progress
+
+    Returns
+    -------
+    plot_information: tuple
+        contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
     """
+    pu.set_up_plot()
+
     f_autocorrelation_times = plt.figure(figsize=(5, 5))
     sps_autocorrelation_times = f_autocorrelation_times.add_subplot(1, 1, 1)
     f_autocorrelation_times.subplots_adjust(hspace=0, wspace=0)
@@ -71,6 +83,33 @@ def set_up_burn_in_plots():
 def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_ins, n_walkers, n_bins, plot_dir):
     """
     Plots new information into burn-in progress plots
+
+    Parameters
+    ----------
+    plot_information: tuple
+        contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
+    sampler_output: dict
+        dictionary containing array of sampled redshift density function bin values as well as posterior probabilities, acceptance fractions, and autocorrelation times
+    n_burn_test: int
+        number of samples to be taken in each interval between tests of the convergence criterion
+    burn_ins: int
+        number of between-convergence-check intervals that have already been performed
+    n_walkers: int
+        number of MCMC walkers
+    n_bins: int
+        number of parameters defining the log_z_dens function
+    plot_dir: string
+        location in which to store the plots
+
+    Returns
+    -------
+    plot_information: tuple
+        contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
+
+    Notes
+    -----
+    I am aware that most of these inputs could be eliminated!
+    This is basically a placeholder to make the plots quickly, but many of those pieces of information are available in the primary input of sampler_output.
     """
     burn_test_range = range(n_burn_test)
 
@@ -99,8 +138,7 @@ def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_in
                                    c='k',
                                    alpha=0.5,
                                    linewidth=0.1,
-                                   s=n_bins,
-                                   rasterized=True)
+                                   s=n_bins)
     acceptance_fractions_plot = [f_acceptance_fractions, sps_acceptance_fractions]
     f_acceptance_fractions.savefig(os.path.join(plot_dir, 'acceptance_fractions.png'), bbox_inches='tight', pad_inches = 0)
 
@@ -127,7 +165,7 @@ def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_in
     plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot)
     return plot_information
 
-def plot_estimators(info):
+def plot_estimators(info, plot_dir):
     """
     Makes a log and linear plot of n(z) estimators from a log_z_dens object
 
@@ -135,6 +173,8 @@ def plot_estimators(info):
     ----------
     info: dict
         dictionary of stored information from log_z_dens object
+    plot_dir: string
+        location into which the plot will be saved
 
     Returns
     -------
@@ -180,6 +220,7 @@ def plot_estimators(info):
         pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mmle_nz'], w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz)
 
     if 'log_mean_sampled_nz' in info['estimators']:
+        plot_samples(info['estimators']['log_sampled_nz_meta_data'], plot_dir)
         pu.plot_step(sps, info['bin_ends'], np.exp(info['estimators']['log_mean_sampled_nz']), w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+nz)
         pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mean_sampled_nz'], w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
 
@@ -187,5 +228,52 @@ def plot_estimators(info):
     sps.set_xlabel('x')
     sps_log.set_ylabel('Log probability density')
     sps.set_ylabel('Probability density')
+    f.savefig(os.path.join(plot_dir, 'all_estimators.png'), bbox_inches='tight', pad_inches = 0)
 
-    return f
+    return
+
+def plot_samples(info, plot_dir):
+    """
+    Plots a few random samples from the posterior distribution
+
+    Parameters
+    ----------
+    info: dict
+        dictionary of stored information from log_z_dens object
+    """
+    pu.set_up_plot()
+
+    f = plt.figure(figsize=(5, 10))
+    sps = [f.add_subplot(2, 1, l+1) for l in xrange(0, 2)]
+    f.subplots_adjust(hspace=0, wspace=0)
+    sps_log = sps[0]
+    sps = sps[1]
+
+    sps_log.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
+    sps_log.set_ylabel(r'$\ln n(z)$')
+    sps.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
+    sps.set_xlabel(r'$z$')
+    sps.set_ylabel(r'$n(z)$')
+    sps.ticklabel_format(style='sci',axis='y')
+
+    pu.plot_step(sps, info['bin_ends'], np.exp(info['log_interim_prior']), w=w_int, s=s_int, a=a_int, c=c_int, d=d_int, l=l_int+nz)
+    pu.plot_step(sps_log, info['bin_ends'], info['log_interim_prior'], w=w_int, s=s_int, a=a_int, c=c_int, d=d_int, l=l_int+lnz)
+    if info['truth'] is not None:
+        sps.plot(info['truth']['z_grid'], info['truth']['nz_grid'], linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+nz)
+        sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']), linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+lnz)
+
+    shape = np.shape(info['estimators']['log_sampled_nz'])
+    flat = info['estimators']['log_sampled_nz'].reshape(np.prod(shape[:-1]), shape[-1])
+    samples = [np.random.randint(0, len(flat)) for i in range(d.plot_colors)]
+    for i in range(d.plot_colors):
+        unlogged = np.exp(flat[i])
+        normed = unlogged / np.dot(info['bin_ends'], unlogged)
+        pu.plot_step(sps_log, info['bin_ends'], normed, s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
+        pu.plot_step(sps, info['bin_ends'], u.safe_log(normed), s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
+
+    sps_log.legend(fontsize='x-small', loc='lower left')
+    sps.set_xlabel('x')
+    sps_log.set_ylabel('Log probability density')
+    sps.set_ylabel('Probability density')
+    f.savefig(os.path.join(plot_dir, 'samples.png'), bbox_inches='tight', pad_inches = 0)
+    return
