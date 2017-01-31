@@ -44,19 +44,27 @@ This paper presents a novel approach to estimating the posterior distribution ov
 \keywords{methods: analytical "\_\_\_" methods: data analysis "\_\_\_" methods: statistical "\_\_\_" techniques: photometric "\_\_\_" galaxies: statistics}
 
 \section{Introduction}
-\label{sec:intro}
+\label{sec:introduction}
 
 The redshift density function $n(z)$ is necessary for calculating two-point statistics of galaxy properties used to determine the cosmological parameter values that inform our understanding of the evolution of large-scale structure in the universe \citep{masters_mapping_2015}.  Inaccurate estimates of $n(z)$ can significantly impact the constraining power of a galaxy survey \citep{hildebrandt_kids-450:_2016}, biasing recovery of the cosmological parameters.  
 
-Though the redshift density function has traditionally been determined from spectroscopically observed redshifts, modern galaxy surveys seek to obtain two-point statistics of redshift from samples of galaxies for which spectroscopic redshifts are unavailable, either due to their large numbers or their low brightnesses.  For decades \citep{baum_photoelectric_1962}, photometrically estimated redshifts (photo-$z$s) have been the leading alternative to spectroscopically observed redshifts, though they suffer from issues of precision in the form of an intrinsic scatter and accuracy in the form of catastrophic outliers.  
+Though the redshift density function has traditionally been determined from spectroscopically observed redshifts, modern galaxy surveys seek to obtain two-point statistics of redshift from samples of galaxies for which spectroscopic redshifts are unavailable, either due to their large numbers or their low brightnesses.  For decades \citep{baum_photoelectric_1962}, photometrically estimated redshifts (photo-$z$s) have been the leading alternative to spectroscopically observed redshifts, though they suffer from issues of precision in the form of an intrinsic scatter and accuracy in the form of catastrophic outliers, as well as other systematics imparted by the properties of the survey, data reduction pipeline(s), and assumptions underlying the analysis.  
 
-These weaknesses are illuminated by a probabilistic interpretation of photo-$zs$; if these complicated uncertainties were expressed as a probability distribution function (PDF) over redshift, photo-$z$s could be replaced by photo-$z$ PDFs containing more information than a simple point estimate.
+These weaknesses are illuminated by a probabilistic interpretation of photo-$zs$; if these nontrivial uncertainties were expressed as a probability distribution function (PDF) over redshift, photo-$z$s could be replaced by photo-$z$ PDFs containing more information than a simple point estimate \citep{koo_overview_1999}.  However, methods for using photo-$z$ PDFs in cosmological inference remain underdeveloped, with many survey pipelines reducing them to familiar point estimators that are compatible with existing technology or engaging with them heuristically in a manner inconsistent with their probabilistic nature.
 
-A more recent 
+It is desirable to create robust methods for using photo-$z$ PDFs in inference, beginning with the simplest one-point statistic of redshift, $n(z)$.  In the spirit of \citet{hogg_inferring_2010, foreman-mackey_exoplanet_2014}, this paper derives a mathematically rigorous approach to inferring $n(z)$ in Sec. \ref{sec:method}.  The presentation of a public code implementing this novel technique is given in Sec. \ref{sec:model_specifics}.  The code is validated on mock data and tested on a subset of BOSS DR10 data in Sec. \ref{sec:experiments}.  We conclude and discuss future directions in Sec. \ref{sec:discussion}.
 
-how surveys get $n(z)$
+\section{Method}
+\label{sec:method}
 
-objective: given photo-$z$ PDFs, seek $n(z)$ PDF
+\section{Model specifics}
+\label{sec:model_specifics}
+
+\section{Experiments}
+\label{sec:experiments}
+
+\section{Discussion}
+\label{sec:discussion}
 
 %\appendix{}
 
