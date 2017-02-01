@@ -13,7 +13,7 @@ import chippr
 from chippr import defaults as d
 from chippr import plot_utils as pu
 from chippr import utils as u
-from chippr import stats as s
+from chippr import stat_utils as s
 from chippr import log_z_dens_plots as plots
 
 class log_z_dens(object):
@@ -365,13 +365,13 @@ class log_z_dens(object):
 
             self.log_smp_nz = mcmc_products['chains']
             self.smp_nz = np.exp(self.log_smp_nz)
-            self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
-            self.info['estimators']['log_sampled_nz_meta_data'] = mcmc_products
+            #self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
+            self.info['log_sampled_nz_meta_data'] = mcmc_products
             self.log_bfe_nz = s.mean(self.log_smp_nz)
             self.bfe_nz = np.exp(self.log_bfe_nz)
             self.info['estimators']['log_mean_sampled_nz'] = self.log_bfe_nz
         else:
-            self.log_smp_nz = self.info['estimators']['log_sampled_nz']
+            self.log_smp_nz = self.info['log_sampled_nz_meta_data']
             self.smp_nz = np.exp(self.log_smp_nz)
             self.log_bfe_nz = self.info['estimators']['log_mean_sampled_nz']
             self.bfe_nz = np.exp(self.log_smp_nz)

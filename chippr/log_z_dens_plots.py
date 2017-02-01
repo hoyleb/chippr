@@ -1,7 +1,6 @@
 import numpy as np
 import os
 import scipy as sp
-from scipy import stats
 
 import matplotlib as mpl
 mpl.use('PS')
@@ -12,17 +11,18 @@ import chippr
 from chippr import defaults as d
 from chippr import utils as u
 from chippr import plot_utils as pu
+from chippr import stat_utils as s
 
 lnz, nz = r'$\ln[n(z)]$', r'$n(z)$'
 
 s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '--', 0.5, 1., 'k', [(0, (1, 1))], 'True '
 s_int, w_int, a_int, c_int, d_int, l_int = '--', 0.5, 0.5, 'k', [(0, (1, 1))], 'Interim '
-s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 1.5, 1., 'k', [(0, (7.5, 7.5))], 'Stacked '
-s_map, w_map, a_map, c_map, d_map, l_map = '--', 1., 1., 'k', [(0, (7.5, 7.5))], 'MMAP '
-s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 1., 1., 'k', [(0, (2.5, 2.5))], 'MExp '
-s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '--', 2., 1., 'k', [(0, (2.5, 2.5))], 'MMLE '
+s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 1.5, 1., 'g', [(0, (7.5, 7.5))], 'Stacked '
+s_map, w_map, a_map, c_map, d_map, l_map = '--', 1., 1., 'r', [(0, (5., 5.))], 'MMAP '
+s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 0.5, 1., 'r', [(0, (2.5, 2.5))], 'MExp '
+s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '--', 2.5, 1., 'b', [(0, (1, 1))], 'MMLE '
 s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '--', 1., 1., 'k', [(0, (1, 1))], 'Sampled '
-s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '--', 2., 1., 'k', [(0, (1, 1))], 'Mean of\n Samples '
+s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '--', 1.5, 1., 'b', [(0, (1, 1))], 'Mean of\n Samples '
 
 cmap = np.linspace(0., 1., d.plot_colors)
 colors = [cm.viridis(i) for i in cmap]
@@ -128,6 +128,7 @@ def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_in
                            alpha=0.5,
                            linewidth=0.1,
                            s=2)
+    sps_autocorrelation_times.set_xlim(0, (burn_ins + 2) * n_burn_test)
     autocorrelation_times_plot = [f_autocorrelation_times, sps_autocorrelation_times]
     f_autocorrelation_times.savefig(os.path.join(plot_dir, 'autocorrelation_times.png'), bbox_inches='tight', pad_inches = 0)
 
@@ -139,6 +140,7 @@ def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_in
                                    alpha=0.5,
                                    linewidth=0.1,
                                    s=n_bins)
+    sps_acceptance_fractions.set_xlim(0, (burn_ins + 2) * n_burn_test)
     acceptance_fractions_plot = [f_acceptance_fractions, sps_acceptance_fractions]
     f_acceptance_fractions.savefig(os.path.join(plot_dir, 'acceptance_fractions.png'), bbox_inches='tight', pad_inches = 0)
 
@@ -152,6 +154,7 @@ def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_in
         scales.append(scale)
     locs = np.array(locs)
     scales = np.array(scales)
+    # (locs, scales) = s.norm_fit(posterior_probabilities[:])
     x_all = np.arange(burn_ins * n_burn_test, (burn_ins + 1) * n_burn_test + 1)
     pu.plot_step(sps_posterior_probabilities, x_all, locs)
     x_cor = [x_all[:-1], x_all[:-1], x_all[1:], x_all[1:]]
@@ -159,6 +162,7 @@ def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_in
     y_cor2 = np.array([locs - 2. * scales, locs + 2. * scales, locs + 2. * scales, locs - 2. * scales])
     sps_posterior_probabilities.fill(x_cor, y_cor, color='k', alpha=0.5, linewidth=0.)
     sps_posterior_probabilities.fill(x_cor, y_cor2, color='k', alpha=0.25, linewidth=0.)
+    sps_posterior_probabilities.set_xlim(0, (burn_ins + 1) * n_burn_test)
     posterior_probabilities_plot = [f_posterior_probabilities, sps_posterior_probabilities]
     f_posterior_probabilities.savefig(os.path.join(plot_dir, 'posterior_probabilities.png'), bbox_inches='tight', pad_inches = 0)
 
@@ -203,6 +207,21 @@ def plot_estimators(info, plot_dir):
         sps.plot(info['truth']['z_grid'], info['truth']['nz_grid'], linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+nz)
         sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']), linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+lnz)
 
+    if 'log_mean_sampled_nz' in info['estimators']:
+        plot_samples(info, plot_dir)
+        (locs, scales) = s.norm_fit(info['log_sampled_nz_meta_data']['chains'])
+        for k in range(len(info['bin_ends'])-1):
+            x_errs = [info['bin_ends'][k], info['bin_ends'][k], info['bin_ends'][k+1], info['bin_ends'][k+1]]
+            log_y_errs = [locs[k] - scales[k], locs[k] + scales[k], locs[k] + scales[k], locs[k] - scales[k]]
+            sps_log.fill(x_errs, log_y_errs, color='k', alpha=0.1, linewidth=0.)
+            sps.fill(x_errs, np.exp(log_y_errs), color='k', alpha=0.1, linewidth=0.)
+        pu.plot_step(sps, info['bin_ends'], np.exp(info['estimators']['log_mean_sampled_nz']), w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+nz)
+        pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mean_sampled_nz'], w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
+
+    if 'log_mmle_nz' in info['estimators']:
+        pu.plot_step(sps, info['bin_ends'], np.exp(info['estimators']['log_mmle_nz']), w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+nz)
+        pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mmle_nz'], w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz)
+
     if 'log_stacked_nz' in info['estimators']:
         pu.plot_step(sps, info['bin_ends'], np.exp(info['estimators']['log_stacked_nz']), w=w_stk, s=s_stk, a=a_stk, c=c_stk, d=d_stk, l=l_stk+nz)
         pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_stacked_nz'], w=w_stk, s=s_stk, a=a_stk, c=c_stk, d=d_stk, l=l_stk+lnz)
@@ -214,15 +233,6 @@ def plot_estimators(info, plot_dir):
     if 'log_mexp_nz' in info['estimators']:
         pu.plot_step(sps, info['bin_ends'], np.exp(info['estimators']['log_mexp_nz']), w=w_exp, s=s_exp, a=a_exp, c=c_exp, d=d_exp, l=l_exp+nz)
         pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mexp_nz'], w=w_exp, s=s_exp, a=a_exp, c=c_exp, d=d_exp, l=l_exp+lnz)
-
-    if 'log_mmle_nz' in info['estimators']:
-        pu.plot_step(sps, info['bin_ends'], np.exp(info['estimators']['log_mmle_nz']), w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+nz)
-        pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mmle_nz'], w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz)
-
-    if 'log_mean_sampled_nz' in info['estimators']:
-        plot_samples(info['estimators']['log_sampled_nz_meta_data'], plot_dir)
-        pu.plot_step(sps, info['bin_ends'], np.exp(info['estimators']['log_mean_sampled_nz']), w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+nz)
-        pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mean_sampled_nz'], w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
 
     sps_log.legend(fontsize='x-small', loc='lower left')
     sps.set_xlabel('x')
@@ -262,14 +272,20 @@ def plot_samples(info, plot_dir):
         sps.plot(info['truth']['z_grid'], info['truth']['nz_grid'], linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+nz)
         sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']), linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+lnz)
 
-    shape = np.shape(info['estimators']['log_sampled_nz'])
-    flat = info['estimators']['log_sampled_nz'].reshape(np.prod(shape[:-1]), shape[-1])
-    samples = [np.random.randint(0, len(flat)) for i in range(d.plot_colors)]
+    (locs, scales) = s.norm_fit(info['log_sampled_nz_meta_data']['chains'])
+    for k in range(len(info['bin_ends'])-1):
+        x_errs = [info['bin_ends'][k], info['bin_ends'][k], info['bin_ends'][k+1], info['bin_ends'][k+1]]
+        log_y_errs = [locs[k] - scales[k], locs[k] + scales[k], locs[k] + scales[k], locs[k] - scales[k]]
+        sps_log.fill(x_errs, log_y_errs, color='k', alpha=0.1, linewidth=0.)
+        sps.fill(x_errs, np.exp(log_y_errs), color='k', alpha=0.1, linewidth=0.)
+    shape = np.shape(info['log_sampled_nz_meta_data']['chains'])
+    flat = info['log_sampled_nz_meta_data']['chains'].reshape(np.prod(shape[:-1]), shape[-1])
+    random_samples = [np.random.randint(0, len(flat)) for i in range(d.plot_colors)]
     for i in range(d.plot_colors):
-        unlogged = np.exp(flat[i])
-        normed = unlogged / np.dot(info['bin_ends'], unlogged)
-        pu.plot_step(sps_log, info['bin_ends'], normed, s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
-        pu.plot_step(sps, info['bin_ends'], u.safe_log(normed), s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
+        pu.plot_step(sps_log, info['bin_ends'], flat[random_samples[i]], s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
+        pu.plot_step(sps, info['bin_ends'], np.exp(flat[random_samples[i]]), s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
+    pu.plot_step(sps_log, info['bin_ends'], locs, s=s_smp, d=d_smp, w=2., a=1., c=c_smp, l=l_bfe+lnz)
+    pu.plot_step(sps, info['bin_ends'], np.exp(locs), s=s_smp, d=d_smp, w=2., a=1., c=c_smp, l=l_bfe+nz)
 
     sps_log.legend(fontsize='x-small', loc='lower left')
     sps.set_xlabel('x')

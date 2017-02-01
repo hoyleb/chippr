@@ -18,6 +18,8 @@ def set_up_plot():
     mpl.rcParams['figure.subplot.wspace'] = 0.5
     mpl.rcParams['figure.subplot.hspace'] = 0.5
 
+    return
+
 def plot_step(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], l=None, r=False):
     """
     Plots a step function
