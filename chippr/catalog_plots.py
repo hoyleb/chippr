@@ -27,10 +27,12 @@ def plot_true_histogram(true_samps, n_bins=50, plot_loc='', plot_name='true_hist
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
     sps = f.add_subplot(1, 1, 1)
-    sps.hist(true_samps, bins=n_bins, normed=1)
+    sps.hist(true_samps, bins=n_bins, normed=1, color='k')
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$n(z_{true})$')
     f.savefig(os.path.join(plot_loc, plot_name))
+
+    return
 
 def plot_obs_scatter(true_samps, obs_samps, plot_loc='', plot_name='obs_scatter.png'):
     """
@@ -50,7 +52,15 @@ def plot_obs_scatter(true_samps, obs_samps, plot_loc='', plot_name='obs_scatter.
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
     sps = f.add_subplot(1, 1, 1)
-    sps.scatter(true_samps, obs_samps)
+    sps.scatter(true_samps, obs_samps, c='k', linewidth=0., alpha=0.1)
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$z_{obs}$')
     f.savefig(os.path.join(plot_loc, plot_name))
+
+    return
+
+def plot_pdfs():
+    """
+    Plots a small number of randomly chosen likelihood functions and parametrized posteriors
+    """
+    return

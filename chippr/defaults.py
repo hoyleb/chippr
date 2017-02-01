@@ -17,6 +17,8 @@ gr_threshold = 1.1
 n_accepted = 10**3
 n_burned = 10**2
 
+plot_colors = 10
+
 def check_sim_params(params={}):
     """
     Checks simulation parameter dictionary for various keywords and sets to default values if not present

@@ -1,4 +1,6 @@
 import numpy as np
+import scipy as sp
+from scipy import stats
 
 import chippr
 from chippr import defaults as d
@@ -22,6 +24,32 @@ def mean(population):
     flat = population.reshape(np.prod(shape[:-1]), shape[-1])
     mean = np.mean(flat, axis=0)
     return mean
+
+def norm_fit(population):
+    """
+    Calculates the mean and standard deviation of a population
+
+    Parameters
+    ----------
+    population: np.array, float
+        population over which to calculate the mean
+
+    Returns
+    -------
+    norm_stats: tuple, list, float
+        mean and standard deviation over population
+    """
+    shape = np.shape(population)
+    flat = population.reshape(np.prod(shape[:-1]), shape[-1]).T
+    locs, scales = [], []
+    for k in range(shape[-1]):
+        loc, scale = sp.stats.norm.fit_loc_scale(flat[k])
+        locs.append(loc)
+        scales.append(scale)
+    locs = np.array(locs)
+    scales = np.array(scales)
+    norm_stats = (locs, scales)
+    return norm_stats
 
 def calculate_kld(pe, qe, vb=True):
     """

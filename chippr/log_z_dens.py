@@ -13,7 +13,7 @@ import chippr
 from chippr import defaults as d
 from chippr import plot_utils as pu
 from chippr import utils as u
-from chippr import stats as s
+from chippr import stat_utils as s
 from chippr import log_z_dens_plots as plots
 
 class log_z_dens(object):
@@ -302,8 +302,8 @@ class log_z_dens(object):
 
         Returns
         -------
-        mcmc_outputs: ndarray
-            array of sampled redshift density function bin values
+        mcmc_outputs: dict
+            dictionary containing array of sampled redshift density function bin values as well as posterior probabilities, acceptance fractions, and autocorrelation times
         """
         self.sampler.reset()
         pos, prob, state = self.sampler.run_mcmc(ivals, n_samps)
@@ -344,33 +344,40 @@ class log_z_dens(object):
             self.n_walkers = len(ivals)
             self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
             self.burn_ins = 0
-            self.tot_runs = 0
             self.burning_in = True
             vals = ivals
+            if vb:
+                canvas = plots.set_up_burn_in_plots()
             while self.burning_in:
-                self.burn_ins += 1
                 if vb:
                     print('beginning sampling '+str(self.burn_ins))
                 burn_in_mcmc_outputs = self.sample(vals, n_burn_test)
+                if vb:
+                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, n_burn_test, self.burn_ins, self.n_walkers, self.n_bins, self.plot_dir)
                 self.burning_in = s.gr_test(burn_in_mcmc_outputs['chains'])
                 if save:
-                    with open('mcmc'+str(self.burn_ins)+'.p', 'wb') as file_location:
+                    with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
                         cpkl.dump(burn_in_mcmc_outputs, file_location)
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
+                self.burn_ins += 1
 
             mcmc_products = self.sample(vals, n_accepted)
+
             self.log_smp_nz = mcmc_products['chains']
             self.smp_nz = np.exp(self.log_smp_nz)
-            self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
-            self.info['estimators']['log_sampled_nz_meta_data'] = mcmc_products
+            #self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
+            self.info['log_sampled_nz_meta_data'] = mcmc_products
             self.log_bfe_nz = s.mean(self.log_smp_nz)
             self.bfe_nz = np.exp(self.log_bfe_nz)
             self.info['estimators']['log_mean_sampled_nz'] = self.log_bfe_nz
         else:
-            self.log_smp_nz = self.info['estimators']['log_sampled_nz']
+            self.log_smp_nz = self.info['log_sampled_nz_meta_data']
             self.smp_nz = np.exp(self.log_smp_nz)
             self.log_bfe_nz = self.info['estimators']['log_mean_sampled_nz']
             self.bfe_nz = np.exp(self.log_smp_nz)
+
+        if vb:
+            plots.plot_samples(self.info, self.plot_dir)
 
         return self.log_smp_nz
 
@@ -403,17 +410,12 @@ class log_z_dens(object):
             print(self.info['stats'])
         return self.info['stats']
 
-    def plot_estimators(self, plot_loc):
+    def plot_estimators(self):
         """
         Plots all available estimators of the redshift density function.
-
-        Parameters
-        ----------
-        plot_loc: string
-            destination where plot should be stored
         """
-        f = plots.plot_estimators(self.info)
-        f.savefig(os.path.join(self.plot_dir, plot_loc))
+        plots.plot_estimators(self.info, self.plot_dir)
+        return
 
     def read(self, read_loc, style='pickle', vb=True):
         """
