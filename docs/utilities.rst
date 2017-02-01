@@ -24,7 +24,7 @@ Simulation Utilities
 Statistics
 ----------
 
-.. automodule:: stats
+.. automodule:: stat_utils
     :members:
     :undoc-members:
 
