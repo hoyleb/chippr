@@ -12,7 +12,7 @@ n_bins = 10
 
 constant_sigma = 0.05
 
-gr_threshold = 1.1
+gr_threshold = 1.25
 
 n_accepted = 10**3
 n_burned = 10**2

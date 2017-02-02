@@ -347,13 +347,13 @@ class log_z_dens(object):
             self.burning_in = True
             vals = ivals
             if vb:
-                canvas = plots.set_up_burn_in_plots()
+                canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers)
             while self.burning_in:
                 if vb:
                     print('beginning sampling '+str(self.burn_ins))
                 burn_in_mcmc_outputs = self.sample(vals, n_burn_test)
                 if vb:
-                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, n_burn_test, self.burn_ins, self.n_walkers, self.n_bins, self.plot_dir)
+                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, self.burn_ins, self.plot_dir)
                 self.burning_in = s.gr_test(burn_in_mcmc_outputs['chains'])
                 if save:
                     with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
@@ -367,7 +367,7 @@ class log_z_dens(object):
             self.smp_nz = np.exp(self.log_smp_nz)
             #self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
             self.info['log_sampled_nz_meta_data'] = mcmc_products
-            self.log_bfe_nz = s.mean(self.log_smp_nz)
+            self.log_bfe_nz = s.norm_fit(self.log_smp_nz)[0]# s.mean(self.log_smp_nz)
             self.bfe_nz = np.exp(self.log_bfe_nz)
             self.info['estimators']['log_mean_sampled_nz'] = self.log_bfe_nz
         else:

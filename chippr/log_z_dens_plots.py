@@ -43,9 +43,14 @@ def plot_ivals(info):
     """
     return f
 
-def set_up_burn_in_plots():
+def set_up_burn_in_plots(n_bins, n_walkers):
     """
     Creates plotting objects for sampler progress
+
+    Parameters
+    ----------
+    n_bins: int
+        number of parameters defining n(z)
 
     Returns
     -------
@@ -77,10 +82,20 @@ def set_up_burn_in_plots():
     sps_posterior_probabilities.set_xlabel(r'accepted sample number')
     posterior_probabilities_plot = [f_posterior_probabilities, sps_posterior_probabilities]
 
-    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot)
+    bin_range = range(n_bins)
+    f_chain_evolution = plt.figure(figsize=(5, 5 * n_bins))
+    sps_chain_evolution = [f_chain_evolution.add_subplot(n_bins, 1, k+1) for k in bin_range]
+    for k in bin_range:
+        sps_chain_evolution[k].set_ylabel(r'parameter value '+str(k))
+        sps_chain_evolution[k].set_xlabel(r'accepted sample number')
+    f_chain_evolution.subplots_adjust(hspace=0, wspace=0)
+    random_walkers = [np.random.randint(0, n_walkers) for i in range(d.plot_colors)]
+    chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
+
+    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
     return plot_information
 
-def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_ins, n_walkers, n_bins, plot_dir):
+def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
     """
     Plots new information into burn-in progress plots
 
@@ -90,14 +105,8 @@ def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_in
         contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
     sampler_output: dict
         dictionary containing array of sampled redshift density function bin values as well as posterior probabilities, acceptance fractions, and autocorrelation times
-    n_burn_test: int
-        number of samples to be taken in each interval between tests of the convergence criterion
     burn_ins: int
         number of between-convergence-check intervals that have already been performed
-    n_walkers: int
-        number of MCMC walkers
-    n_bins: int
-        number of parameters defining the log_z_dens function
     plot_dir: string
         location in which to store the plots
 
@@ -105,15 +114,13 @@ def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_in
     -------
     plot_information: tuple
         contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
-
-    Notes
-    -----
-    I am aware that most of these inputs could be eliminated!
-    This is basically a placeholder to make the plots quickly, but many of those pieces of information are available in the primary input of sampler_output.
     """
-    burn_test_range = range(n_burn_test)
+    (n_walkers, n_burn_test, n_bins) = np.shape(sampler_output['chains'])
 
-    (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot) = plot_information
+    burn_test_range = range(n_burn_test)
+    bin_range = range(n_bins)
+
+    (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot) = plot_information
 
     [f_autocorrelation_times, sps_autocorrelation_times] = autocorrelation_times_plot
     autocorrelation_times = sampler_output['acors']
@@ -166,7 +173,19 @@ def plot_sampler_progress(plot_information, sampler_output, n_burn_test, burn_in
     posterior_probabilities_plot = [f_posterior_probabilities, sps_posterior_probabilities]
     f_posterior_probabilities.savefig(os.path.join(plot_dir, 'posterior_probabilities.png'), bbox_inches='tight', pad_inches = 0)
 
-    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot)
+    [f_chain_evolution, sps_chain_evolution, random_walkers] = chain_evolution_plot
+    chains = sampler_output['chains']
+    (n_walkers, n_burn_test, n_bins) = np.shape(chains)
+    chains = np.swapaxes(chains, 1, 2)
+    x_all = np.arange(burn_ins * n_burn_test, (burn_ins + 1) * n_burn_test)
+    for k in bin_range:
+        for i in range(d.plot_colors):
+            sps_chain_evolution[k].plot(x_all, chains[random_walkers[i]][k], c=colors[i])
+            sps_chain_evolution[k].set_xlim(0, (burn_ins + 1) * n_burn_test)
+    chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
+    f_chain_evolution.savefig(os.path.join(plot_dir, 'chain_evolution.png'), bbox_inches='tight', pad_inches = 0)
+
+    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
     return plot_information
 
 def plot_estimators(info, plot_dir):
@@ -284,8 +303,8 @@ def plot_samples(info, plot_dir):
     for i in range(d.plot_colors):
         pu.plot_step(sps_log, info['bin_ends'], flat[random_samples[i]], s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
         pu.plot_step(sps, info['bin_ends'], np.exp(flat[random_samples[i]]), s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
-    pu.plot_step(sps_log, info['bin_ends'], locs, s=s_smp, d=d_smp, w=2., a=1., c=c_smp, l=l_bfe+lnz)
-    pu.plot_step(sps, info['bin_ends'], np.exp(locs), s=s_smp, d=d_smp, w=2., a=1., c=c_smp, l=l_bfe+nz)
+    pu.plot_step(sps_log, info['bin_ends'], locs, s=s_smp, d=d_smp, w=2., a=1., c='k', l=l_bfe+lnz)
+    pu.plot_step(sps, info['bin_ends'], np.exp(locs), s=s_smp, d=d_smp, w=2., a=1., c='k', l=l_bfe+nz)
 
     sps_log.legend(fontsize='x-small', loc='lower left')
     sps.set_xlabel('x')
