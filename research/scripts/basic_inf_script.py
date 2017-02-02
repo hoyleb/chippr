@@ -1,11 +1,20 @@
-def make_true():
+def make_true_nz(test_name):
     """
     Function to create true redshift distribution to be shared among several test cases
+
+    Parameters
+    ----------
+    test_name: string
+        name used to look up parameters for making true_nz
 
     Returns
     -------
     true_nz: chippr.gmix object
         gaussian mixture probability distribution
+
+    Notes
+    -----
+    test_name is currently ignored but will soon be used to load parameters for making true_nz instead of hardcoded values.
     """
     true_amps = np.array([0.20, 0.35, 0.55])
     true_means = np.array([0.5, 0.2, 0.75])
@@ -44,14 +53,14 @@ def set_up_prior(data):
     prior = mvn(prior_mean, prior_var)
     return prior
 
-def the_loop(given_key):
+def do_inference(given_key):
     """
-    Function to create a catalog once true redshifts exist
+    Function to do inference from a catalog of photo-z interim posteriors
 
     Parameters
     ----------
-    true_nz: chippr.gmix object, optional
-        gaussian mixture probability distribution
+    given_key: string
+        name of test case to be run
     """
     test_info = all_tests[given_key]
     test_name = test_info['name']
@@ -88,14 +97,13 @@ if __name__ == "__main__":
     import chippr
     from chippr import *
 
-    true_nz = make_true()
-
     result_dir = os.path.join('..', 'results')
     name_file = 'which_inf_tests.txt'
 
     with open(name_file) as tests_to_run:
         all_tests = {}
         for test_name in tests_to_run:
+            true_nz = make_true_nz(test_name)
             test_info = {}
             test_info['name'] = test_name
             test_info['truth'] = true_nz
@@ -103,4 +111,4 @@ if __name__ == "__main__":
 
     nps = mp.cpu_count()-1
     pool = mp.Pool(nps)
-    pool.map(the_loop, all_tests.keys())
+    pool.map(do_inference, all_tests.keys())
