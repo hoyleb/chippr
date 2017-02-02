@@ -76,12 +76,17 @@ def do_inference(given_key):
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
 
     prior = set_up_prior(data)
+    n_bins = len(data['log_interim_prior'])
+    n_ivals = 2 * n_bins
+    initial_values = prior.sample(n_ivals)
 
     nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
     nz_stacked = nz.calculate_stacked()
     nz_mmap = nz.calculate_mmap()
     nz_mexp = nz.calculate_mexp()
+    nz_mmle = nz.calculate_mmle(nz_stacked)
+    nz_samps = nz.calculate_samples(initial_values)
     nz_stats = nz.compare()
 
     nz.plot_estimators()
