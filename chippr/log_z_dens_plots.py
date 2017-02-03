@@ -67,7 +67,7 @@ def plot_ivals(info, ivals, plot_dir):
     colors = [cm.viridis(i) for i in cmap]
     for i in range(n_walkers):
         pu.plot_step(sps_log, info['bin_ends'], ivals[i], s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
-        pu.plot_step(sps, info['bin_ends'], np.exp(ivals[i]]), s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
+        pu.plot_step(sps, info['bin_ends'], np.exp(ivals[i]), s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
 
     sps_log.legend(fontsize='x-small', loc='lower left')
     f.savefig(os.path.join(plot_dir, 'sampler_ivals.png'), bbox_inches='tight', pad_inches = 0, dpi=100)
