@@ -351,6 +351,7 @@ class log_z_dens(object):
             vals = ivals
             if vb:
                 canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers)
+                plots.plot_ivals(self.info, ivals, self.plot_dir)
             full_chain = np.array([[ivals[w]] for w in range(self.n_walkers)])
             while self.burning_in:
                 if vb:

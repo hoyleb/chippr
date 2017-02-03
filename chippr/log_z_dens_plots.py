@@ -15,19 +15,19 @@ from chippr import stat_utils as s
 
 lnz, nz = r'$\ln[n(z)]$', r'$n(z)$'
 
-s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '--', 0.5, 1., 'k', [(0, (1, 1))], 'True '
-s_int, w_int, a_int, c_int, d_int, l_int = '--', 0.5, 0.5, 'k', [(0, (1, 1))], 'Interim '
+s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 0.5, 1., 'k', [(0, (1, 1))], 'True '
+s_int, w_int, a_int, c_int, d_int, l_int = '-', 0.5, 0.5, 'k', [(0, (1, 1))], 'Interim '
 s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 1.5, 1., 'g', [(0, (7.5, 7.5))], 'Stacked '
 s_map, w_map, a_map, c_map, d_map, l_map = '--', 1., 1., 'r', [(0, (5., 5.))], 'MMAP '
 s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 0.5, 1., 'r', [(0, (2.5, 2.5))], 'MExp '
-s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '--', 2.5, 1., 'b', [(0, (1, 1))], 'MMLE '
-s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '--', 1., 1., 'k', [(0, (1, 1))], 'Sampled '
-s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '--', 1.5, 1., 'b', [(0, (1, 1))], 'Mean of\n Samples '
+s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 2.5, 1., 'b', [(0, (1, 1))], 'MMLE '
+s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '-', 1., 1., 'k', [(0, (1, 1))], 'Sampled '
+s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 1.5, 1., 'b', [(0, (1, 1))], 'Mean of\n Samples '
 
 cmap = np.linspace(0., 1., d.plot_colors)
 colors = [cm.viridis(i) for i in cmap]
 
-def plot_ivals(info):
+def plot_ivals(info, ivals, plot_dir):
     """
     Plots the initial values given to the sampler
 
@@ -35,13 +35,44 @@ def plot_ivals(info):
     ----------
     info: dict
         dictionary of stored information from log_z_dens object
-
-    Returns
-    -------
-    f: matplotlib figure
-        figure object
+    ivals: numpy ndarray, float
+        array of initial values
+    plot_dir: string
+        where to save the figure
     """
-    return f
+    pu.set_up_plot()
+
+    f = plt.figure(figsize=(5, 10))
+    sps = [f.add_subplot(2, 1, l+1) for l in xrange(0, 2)]
+    f.subplots_adjust(hspace=0, wspace=0)
+    sps_log = sps[0]
+    sps = sps[1]
+
+    sps_log.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
+    sps_log.set_ylabel(r'$\ln[n(z)]$')
+    sps.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
+    sps.set_xlabel(r'$z$')
+    sps.set_ylabel(r'$n(z)$')
+    sps.ticklabel_format(style='sci',axis='y')
+
+    pu.plot_step(sps, info['bin_ends'], np.exp(info['log_interim_prior']), w=w_int, s=s_int, a=a_int, c=c_int, d=d_int, l=l_int+nz)
+    pu.plot_step(sps_log, info['bin_ends'], info['log_interim_prior'], w=w_int, s=s_int, a=a_int, c=c_int, d=d_int, l=l_int+lnz)
+
+    if info['truth'] is not None:
+        sps.plot(info['truth']['z_grid'], info['truth']['nz_grid'], linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+nz)
+        sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']), linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+lnz)
+
+    n_walkers = len(ivals)
+    cmap = np.linspace(0., 1., n_walkers)
+    colors = [cm.viridis(i) for i in cmap]
+    for i in range(n_walkers):
+        pu.plot_step(sps_log, info['bin_ends'], ivals[i], s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
+        pu.plot_step(sps, info['bin_ends'], np.exp(ivals[i]]), s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
+
+    sps_log.legend(fontsize='x-small', loc='lower left')
+    f.savefig(os.path.join(plot_dir, 'sampler_ivals.png'), bbox_inches='tight', pad_inches = 0)
+
+    return
 
 def set_up_burn_in_plots(n_bins, n_walkers):
     """
@@ -222,7 +253,7 @@ def plot_estimators(info, plot_dir):
     sps = sps[1]
 
     sps_log.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
-    sps_log.set_ylabel(r'$\ln n(z)$')
+    sps_log.set_ylabel(r'$\ln[n(z)]$')
     sps.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
     sps.set_xlabel(r'$z$')
     sps.set_ylabel(r'$n(z)$')
@@ -263,9 +294,6 @@ def plot_estimators(info, plot_dir):
         pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mexp_nz'], w=w_exp, s=s_exp, a=a_exp, c=c_exp, d=d_exp, l=l_exp+lnz)
 
     sps_log.legend(fontsize='x-small', loc='lower left')
-    sps.set_xlabel('x')
-    sps_log.set_ylabel('Log probability density')
-    sps.set_ylabel('Probability density')
     f.savefig(os.path.join(plot_dir, 'all_estimators.png'), bbox_inches='tight', pad_inches = 0)
 
     return
@@ -288,7 +316,7 @@ def plot_samples(info, plot_dir):
     sps = sps[1]
 
     sps_log.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
-    sps_log.set_ylabel(r'$\ln n(z)$')
+    sps_log.set_ylabel(r'$\ln[n(z)]$')
     sps.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
     sps.set_xlabel(r'$z$')
     sps.set_ylabel(r'$n(z)$')
@@ -316,8 +344,5 @@ def plot_samples(info, plot_dir):
     pu.plot_step(sps, info['bin_ends'], np.exp(locs), s=s_smp, d=d_smp, w=2., a=1., c='k', l=l_bfe+nz)
 
     sps_log.legend(fontsize='x-small', loc='lower left')
-    sps.set_xlabel('x')
-    sps_log.set_ylabel('Log probability density')
-    sps.set_ylabel('Probability density')
     f.savefig(os.path.join(plot_dir, 'samples.png'), bbox_inches='tight', pad_inches = 0)
     return
