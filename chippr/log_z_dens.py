@@ -318,7 +318,7 @@ class log_z_dens(object):
         mcmc_outputs['acors'] = acors
         return mcmc_outputs
 
-    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burn_test=d.n_burned, vb=True, save=True):
+    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burn_test=d.n_burned, vb=True):
         """
         Calculates samples estimating the redshift density function
 
@@ -332,8 +332,6 @@ class log_z_dens(object):
             initial values of log n(z) for each walker
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
-        save: boolean, optional
-            True to save burn-in state, False to only save final state
 
         Returns
         -------
@@ -347,27 +345,31 @@ class log_z_dens(object):
             self.burning_in = True
             vals = ivals
             if vb:
-                canvas = plots.set_up_burn_in_plots()
+                canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers)
+            full_chain = np.array([[ivals[w]] for w in range(self.n_walkers)])
             while self.burning_in:
                 if vb:
                     print('beginning sampling '+str(self.burn_ins))
                 burn_in_mcmc_outputs = self.sample(vals, n_burn_test)
                 if vb:
-                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, n_burn_test, self.burn_ins, self.n_walkers, self.n_bins, self.plot_dir)
-                self.burning_in = s.gr_test(burn_in_mcmc_outputs['chains'])
-                if save:
-                    with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
-                        cpkl.dump(burn_in_mcmc_outputs, file_location)
+                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, self.burn_ins, self.plot_dir)
+                with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
+                    cpkl.dump(burn_in_mcmc_outputs, file_location)
+                full_chain = np.concatenate((full_chain, burn_in_mcmc_outputs['chains']), axis=1)
+                self.burning_in = s.gr_test(full_chain)
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
                 self.burn_ins += 1
 
-            mcmc_products = self.sample(vals, n_accepted)
+            mcmc_outputs = self.sample(vals, n_accepted)
+            full_chain = np.concatenate((full_chain, mcmc_outputs['chains']), axis=1)
+            with open(os.path.join(self.res_dir, 'full_chain.p'), 'wb') as file_location:
+                cpkl.dump(full_chain, file_location)
 
-            self.log_smp_nz = mcmc_products['chains']
+            self.log_smp_nz = mcmc_outputs['chains']
             self.smp_nz = np.exp(self.log_smp_nz)
             #self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
-            self.info['log_sampled_nz_meta_data'] = mcmc_products
-            self.log_bfe_nz = s.mean(self.log_smp_nz)
+            self.info['log_sampled_nz_meta_data'] = mcmc_outputs
+            self.log_bfe_nz = s.norm_fit(self.log_smp_nz)[0]# s.mean(self.log_smp_nz)
             self.bfe_nz = np.exp(self.log_bfe_nz)
             self.info['estimators']['log_mean_sampled_nz'] = self.log_bfe_nz
         else:

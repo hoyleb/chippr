@@ -146,7 +146,7 @@ def multi_parameter_gr_stat(sample):
     dims = np.shape(sample)
     (n_walkers, n_iterations, n_params) = dims
     n_burn_ins = n_iterations / 2
-    chain_ensemble = sample.reshape(n_iterations, n_walkers, n_params)
+    chain_ensemble = np.swapaxes(sample, 0, 1)
     chain_ensemble = chain_ensemble[n_burn_ins:, :]
     Rs = np.zeros((n_params))
     for i in range(n_params):
@@ -171,6 +171,7 @@ def gr_test(sample, threshold=d.gr_threshold):
         True if burning in, False if post-burn in
     """
     gr = multi_parameter_gr_stat(sample)
+    print('Gelman-Rubin test statistic = '+str(gr))
     return np.max(gr) > threshold
 
 def cft(xtimes, lag):
