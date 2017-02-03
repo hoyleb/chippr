@@ -1,3 +1,3 @@
 null_test
 doubly_broad_null_test
-quintuply_narrow_null_test
+doubly_narrow_null_test

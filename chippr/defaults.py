@@ -10,7 +10,7 @@ max_x = 1.
 n_bins = 10
 # n_items = 4
 
-constant_sigma = 0.05
+constant_sigma = 0.03
 
 n_walkers = 2 * n_bins
 
