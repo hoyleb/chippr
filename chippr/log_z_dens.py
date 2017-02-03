@@ -98,7 +98,7 @@ class log_z_dens(object):
             self.params = params
         self.params = d.check_inf_params(self.params)
         if vb:
-            print self.params
+            print self.dir + ': ' + str(self.params)
         return
 
     def evaluate_log_hyper_likelihood(self, log_nz):
@@ -179,12 +179,12 @@ class log_z_dens(object):
             return -2. * self.evaluate_log_hyper_posterior(log_nz)
 
         if vb:
-            print("starting at", start, _objective(start))
+            print(self.dir + 'starting at', start, _objective(start))
 
         res = op.minimize(_objective, start, method="Nelder-Mead", options={"maxfev": 1e5, "maxiter":1e5})
 
         if vb:
-            print(res)
+            print(self.dir + ': ' + str(res))
         return res.x
 
     def calculate_mmle(self, start, vb=True):
@@ -354,7 +354,7 @@ class log_z_dens(object):
             full_chain = np.array([[ivals[w]] for w in range(self.n_walkers)])
             while self.burning_in:
                 if vb:
-                    print('beginning sampling '+str(self.burn_ins))
+                    print(self.dir + ': beginning sampling '+str(self.burn_ins))
                 burn_in_mcmc_outputs = self.sample(vals, self.params['n_burned'])
                 if vb:
                     canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, self.burn_ins, self.plot_dir)
@@ -414,7 +414,7 @@ class log_z_dens(object):
                 self.info['stats']['rms'][key_1[4:] + '__' + key_2[4:]] = s.calculate_rms(np.exp(self.info['estimators'][key_1]), np.exp(self.info['estimators'][key_2]))
 
         if vb:
-            print(self.info['stats'])
+            print(self.dir + ': ' + str(self.info['stats']))
         return self.info['stats']
 
     def plot_estimators(self):
