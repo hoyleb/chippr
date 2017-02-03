@@ -70,7 +70,7 @@ def plot_ivals(info, ivals, plot_dir):
         pu.plot_step(sps, info['bin_ends'], np.exp(ivals[i]]), s=s_smp, d=d_smp, w=w_smp, a=1., c=colors[i])
 
     sps_log.legend(fontsize='x-small', loc='lower left')
-    f.savefig(os.path.join(plot_dir, 'sampler_ivals.png'), bbox_inches='tight', pad_inches = 0)
+    f.savefig(os.path.join(plot_dir, 'sampler_ivals.png'), bbox_inches='tight', pad_inches = 0, dpi=100)
 
     return
 
@@ -177,7 +177,7 @@ def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
                            s=2)
     sps_autocorrelation_times.set_xlim(0, (burn_ins + 2) * n_burn_test)
     autocorrelation_times_plot = [f_autocorrelation_times, sps_autocorrelation_times]
-    f_autocorrelation_times.savefig(os.path.join(plot_dir, 'autocorrelation_times.png'), bbox_inches='tight', pad_inches = 0)
+    f_autocorrelation_times.savefig(os.path.join(plot_dir, 'autocorrelation_times.png'), bbox_inches='tight', pad_inches = 0, dpi=100)
 
     [f_acceptance_fractions, sps_acceptance_fractions] = acceptance_fractions_plot
     acceptance_fractions = sampler_output['fracs'].T
@@ -189,7 +189,7 @@ def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
                                    s=n_bins)
     sps_acceptance_fractions.set_xlim(0, (burn_ins + 2) * n_burn_test)
     acceptance_fractions_plot = [f_acceptance_fractions, sps_acceptance_fractions]
-    f_acceptance_fractions.savefig(os.path.join(plot_dir, 'acceptance_fractions.png'), bbox_inches='tight', pad_inches = 0)
+    f_acceptance_fractions.savefig(os.path.join(plot_dir, 'acceptance_fractions.png'), bbox_inches='tight', pad_inches = 0, dpi=100)
 
     [f_posterior_probabilities, sps_posterior_probabilities] = posterior_probabilities_plot
     posterior_probabilities = np.swapaxes(sampler_output['probs'], 0, 1)
@@ -211,7 +211,7 @@ def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
     sps_posterior_probabilities.fill(x_cor, y_cor2, color='k', alpha=0.25, linewidth=0.)
     sps_posterior_probabilities.set_xlim(0, (burn_ins + 1) * n_burn_test)
     posterior_probabilities_plot = [f_posterior_probabilities, sps_posterior_probabilities]
-    f_posterior_probabilities.savefig(os.path.join(plot_dir, 'posterior_probabilities.png'), bbox_inches='tight', pad_inches = 0)
+    f_posterior_probabilities.savefig(os.path.join(plot_dir, 'posterior_probabilities.png'), bbox_inches='tight', pad_inches = 0, dpi=100)
 
     [f_chain_evolution, sps_chain_evolution, random_walkers] = chain_evolution_plot
     chains = sampler_output['chains']
@@ -223,7 +223,7 @@ def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
             sps_chain_evolution[k].plot(x_all, chains[random_walkers[i]][k], c=colors[i])
             sps_chain_evolution[k].set_xlim(0, (burn_ins + 1) * n_burn_test)
     chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
-    f_chain_evolution.savefig(os.path.join(plot_dir, 'chain_evolution.png'), bbox_inches='tight', pad_inches = 0)
+    f_chain_evolution.savefig(os.path.join(plot_dir, 'chain_evolution.png'), bbox_inches='tight', pad_inches = 0, dpi=100)
 
     plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
     return plot_information
@@ -294,7 +294,7 @@ def plot_estimators(info, plot_dir):
         pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mexp_nz'], w=w_exp, s=s_exp, a=a_exp, c=c_exp, d=d_exp, l=l_exp+lnz)
 
     sps_log.legend(fontsize='x-small', loc='lower left')
-    f.savefig(os.path.join(plot_dir, 'all_estimators.png'), bbox_inches='tight', pad_inches = 0)
+    f.savefig(os.path.join(plot_dir, 'all_estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=100)
 
     return
 
@@ -344,5 +344,5 @@ def plot_samples(info, plot_dir):
     pu.plot_step(sps, info['bin_ends'], np.exp(locs), s=s_smp, d=d_smp, w=2., a=1., c='k', l=l_bfe+nz)
 
     sps_log.legend(fontsize='x-small', loc='lower left')
-    f.savefig(os.path.join(plot_dir, 'samples.png'), bbox_inches='tight', pad_inches = 0)
+    f.savefig(os.path.join(plot_dir, 'samples.png'), bbox_inches='tight', pad_inches = 0, dpi=100)
     return

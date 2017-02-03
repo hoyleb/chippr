@@ -30,7 +30,7 @@ def plot_true_histogram(true_samps, n_bins=50, plot_loc='', plot_name='true_hist
     sps.hist(true_samps, bins=n_bins, normed=1, color='k')
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$n(z_{true})$')
-    f.savefig(os.path.join(plot_loc, plot_name))
+    f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=100)
 
     return
 
@@ -55,7 +55,7 @@ def plot_obs_scatter(true_samps, obs_samps, plot_loc='', plot_name='obs_scatter.
     sps.scatter(true_samps, obs_samps, c='k', linewidth=0., alpha=0.1)
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$z_{obs}$')
-    f.savefig(os.path.join(plot_loc, plot_name))
+    f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=100)
 
     return
 
