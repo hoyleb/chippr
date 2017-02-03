@@ -51,6 +51,8 @@ def set_up_burn_in_plots(n_bins, n_walkers):
     ----------
     n_bins: int
         number of parameters defining n(z)
+    n_walkers: int
+        number of walkers in the sampler
 
     Returns
     -------
@@ -87,10 +89,17 @@ def set_up_burn_in_plots(n_bins, n_walkers):
     sps_chain_evolution = [f_chain_evolution.add_subplot(n_bins, 1, k+1) for k in bin_range]
     for k in bin_range:
         sps_chain_evolution[k].set_ylabel(r'parameter value '+str(k))
-        sps_chain_evolution[k].set_xlabel(r'accepted sample number')
+        sps_chain_evolution[k].set_xlabel(r'sample number')
     f_chain_evolution.subplots_adjust(hspace=0, wspace=0)
     random_walkers = [np.random.randint(0, n_walkers) for i in range(d.plot_colors)]
     chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
+
+    # f_gr_evolution = plt.figure(figsize=(5, 5))
+    # sps_gr_evolution = f_gr_evolution.add_subplot(1, 1, 1)
+    # f_gr_evolution.subplots_adjust(hspace=0, wspace=0)
+    # sps_gr_evolution.set_ylabel(r'Maximum Gelman-Rubin statistic value')
+    # sps_gr_evolution.set_xlabel(r'accepted sample number')
+    # gr_evolution_plot = [f_gr_evolution, sps_gr_evolution]
 
     plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
     return plot_information

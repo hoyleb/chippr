@@ -44,36 +44,33 @@ def make_catalog(given_key):
     given_key: string
         name of test case to be run
     """
-    with open(name_file) as tests_to_run:
+    test_info = all_tests[given_key]
+    test_name = test_info['name']
+    true_nz = test_info['true_nz']
+    true_zs = test_info['true_zs']
 
-        for test_name in tests_to_run:
-            test_info = all_tests[given_key]
-            test_name = test_info['name']
-            true_nz = test_info['true_nz']
-            true_zs = test_info['true_zs']
+    test_name = test_name[:-1]
+    param_file_name = test_name + '.txt'
 
-            test_name = test_name[:-1]
-            param_file_name = test_name + '.txt'
+    params = chippr.utils.ingest(param_file_name)
+    params = defaults.check_sim_params(params)
 
-            params = chippr.sim_utils.ingest(param_file_name)
-            params = defaults.check_sim_params(params)
+    bin_ends = np.array([params['bin_min'], params['bin_max']])
+    weights = np.array([1.])
 
-            bin_ends = np.array([params['bin_min'], params['bin_max']])
-            weights = np.array([1.])
+    interim_prior = chippr.discrete(bin_ends, weights)
 
-            interim_prior = chippr.discrete(bin_ends, weights)
+    test_dir = os.path.join(result_dir, test_name)
+    if os.path.exists(test_dir):
+        shutil.rmtree(test_dir)
+    os.makedirs(test_dir)
 
-            test_dir = os.path.join(result_dir, test_name)
-            if os.path.exists(test_dir):
-                shutil.rmtree(test_dir)
-            os.makedirs(test_dir)
+    posteriors = chippr.catalog(param_file_name, loc=test_dir)
+    output = posteriors.create(true_zs, interim_prior)
 
-            posteriors = chippr.catalog(param_file_name, loc=test_dir)
-            output = posteriors.create(true_zs, interim_prior)
+    data = np.exp(output['log_interim_posteriors'])
 
-            data = np.exp(output['log_interim_posteriors'])
-
-            posteriors.write()
+    posteriors.write()
 
 if __name__ == "__main__":
 

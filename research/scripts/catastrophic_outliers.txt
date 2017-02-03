@@ -6,4 +6,5 @@ constant_sigma 0.05
 outlier_fraction 0.2
 outlier_mean 0.4
 outlier_sigma 0.075
+n_walkers 100
 gr_threshold 1.1

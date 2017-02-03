@@ -69,6 +69,9 @@ def do_inference(given_key):
     test_name = test_name[:-1]
     param_file_name = test_name + '.txt'
 
+    params = chippr.utils.ingest(param_file_name)
+    params = defaults.check_inf_params(params)
+
     test_dir = os.path.join(result_dir, test_name)
     simulated_posteriors = catalog(params=param_file_name, loc=test_dir)
     saved_location = 'data'
@@ -77,7 +80,10 @@ def do_inference(given_key):
 
     prior = set_up_prior(data)
     n_bins = len(data['log_interim_prior'])
-    n_ivals = 2 * n_bins
+    if params['n_walkers'] is not None:
+        n_ivals = params['n_walkers']
+    else:
+        n_ivals = 2 * n_bins
     initial_values = prior.sample(n_ivals)
 
     nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, params=param_file_name, vb=True)

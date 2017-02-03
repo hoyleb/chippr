@@ -12,6 +12,8 @@ n_bins = 10
 
 constant_sigma = 0.05
 
+n_walkers = 2 * n_bins
+
 gr_threshold = 1.25
 
 n_accepted = 3
@@ -163,4 +165,8 @@ def check_sampler_params(params):
         params['n_burned'] = 10 ** n_burned
     else:
         params['n_burned'] = 10 ** int(params['n_burned'][0])
+    if 'n_walkers' not in params:
+        params['n_walkers'] = None
+    else:
+        params['n_walkers'] = int(params['n_walkers'][0])
     return params
