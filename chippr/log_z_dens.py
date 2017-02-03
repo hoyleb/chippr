@@ -18,7 +18,7 @@ from chippr import log_z_dens_plots as plots
 
 class log_z_dens(object):
 
-    def __init__(self, catalog, hyperprior, truth=None, loc='', vb=True):
+    def __init__(self, catalog, hyperprior, truth=None, params={}, loc='', vb=True):
         """
         An object representing the redshift density function (normalized redshift distribution function)
 
@@ -30,6 +30,8 @@ class log_z_dens(object):
             multivariate Gaussian distribution for hyperprior distribution
         truth: chippr.gmix object, optional
             true redshift density function expressed as univariate Gaussian mixture
+        params: dict or string, optional
+            dictionary containing parameter values for catalog creation or string containing location of parameter file
         loc: string, optional
             directory into which to save results and plots made along the way
         vb: boolean, optional
@@ -90,6 +92,13 @@ class log_z_dens(object):
         if not os.path.exists(self.res_dir):
             os.makedirs(self.res_dir)
 
+        if type(params) == str:
+            self.params = u.ingest(params)
+        else:
+            self.params = params
+        self.params = d.check_inf_params(self.params)
+        if vb:
+            print self.params
         return
 
     def evaluate_log_hyper_likelihood(self, log_nz):
@@ -318,16 +327,12 @@ class log_z_dens(object):
         mcmc_outputs['acors'] = acors
         return mcmc_outputs
 
-    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burn_test=d.n_burned, vb=True):
+    def calculate_samples(self, ivals, vb=True):
         """
         Calculates samples estimating the redshift density function
 
         Parameters
         ----------
-        n_accepted: int, optional
-            number of samples to accept per walker
-        n_intermediate: int, optional
-            duration of interval between burn-in tests
         ivals: numpy.ndarray, float
             initial values of log n(z) for each walker
         vb: boolean, optional
@@ -350,17 +355,17 @@ class log_z_dens(object):
             while self.burning_in:
                 if vb:
                     print('beginning sampling '+str(self.burn_ins))
-                burn_in_mcmc_outputs = self.sample(vals, n_burn_test)
+                burn_in_mcmc_outputs = self.sample(vals, self.params['n_burned'])
                 if vb:
                     canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, self.burn_ins, self.plot_dir)
                 with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
                     cpkl.dump(burn_in_mcmc_outputs, file_location)
                 full_chain = np.concatenate((full_chain, burn_in_mcmc_outputs['chains']), axis=1)
-                self.burning_in = s.gr_test(full_chain)
+                self.burning_in = s.gr_test(full_chain, self.params['gr_threshold'])
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
                 self.burn_ins += 1
 
-            mcmc_outputs = self.sample(vals, n_accepted)
+            mcmc_outputs = self.sample(vals, self.params['n_accepted'])
             full_chain = np.concatenate((full_chain, mcmc_outputs['chains']), axis=1)
             with open(os.path.join(self.res_dir, 'full_chain.p'), 'wb') as file_location:
                 cpkl.dump(full_chain, file_location)

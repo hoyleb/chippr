@@ -154,7 +154,7 @@ def multi_parameter_gr_stat(sample):
         Rs[i] = single_parameter_gr_stat(chains)
     return Rs
 
-def gr_test(sample, threshold=d.gr_threshold):
+def gr_test(sample, threshold):
     """
     Performs the Gelman-Rubin test of convergence of an MCMC chain
 
@@ -162,7 +162,7 @@ def gr_test(sample, threshold=d.gr_threshold):
     ----------
     sample: numpy.ndarray, float
         chain output
-    threshold: float, optional
+    threshold: float
         Gelman-Rubin test statistic criterion (usually around 1)
 
     Returns

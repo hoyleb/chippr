@@ -80,7 +80,7 @@ def do_inference(given_key):
     n_ivals = 2 * n_bins
     initial_values = prior.sample(n_ivals)
 
-    nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
+    nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, params=param_file_name, vb=True)
 
     nz_stacked = nz.calculate_stacked()
     nz_mmap = nz.calculate_mmap()

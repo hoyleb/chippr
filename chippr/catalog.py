@@ -30,7 +30,7 @@ class catalog(object):
             directory into which to save data and plots made along the way
         """
         if type(params) == str:
-            self.params = su.ingest(params)
+            self.params = u.ingest(params)
         else:
             self.params = params
 
