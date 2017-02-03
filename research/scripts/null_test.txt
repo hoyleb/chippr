@@ -4,3 +4,4 @@ bin_max 1.0
 variable_sigmas 0
 constant_sigma 0.05
 outlier_fraction 0.
+gr_threshold 1.1
