@@ -55,9 +55,18 @@ def set_up_burn_in_plots(n_bins, n_walkers):
     Returns
     -------
     plot_information: tuple
-        contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
+        contains figure and subplot objects for Gelman-Rubin evolution,
+        autocorrelation times, acceptance fractions, posterior probabilities,
+        and chain evolution
     """
     pu.set_up_plot()
+
+    f_gelman_rubin_evolution = plt.figure(figsize=(5, 5))
+    sps_gelman_rubin_evolution = f_gelman_rubin_evolution.add_subplot(1, 1, 1)
+    f_gelman_rubin_evolution.subplots_adjust(hspace=0, wspace=0)
+    sps_gelman_rubin_evolution.set_ylabel(r'Gelman-Rubin Statistic')
+    sps_gelman_rubin_evolution.set_xlabel(r'accepted sample number')
+    gelman_rubin_evolution_plot = [f_gelman_rubin_evolution, sps_gelman_rubin_evolution]
 
     f_autocorrelation_times = plt.figure(figsize=(5, 5))
     sps_autocorrelation_times = f_autocorrelation_times.add_subplot(1, 1, 1)
@@ -92,7 +101,7 @@ def set_up_burn_in_plots(n_bins, n_walkers):
     random_walkers = [np.random.randint(0, n_walkers) for i in range(d.plot_colors)]
     chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
 
-    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
+    plot_information = (gelman_rubin_evolution_plot, autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
     return plot_information
 
 def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins, plot_dir):
@@ -102,7 +111,9 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
     Parameters
     ----------
     plot_information: tuple
-        contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
+        contains figure and subplot objects for Gelman-Rubin evolution,
+        autocorrelation times, acceptance fractions, posterior probabilities,
+        and chain evolution
     sampler_output: dict
         dictionary containing array of sampled redshift density function bin values as well as posterior probabilities, acceptance fractions, and autocorrelation times
     full_chain: ndarray, float
@@ -115,14 +126,29 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
     Returns
     -------
     plot_information: tuple
-        contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
+        contains figure and subplot objects for Gelman-Rubin evolution,
+        autocorrelation times, acceptance fractions, posterior probabilities,
+        and chain evolution
     """
     (n_walkers, n_burn_test, n_bins) = np.shape(sampler_output['chains'])
 
     burn_test_range = range(n_burn_test)
     bin_range = range(n_bins)
 
-    (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot) = plot_information
+    (gelman_rubin_evolution_plot, autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot) = plot_information
+
+    [f_gelman_rubin_evolution, sps_gelman_rubin_evolution] = gelman_rubin_evolution_plot
+    gelman_rubin = s.multi_parameter_gr_stat(full_chain)
+    x_some = [(burn_ins + 1) * n_burn_test] * n_bins
+    sps_gelman_rubin_evolution.scatter(x_some,
+                           gelman_rubin,
+                           c='k',
+                           alpha=0.5,
+                           linewidth=0.1,
+                           s=2)
+    sps_gelman_rubin_evolution.set_xlim(0, (burn_ins + 2) * n_burn_test)
+    gelman_rubin_evolution_plot = [f_gelman_rubin_evolution, sps_gelman_rubin_evolution]
+    f_gelman_rubin_evolution.savefig(os.path.join(plot_dir, 'gelman_rubin_evolution.png'), bbox_inches='tight', pad_inches = 0)
 
     [f_autocorrelation_times, sps_autocorrelation_times] = autocorrelation_times_plot
     autocorrelation_times = s.acors(full_chain)# sampler_output['acors']
