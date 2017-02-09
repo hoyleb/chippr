@@ -351,11 +351,11 @@ class log_z_dens(object):
                 if vb:
                     print('beginning sampling '+str(self.burn_ins))
                 burn_in_mcmc_outputs = self.sample(vals, n_burn_test)
-                if vb:
-                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, self.burn_ins, self.plot_dir)
                 with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
                     cpkl.dump(burn_in_mcmc_outputs, file_location)
                 full_chain = np.concatenate((full_chain, burn_in_mcmc_outputs['chains']), axis=1)
+                if vb:
+                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, full_chain, self.burn_ins, self.plot_dir)
                 self.burning_in = s.gr_test(full_chain)
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
                 self.burn_ins += 1

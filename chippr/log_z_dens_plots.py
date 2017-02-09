@@ -95,7 +95,7 @@ def set_up_burn_in_plots(n_bins, n_walkers):
     plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
     return plot_information
 
-def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
+def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins, plot_dir):
     """
     Plots new information into burn-in progress plots
 
@@ -105,6 +105,8 @@ def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
         contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
     sampler_output: dict
         dictionary containing array of sampled redshift density function bin values as well as posterior probabilities, acceptance fractions, and autocorrelation times
+    full_chain: ndarray, float
+        array of all accepted samples so far
     burn_ins: int
         number of between-convergence-check intervals that have already been performed
     plot_dir: string
@@ -123,7 +125,7 @@ def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
     (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot) = plot_information
 
     [f_autocorrelation_times, sps_autocorrelation_times] = autocorrelation_times_plot
-    autocorrelation_times = sampler_output['acors']
+    autocorrelation_times = s.acors(full_chain)# sampler_output['acors']
     # default to bins mode for autocorrelation times, will need to fix this later
     # if something == 'bins':
     x_some = [(burn_ins + 1) * n_burn_test] * n_bins
