@@ -213,7 +213,7 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
     chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
     f_chain_evolution.savefig(os.path.join(plot_dir, 'chain_evolution.png'), bbox_inches='tight', pad_inches = 0)
 
-    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
+    plot_information = (gelman_rubin_evolution_plot, autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
     return plot_information
 
 def plot_estimators(info, plot_dir):
