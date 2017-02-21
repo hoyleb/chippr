@@ -1,0 +1,47 @@
+%\documentclass[iop]{emulateapj}
+\documentclass[preprint]{aastex}
+%\documentclass[12pt, onecolumn]{emulateapj}
+%\documentstyle[aas2pp4,natbib209]{article}
+
+\usepackage{tikz}
+\usepackage{natbib}
+\usepackage{amsmath}
+
+\usetikzlibrary{shapes.geometric, arrows}
+\usetikzlibrary{fit}
+
+\tikzstyle{hyper} = [circle, text centered, draw=black]
+\tikzstyle{param} = [circle, text centered, draw=black]
+\tikzstyle{data} = [circle, text centered, draw=black, line width=2pt]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\newcommand{\myemail}{aimalz@nyu.edu}
+\newcommand{\textul}{\underline}
+
+\shorttitle{One-point galaxy population statistics from photo-$z$ PDFs}
+\shortauthors{Malz and Hogg}
+
+\begin{document}
+
+\title{Using a Bayesian hierarchical model to infer the redshift density function from photometric redshift probability distribution functions}
+
+\author{A.I. Malz\altaffilmark{1} \& David W. Hogg\altaffilmark{1,2,3,4} %\& Boris Leistedt\altaffilmark{1,5}
+}
+\email{aimalz@nyu.edu}
+
+\altaffiltext{1}{Center for Cosmology and Particle Physics, Department of Physics,
+  New York University, 4 Washington Pl., room 424, New York, NY 10003, USA}
+\altaffiltext{2}{Simons Center for Data Analysis, 160 Fifth Avenue, 7th floor, New York, NY 10010, USA}
+\altaffiltext{3}{Center for Data Science, New York University, 726 Broadway, 7th floor, New York, NY 10003, USA}
+\altaffiltext{4}{Max-Planck-Institut f\"ur Astronomie, K\"onigstuhl 17, D-69117 Heidelberg, Germany}
+%\altaffiltext{5}{Department of Physics \& Astronomy, University College London, Gower Street, London, WC1E 6BT, UK}
+
+\begin{abstract}
+Ongoing and upcoming galaxy surveys aiming to constrain cosmological parameters will produce photometric redshift (photo-$z$) probability distribution functions (PDFs), which are, generally, posteriors under an interim prior.  It is desirable to use this highly informative data product to estimate redshift-dependent distribution functions such as the redshift density function, stellar mass function, or We present a mathematically rigorous approach to obtain the posterior distribution on a one-point statistic of redshift from a survey providing photo-$z$ PDFs and their interim prior by way of a probabilistic graphical model corresponding to a hierarchical Bayesian relation of photo-$z$ PDFs to a posterior distribution over the one-point statistic.  This fully consistent method is applied to the redshift density function $n(z)$ necessary for the calculation of cosmological parameters from weak lensing surveys, validated on synthetic data and tested on a small subset of BOSS DR10 data.  It is demonstrated that this method improves accuracy, both qualitatively and as quantified by the Kullback-Leibler Divergence, compared to popular alternatives (such as stacking of photo-$z$ PDFs and conversion of photo-$z$ PDFs to point estimators of redshift).  The method can be straightforwardly generalized to other one-point statistics of redshift including distribution functions over luminosity, mass, star formation rate, etc.  We publicly release the Cosmological Hierarchical Inference with Probabilistic Photometric Redshifts (CHIPPR) code that provides a general framework for estimating the posterior distribution of a general one-point statistic of redshift.
+\end{abstract}
+
+\keywords{methods: analytical "\_\_\_" methods: data analysis "\_\_\_" methods: statistical "\_\_\_" techniques: photometric "\_\_\_" galaxies: statistics}
+
+%\clearpage
+\section{Introduction}
+\label{sec:intro}
