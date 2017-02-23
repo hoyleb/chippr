@@ -119,3 +119,48 @@ def check_catastrophic_outliers(params):
     else:
         params['outlier_fraction'] = 0.
     return params
+
+def check_inf_params(params={}):
+    """
+    Checks inference parameter dictionary for various keywords and sets to default values if not present
+    Parameters
+    ----------
+    params: dict, optional
+        dictionary containing initial key/value pairs for inference
+    Returns
+    -------
+    params: dict
+        dictionary containing final key/value pairs for inference
+    """
+    params = check_sampler_params(params)
+    return params
+
+def check_sampler_params(params):
+    """
+    Sets parameter values pertaining to basic constants of inference
+    Parameters
+    ----------
+    params: dict
+        dictionary containing key/value pairs for inference
+    Returns
+    -------
+    params: dict
+        dictionary containing key/value pairs for inference
+    """
+    if 'gr_threshold' not in params:
+        params['gr_threshold'] = gr_threshold
+    else:
+        params['gr_threshold'] = float(params['gr_threshold'][0])
+    if 'n_accepted' not in params:
+        params['n_accepted'] = 10 ** n_accepted
+    else:
+        params['n_accepted'] = 10 ** int(params['n_accepted'][0])
+    if 'n_burned' not in params:
+        params['n_burned'] = 10 ** n_burned
+    else:
+        params['n_burned'] = 10 ** int(params['n_burned'][0])
+    if 'n_walkers' not in params:
+        params['n_walkers'] = None
+    else:
+        params['n_walkers'] = int(params['n_walkers'][0])
+    return params
