@@ -69,6 +69,9 @@ def do_inference(given_key):
     test_name = test_name[:-1]
     param_file_name = test_name + '.txt'
 
+    params = chippr.utils.ingest(param_file_name)
+    params = defaults.check_inf_params(params)
+
     test_dir = os.path.join(result_dir, test_name)
     simulated_posteriors = catalog(params=param_file_name, loc=test_dir)
     saved_location = 'data'
