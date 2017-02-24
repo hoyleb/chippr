@@ -128,7 +128,7 @@ class log_z_dens(object):
             log prior probability associated with parameters in log_nz
         """
         log_hyper_prior = -0.5 * np.dot(np.dot(self.hyper_prior.invvar, log_nz), log_nz)
-        log_hyper_prior -= np.dot(np.exp(log_nz), self.bin_difs)
+        log_hyper_prior -= u.safe_log(np.dot(np.exp(log_nz), self.bin_difs))
 
         return log_hyper_prior
 
