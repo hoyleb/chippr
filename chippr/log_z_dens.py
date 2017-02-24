@@ -128,6 +128,7 @@ class log_z_dens(object):
             log prior probability associated with parameters in log_nz
         """
         log_hyper_prior = -0.5 * np.dot(np.dot(self.hyper_prior.invvar, log_nz), log_nz)
+        log_hyper_prior -= np.dot(np.exp(log_nz), self.bin_difs)
 
         return log_hyper_prior
 
@@ -197,8 +198,8 @@ class log_z_dens(object):
         if 'log_mmle_nz' not in self.info['estimators']:
             log_mle = self.optimize(start)
             mle_nz = np.exp(log_mle)
-            self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
-            self.log_mle_nz = u.safe_log(self.mle_nz)
+            self.mle_nz = mle_nz# / np.dot(mle_nz, self.bin_difs)
+            self.log_mle_nz = log_mle_nz#u.safe_log(self.mle_nz)
             self.info['estimators']['log_mmle_nz'] = self.log_mle_nz
         else:
             self.log_mle_nz = self.info['estimators']['log_mmle_nz']
@@ -295,6 +296,8 @@ class log_z_dens(object):
 
         Parameters
         ----------
+        ivals: numpy.ndarray, float
+            initial values of the walkers
         n_samps: int
             number of samples to accept before stopping
         vb: boolean, optional
