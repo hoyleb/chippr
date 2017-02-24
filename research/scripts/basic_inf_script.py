@@ -93,7 +93,7 @@ def do_inference(given_key):
     if params['n_walkers'] is not None:
         n_ivals = params['n_walkers']
     else:
-        n_ivals = 2 * n_bins
+        n_ivals = 10 * n_bins
     initial_values = start.sample(n_ivals)
 
     nz_samps = nz.calculate_samples(initial_values)
