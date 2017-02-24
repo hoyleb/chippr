@@ -55,7 +55,7 @@ def make_catalog(given_key):
             test_name = test_name[:-1]
             param_file_name = test_name + '.txt'
 
-            params = chippr.sim_utils.ingest(param_file_name)
+            params = chippr.utils.ingest(param_file_name)
             params = defaults.check_sim_params(params)
 
             bin_ends = np.array([params['bin_min'], params['bin_max']])
