@@ -24,7 +24,7 @@ def make_true_nz(test_name):
 
     return(true_nz)
 
-def set_up_prior(data):
+def set_up_prior(data, ):
     """
     Function to create prior distribution from data
 
@@ -48,10 +48,10 @@ def set_up_prior(data):
 
     prior_var = np.eye(n_bins)
     for k in range(n_bins):
-        prior_var[k] = 1. * np.exp(-0.5 * (z_mids[k] - z_mids) ** 2 / 0.05 ** 2)
+        prior_var[k] = 1. * np.exp(-0.5 * (z_mids[k] - z_mids) ** 2 / 0.16 ** 2)
     prior_mean = log_nz_intp
     prior = mvn(prior_mean, prior_var)
-    return prior
+    return (prior, prior_var)
 
 def do_inference(given_key):
     """
@@ -78,15 +78,7 @@ def do_inference(given_key):
     saved_type = '.txt'
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
 
-    prior = set_up_prior(data)
-
-    prior = set_up_prior(data)
-    n_bins = len(data['log_interim_prior'])
-    if params['n_walkers'] is not None:
-        n_ivals = params['n_walkers']
-    else:
-        n_ivals = 2 * n_bins
-    initial_values = prior.sample(n_ivals)
+    (prior, cov) = set_up_prior(data)
 
     nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
@@ -94,6 +86,16 @@ def do_inference(given_key):
     nz_mmap = nz.calculate_mmap()
     nz_mexp = nz.calculate_mexp()
     nz_mmle = nz.calculate_mmle(nz_stacked)
+
+    start = mvn(nz_mmle, cov)
+
+    n_bins = len(nz_mmle)
+    if params['n_walkers'] is not None:
+        n_ivals = params['n_walkers']
+    else:
+        n_ivals = 2 * n_bins
+    initial_values = start.sample(n_ivals)
+
     nz_samps = nz.calculate_samples(initial_values)
 
     nz_stats = nz.compare()
