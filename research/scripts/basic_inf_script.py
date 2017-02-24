@@ -24,7 +24,7 @@ def make_true_nz(test_name):
 
     return(true_nz)
 
-def set_up_prior(data, ):
+def set_up_prior(data):
     """
     Function to create prior distribution from data
 
