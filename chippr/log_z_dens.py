@@ -338,7 +338,7 @@ class log_z_dens(object):
         log_samples_nz: ndarray
             array of sampled log redshift density function bin values
         """
-        if 'log_sampled_nz' not in self.info['estimators']:
+        if 'log_mean_sampled_nz' not in self.info['estimators']:
             self.n_walkers = len(ivals)
             self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
             self.burn_ins = 0
