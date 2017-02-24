@@ -39,8 +39,8 @@ def set_up_prior(data, ):
         prior distribution as multivariate normal
     """
     zs = data['bin_ends']
-    log_nz_intp = np.exp(data['log_interim_prior'])
-    log_z_posts = np.exp(data['log_interim_posteriors'])
+    log_nz_intp = data['log_interim_prior']
+    log_z_posts = data['log_interim_posteriors']
 
     z_difs = zs[1:]-zs[:-1]
     z_mids = (zs[1:]+zs[:-1])/2.
@@ -87,7 +87,7 @@ def do_inference(given_key):
     nz_mexp = nz.calculate_mexp()
     nz_mmle = nz.calculate_mmle(nz_stacked)
 
-    start = mvn(nz_mmle, cov)
+    start = prior#mvn(data['log_interim_prior'], cov)
 
     n_bins = len(nz_mmle)
     if params['n_walkers'] is not None:

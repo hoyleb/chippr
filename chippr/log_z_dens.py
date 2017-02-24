@@ -199,7 +199,7 @@ class log_z_dens(object):
             log_mle = self.optimize(start)
             mle_nz = np.exp(log_mle)
             self.mle_nz = mle_nz# / np.dot(mle_nz, self.bin_difs)
-            self.log_mle_nz = log_mle_nz#u.safe_log(self.mle_nz)
+            self.log_mle_nz = log_mle#u.safe_log(self.mle_nz)
             self.info['estimators']['log_mmle_nz'] = self.log_mle_nz
         else:
             self.log_mle_nz = self.info['estimators']['log_mmle_nz']
