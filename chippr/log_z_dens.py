@@ -106,7 +106,7 @@ class log_z_dens(object):
         log_hyper_lf: float
             log likelihood probability associated with parameters in log_nz
         """
-        norm_nz = np.exp(log_nz - np.max(log_nz))
+        norm_nz = np.exp(log_nz)# - np.max(log_nz))
         norm_nz /= np.sum(norm_nz)
         hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], axis=1)
         log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs))
