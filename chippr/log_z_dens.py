@@ -108,8 +108,9 @@ class log_z_dens(object):
         """
         norm_nz = np.exp(log_nz)# - np.max(log_nz))
         #norm_nz /= np.sum(norm_nz)#, self.bin_difs)
-        hyper_lfs = np.dot(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], self.bin_difs)#axis=1)
-        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs))
+
+        hyper_lfs = norm_nz * self.pdfs / self.int_pr#, self.bin_difs)#axis=1)
+        log_hyper_likelihood = np.sum(u.safe_log(np.dot(hyper_lfs, self.bin_difs)))
 
         return log_hyper_likelihood
 
