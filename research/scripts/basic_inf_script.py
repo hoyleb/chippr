@@ -86,6 +86,8 @@ def do_inference(given_key):
     nz_mmap = nz.calculate_mmap()
     nz_mexp = nz.calculate_mexp()
     nz_mmle = nz.calculate_mmle(nz_stacked)
+    nz.plot_estimators()
+    nz.write('nz.p')
 
     start = prior#mvn(data['log_interim_prior'], cov)
 
@@ -101,7 +103,6 @@ def do_inference(given_key):
     nz_stats = nz.compare()
 
     nz.plot_estimators()
-
     nz.write('nz.p')
 
 if __name__ == "__main__":
