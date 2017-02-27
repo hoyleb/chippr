@@ -18,41 +18,41 @@
 \newcommand{\myemail}{aimalz@nyu.edu}
 \newcommand{\textul}{\underline}
 
-\shorttitle{How to estimate the redshift density function}
+\shorttitle{How to obtain the redshift distribution from probabilistic redshift estimates}
 \shortauthors{Malz and Hogg}
 
 \begin{document}
 
-\title{How to estimate the redshift density function}
+\title{How to obtain the redshift distribution from probabilistic redshift estimates}
 
 \author{Alex Malz\altaffilmark{1} \& David W. Hogg\altaffilmark{1,2,3,4}}
 \email{aimalz@nyu.edu}
 
 \altaffiltext{1}{Center for Cosmology and Particle Physics, Department of Physics,
   New York University, 726 Broadway, 9th floor, New York, NY 10003, USA}
-\altaffiltext{2}{Simons Center for Data Analysis, 160 Fifth Avenue, 7th floor, New York, NY 10010, USA}
-\altaffiltext{3}{Center for Data Science, New York University, 726 Broadway, 7th floor, New York, NY 10003, USA}
+\altaffiltext{2}{Simons Center for Computational Astrophysics, 162 Fifth Avenue, 7th floor, New York, NY 10010, USA}
+\altaffiltext{3}{Center for Data Science, New York University, 60 Fifth Avenue, 7th floor, New York, NY 10003, USA}
 \altaffiltext{4}{Max-Planck-Institut f\"ur Astronomie, K\"onigstuhl 17, D-69117 Heidelberg, Germany}
 
 \begin{abstract}
-The redshift density function $n(z)$ is a crucial ingredient for weak lensing cosmology.  Spectroscopically confirmed redshifts for the dim and numerous galaxies observed by past, present, and future weak lensing surveys are inaccessible, making photometric redshifts (photo-$z$s) the next best alternative.  Due to their intrinsic scatter and susceptibility to catastrophic outliers, photo-$z$ point estimates are being superseded by photo-$z$ probability distribution functions (PDFs).  However, analytic methods for utilizing these new data products in cosmological inference are still evolving.
+The redshift distribution $n(z)$ is a crucial ingredient for weak lensing cosmology.  Spectroscopically confirmed redshifts for the dim and numerous galaxies observed by weak lensing surveys are expected to be inaccessible, making photometric redshifts (photo-$z$s) the next best alternative.  Because of the nontrivial inference involved in their determination, photo-$z$ point estimates are being superseded by photo-$z$ probability distribution functions (PDFs).  However, analytic methods for utilizing these new data products in cosmological inference are still evolving.
 
-This paper presents a novel approach to estimating the posterior distribution over $n(z)$ from a survey of galaxy photo-$z$ PDFs based upon a probabilistic graphical model.  We present the Cosmological Hierarchical Inference with Probabilistic Photometric Redshifts (CHIPPR) code implementing this technique, as well as its validation on mock data and testing on a subset of BOSS DR10.  CHIPPR yields a more comprehensive and accurate characterization of $n(z)$ than traditional procedures.  The code is easily extensible to other one-point statistics of redshift that are informative to galaxy evolution and large-scale structure.
+This paper presents a novel approach to estimating the posterior distribution over $n(z)$ from a survey of galaxy photo-$z$ PDFs based upon a probabilistic graphical model of hierarchical inference.  We present the Cosmological Hierarchical Inference with Probabilistic Photometric Redshifts (CHIPPR) code implementing this technique, as well as its validation on mock data and testing on a subset of BOSS DR10.  CHIPPR yields an accurate characterization of $n(z)$ containing information beyond the best-fit estimator produced by traditional procedures.  The publicly available code is easily extensible to other one-point statistics that depend on redshift.
 
 \end{abstract}
 
-\keywords{methods: analytical "\_\_\_" methods: data analysis "\_\_\_" methods: statistical "\_\_\_" techniques: photometric "\_\_\_" galaxies: statistics}
+\keywords{catalogs --- cosmology: cosmological parameters --- galaxies: statistics --- gravitational lensing: weak --- methods: analytical --- methods: data analysis --- methods: statistical --- techniques: photometric}
 
 \section{Introduction}
 \label{sec:introduction}
 
-The redshift density function $n(z)$ is necessary for calculating two-point statistics of galaxy properties used to determine the cosmological parameter values that inform our understanding of the evolution of large-scale structure in the universe \citep{masters_mapping_2015}.  Inaccurate estimates of $n(z)$ can significantly impact the constraining power of a galaxy survey \citep{hildebrandt_kids-450:_2016}, biasing recovery of the cosmological parameters.  
+The redshift distribution $n(z)$ is necessary for calculating two-point statistics of galaxy properties used to determine the cosmological parameter values that inform our understanding of the evolution of large-scale structure in the universe \citep{masters_mapping_2015}.  Inaccurate estimates of $n(z)$ can significantly impact the constraining power of a galaxy survey, biasing recovery of the cosmological parameters.  For example, if the $n(z)$ used in analysis is offset from the true $n(z)$ by a small, negative constant, it results in underestimating $w_{0}$ and overestimating $\sigma_{8}$ \citep{samuroff_simultaneous_2017}.
 
-Though the redshift density function has traditionally been determined from spectroscopically observed redshifts, modern galaxy surveys seek to obtain two-point statistics of redshift from samples of galaxies for which spectroscopic redshifts are unavailable, either due to their large numbers or their low brightnesses.  For decades \citep{baum_photoelectric_1962}, photometrically estimated redshifts (photo-$z$s) have been the leading alternative to spectroscopically observed redshifts, though they suffer from issues of precision in the form of an intrinsic scatter and accuracy in the form of catastrophic outliers, as well as other systematics imparted by the properties of the survey, data reduction pipeline(s), and assumptions underlying the analysis.  
+Though the redshift density function has traditionally been determined from spectroscopically observed redshifts, modern galaxy surveys including DES, LSST, Euclid, and WFIRST seek to obtain two-point statistics of redshift from samples of galaxies for which spectroscopic redshifts are unavailable, either due to their large numbers or their low brightnesses.  For decades, photometrically estimated redshifts (photo-$z$s) have been the leading alternative to spectroscopically observed redshifts, though they suffer from issues of precision in the form of an intrinsic scatter and accuracy in the form of catastrophic outliers, as well as other systematics imparted by the properties of the survey, data reduction pipeline(s), and assumptions underlying the analysis \citep{baum_photoelectric_1962}.  These weaknesses are illuminated by a probabilistic interpretation of photo-$zs$; if these nontrivial uncertainties were expressed as a probability distribution function (PDF) over redshift, photo-$z$s could be replaced by photo-$z$ PDFs containing more information than a simple point estimate \citep{koo_overview_1999}.  Such data products have been commonly released by photometric galaxy surveys since SDSS DR7 \citep{abazajian_seventh_2009} using a great variety of methods.
 
-These weaknesses are illuminated by a probabilistic interpretation of photo-$zs$; if these nontrivial uncertainties were expressed as a probability distribution function (PDF) over redshift, photo-$z$s could be replaced by photo-$z$ PDFs containing more information than a simple point estimate \citep{koo_overview_1999}.  However, methods for using photo-$z$ PDFs in cosmological inference remain underdeveloped, with many survey pipelines reducing them to familiar point estimators that are compatible with existing technology or engaging with them heuristically in a manner inconsistent with their probabilistic nature.
+Methods for using photo-$z$ PDFs in cosmological inference remain underdeveloped, with many survey pipelines reducing them to familiar point estimators that are compatible with existing technology or engaging with them heuristically in a manner inconsistent with their probabilistic nature.  Stacking photo-$z$ PDFs, or other mathematically equivalent methods, to obtain an estimator of $n(z)$ is especially popular \citep{cunha_estimating_2009, sheldon_photometric_2012}.  However, photo-$z$ PDFs are probabilistic data products that must be handled in a fully consistent, probabilistic manner; hierarchical inference is the only mathematically valid way to do inference with photo-$z$ PDFs and other probabilistic quantities.
 
-It is desirable to create robust methods for using photo-$z$ PDFs in inference, beginning with the simplest one-point statistic of redshift, $n(z)$.  In the spirit of \citet{hogg_inferring_2010, foreman-mackey_exoplanet_2014}, this paper derives a mathematically rigorous approach to inferring $n(z)$ in Sec. \ref{sec:method}.  The presentation of a public code implementing this novel technique is given in Sec. \ref{sec:model_specifics}.  The code is validated on mock data and tested on a subset of BOSS DR10 data in Sec. \ref{sec:experiments}.  We conclude and discuss future directions in Sec. \ref{sec:discussion}.
+It is desirable to create rigorous methods for using photo-$z$ PDFs in inference, beginning with the simplest one-point statistic of redshift, $n(z)$.  In the spirit of \citet{hogg_inferring_2010, foreman-mackey_exoplanet_2014}, this paper derives a mathematically rigorous approach to inferring $n(z)$ in Sec. \ref{sec:method}.  The presentation of a public code implementing this novel technique is given in Sec. \ref{sec:model_specifics}.  The code is validated on mock data and tested on a subset of BOSS DR10 data in Sec. \ref{sec:experiments}.  We conclude and discuss future directions in Sec. \ref{sec:discussion}.
 
 \section{Method}
 \label{sec:method}
