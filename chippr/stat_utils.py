@@ -43,7 +43,7 @@ def norm_fit(population):
     flat = population.reshape(np.prod(shape[:-1]), shape[-1]).T
     locs, scales = [], []
     for k in range(shape[-1]):
-        loc, scale = sp.stats.norm.fit_loc_scale(flat[k])
+        (loc, scale) = sp.stats.norm.fit_loc_scale(flat[k])
         locs.append(loc)
         scales.append(scale)
     locs = np.array(locs)
