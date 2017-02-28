@@ -62,12 +62,12 @@ The redshift distribution $n(z)$ may be understood as the probability of finding
 \label{eq:parametrization}
 n(z) &\equiv f_{\vec{\theta}}(z)\ \equiv\ p(z|\vec{\theta})
 \end{align}
-In this work, we wish to characterize the posterior distribution $p(\vec{\theta}|D)$ of the parameters contained in $\vec{\theta}$ defining $n(z)$ given all available data $D$.  The likelihood $p(z|\vec{\theta})$ represents the probability of a random variable, in this case redshift $z$, given the parameters in $\vec{\theta}$ defining the distribution $n(z)$ from which it is drawn.  Our model for inferring $p(\vec{\theta}|D)$ will be introduced in Sec. \ref{sec:derivation}, and alternative methods of estimating $\vec{\theta}$ will be presented in Sec. \ref{sec:alternatives}.
+In this work, we wish to characterize the posterior distribution $p(\vec{\theta}|\textul{D})$ of the parameters contained in $\vec{\theta}$ defining $n(z)$ given all available data $\textul{D}$.  The likelihood $p(z|\vec{\theta})$ represents the probability of a random variable, in this case redshift $z$, given the parameters in $\vec{\theta}$ defining the distribution $n(z)$ from which it is drawn.  Our model for inferring $p(\vec{\theta}|\textul{D})$ will be introduced in Sec. \ref{sec:derivation}, and alternative methods of estimating $\vec{\theta}$ will be presented in Sec. \ref{sec:alternatives}.
 
-\subsection{Model Specifics}
+\subsection{Derivation}
 \label{sec:derivation}
 
-Inference of $p(\vec{\theta}|D)$ is perfectly suited to a hierarchical Bayesian model.  In this problem, the available data $D$ is a catalog of photometry $\{\vec{d}_{i}\}$ of individual galaxies $i$ where each $\vec{d}_{i}$ is a random variable that is a function of its redshift parameter $z_{i}$; the redshift parameters $\{z_{i}\}$ are independently drawn from a function defined by hyperparameters in $\vec{\theta}$.  These physical relationships may be illustrated in Fig. \ref{fig:pgm} by a directed acyclic graph representing a probabilistic graphical model (PGM).
+Inference of $p(\vec{\theta}|\textul{D})$ is perfectly suited to a hierarchical Bayesian model.  In this problem, the available data $\textul{D}$ is a catalog of photometry $\{\vec{d}_{i}\}$ of individual galaxies $i$ where each $\vec{d}_{i}$ is a random variable that is a function of its redshift parameter $z_{i}$; the redshift parameters $\{z_{i}\}$ are independently drawn from a function defined by hyperparameters in $\vec{\theta}$.  These physical relationships may be illustrated in Fig. \ref{fig:pgm} by a directed acyclic graph representing a probabilistic graphical model (PGM).
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.5\textwidth]{pgm.png}
@@ -77,9 +77,9 @@ Inference of $p(\vec{\theta}|D)$ is perfectly suited to a hierarchical Bayesian 
 \end{figure}
 This PGM may be used as the basis for a derivation of the desired hyperposterior $p(\vec{\theta}|\{\vec{d}_{i}\})$, assuming our physical model is complete.  From this point on, we will work solely with log probabilities.
 
-We begin with Eq. \ref{eq:bayes} by applying Bayes' Rule to express the log-hyperposterior $\ln\left[p(\vec{\theta}|\{\vec{d}_{i}\})\right]$ in terms of the log-hyperlikelihood $\ln\left[p(\{\vec{d}_{i}\}|\vec{\theta})\right]$.
+We begin with Eq. \ref{eq:hyperbayes} by applying Bayes' Rule to express the log-hyperposterior $\ln\left[p(\vec{\theta}|\{\vec{d}_{i}\})\right]$ in terms of the log-hyperlikelihood $\ln\left[p(\{\vec{d}_{i}\}|\vec{\theta})\right]$.
 \begin{align}
-\label{eq:bayes}
+\label{eq:hyperbayes}
 \ln\left[p(\vec{\theta}|\{\vec{d}_{i}\})\right] &\propto \ln\left[p(\vec{\theta})\right] + \ln\left[p(\{\vec{d}_{i}\}|\vec{\theta})\right]
 \end{align}
 To do this, we will choose a log-hyperprior distribution $\ln\left[p(\vec{\theta})\right]$ representing our beliefs about the distribution of the hyperparameters $\vec{\theta}$ in terms of fixed variables that we will assume are known.
@@ -91,30 +91,66 @@ The log-hyperlikelihood $\ln\left[p(\{\vec{d}_{i}\}|\vec{\theta})\right]$ contai
 \end{align}
 We shall handle the two terms in the integral separately.
 
-The first term is the likelihood of all galaxy photometry given all galaxy redshifts.  If we assume independence of galaxy photometry, such that $p(\vec{d}_{i}|\{\vec{d}_{i'\neq i}\}, \{z_{i}\})=p(\vec{d}_{i}|z_{i})$, then we may write Eq. \ref{eq:independence}.
+The first term is the likelihood of all galaxy photometry given all galaxy redshifts.  If we assume independence of galaxy photometry, such that $p(\vec{d}_{i}|\{\vec{d}_{i'\neq i}\}, \{z_{i}\})=p(\vec{d}_{i}|z_{i})$, then we may write Eq. \ref{eq:independentdata}.
 \begin{align}
-\label{eq:independence}
+\label{eq:independentdata}
 \ln\left[p(\{\vec{d}_{i}\}|\{z_{i}\})\right] &= \sum_{i}\ln\left[p(\vec{d}_{i}|z_{i})\right]
 \end{align}
-The second term may also be expanded by assuming that all galaxy redshifts are drawn independently from $n(z)$.
+The second term may also be expanded as in Eq. \ref{eq:independentredshifts} by assuming that all galaxy redshifts are drawn independently from $n(z)$.
 \begin{align}
-\label{eq:poisson}
+\label{eq:independentredshifts}
 \ln\left[p(\{z_{i}\}|\vec{\theta})\right] &= \sum_{i}\ln\left[p(z_{i}|\vec{\theta})\right]
 \end{align}
+Since all galaxy redshifts are independent of one another, an integral over the aggregate $\int\dots d\{z_{i}\}$ is simply the product of the integrals over each one $\prod_{i}\int\dots dz_{i}$.  Thus, the log-hyperlikelihood can be written according to Eq. \ref{eq:log-hyperlikelihood}.
+\begin{align}
+\label{eq:log-hyperlikelihood}
+\ln\left[p(\{\vec{d}_{i}\}|\vec{\theta})\right] &= \sum_{i}\ln\left[\int\ p(\vec{d}_{i}|z_{i})\ p(z_{i}|\vec{\theta})\ dz_{i}\right]
+\end{align}
+The expression of Eq. \ref{eq:log-hyperlikelihood} contains two types of quantities.  The $\{p(z_{i}|\vec{\theta})\}$ are known likelihoods that will be equal to $\{f_{\vec{\theta}}(z_{i})\}$.  The $\{p(\vec{d}_{i}|z_{i})\}$, however, are likelihoods that are unknown and in general unknowable, and it is worth discussing these facts.  
 
+Photo-$z$ PDFs are commonly written simply as $p(z)$, but this notation oversimplifies their substance.  Whether determined by way of template-fitting or machine learning, photo-$z$ PDFs are dependent on the data $\vec{d}$ from which they are calculated.  This data $\vec{d}$ must be considered to be a quantity upon which the redshift $z$ is conditioned, otherwise normalizing a photo-$z$ PDF would require integrating over all possible values of $\vec{d}$.  This means that photo-$z$ PDFs are posteriors, probabilities of parameters $z$ conditioned on data $\vec{d}$.  However, where there is a posterior, there is always a prior.  Photo-$z$ PDFs are in general \textit{interim} posteriors, because in addition to being conditioned on observations, they are also conditioned on an interim prior in the form of a particular value $\vec{\theta}^{*}$ of $\vec{\theta}$ necessary for computing the photo-$z$ PDF.  In the case of template-fitting methods, the interim prior is usually specified as an input to the photo-$z$ PDF production code, and it often takes the form of an initial guess for $\vec{\theta}$ based on the results of previous galaxy surveys or simulations thereof; in the case of machine learning methods, the interim prior may be explicitly derived from the training set or implicitly produced in the process of determining the photo-$z$ PDFs, and the interim prior is not always revealed to the user.   Hierarchical inference may be performed only when the interim prior is known, which means it will only be possible for photo-$z$ PDFs made via certain methods.
 
+Since the data products from which we hope to probe the log-hyperposterior are themselves posteriors, we must express the likelihoods $\{p(\vec{d}_{i}|z_{i})\}$ of Eq. \ref{eq:log-hyperlikelihood} in terms of the photo-$z$ PDFs $\{p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})\}$.  We start by multiplying the likelihood by an inspired factor of unity written in terms of the photo-$z$ interim posterior we have at hand, as in Eq. \ref{eq:unity}.
+\begin{align}
+\label{eq:unity}
+p(\vec{d}_{i}|z_{i}) &= p(\vec{d}_{i}|z_{i})\ \frac{p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})}{p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})}
+\end{align}
+Next, we expand the denominator in terms of Bayes' Rule to obtain Eq. \ref{eq:bayes}.
+\begin{align}
+\label{eq:bayes}
+p(\vec{d}_{i}|z_{i}) &= p(\vec{d}_{i}|z_{i})\ p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})\ \frac{p(\vec{d}_{i}|\vec{\theta}^{*})}{p(z_{i}|\vec{\theta}^{*})\ p(\vec{d}_{i}|z_{i}, \vec{\theta}^{*})}
+\end{align}
+Because the redshift $z_{i}$ is independent of the interim prior $\vec{\theta}^{*}$, the interim likelihood $p(\vec{d}_{i}|z_{i}, \vec{\theta}^{*})$ may be expanded further as in Eq. \ref{eq:expansion}.
+\begin{align}
+\label{eq:expansion}
+p(\vec{d}_{i}|z_{i}) &= p(\vec{d}_{i}|z_{i})\ p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})\ \frac{p(\vec{d}_{i}|\vec{\theta}^{*})}{p(z_{i}|\vec{\theta}^{*})\ p(\vec{d}_{i}|z_{i})\ p(\vec{d}_{i}|\vec{\theta}^{*})}
+\end{align}
+We cancel the terms $p(\vec{d}_{i}|z_{i})$ and $p(\vec{d}_{i}|\vec{\theta}^{*})$ that appear in both the numerator and denominator of Eq. \ref{eq:expansion} to obtain Eq. \ref{eq:cancellation}.
+\begin{align}
+\label{eq:cancellation}
+p(\vec{d}_{i}|z_{i}) &= \frac{p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})}{p(z_{i}|\vec{\theta}^{*})}
+\end{align}
 
-Photo-$z$ PDFs, on the other hand, are posteriors, probabilities of a parameter, in this case redshift $z$, given the random variable derived from the parameter, in this case photometric data $\vec{d}$.  Though they are commonly written as $p(z)$, a photo-$z$ PDF for galaxy $i$ in the catalog is truly a posterior $p(z_{i}|\vec{d}_{i})$ where $\vec{d}_{i}$ represents photometric data.
+Finally we may return to Eq. \ref{eq:hyperbayes} to express the log-hyperposterior $\ln\left[p(\vec{\theta}|\{\vec{d}_{i}\})\right]$ in terms of the photo-$z$ interim posteriors $\{p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})\}$, as in Eq. \ref{eq:final}.
+\begin{align}
+\label{eq:final}
+\ln\left[p(\vec{\theta}|\{\vec{d}_{i}\})\right] &\propto \ln\left[p(\vec{\theta})\right] + \sum_{i}\ln\left[\int\ p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})\ \frac{p(z_{i}|\vec{\theta})}{p(z_{i}|\vec{\theta}^{*})}\ dz_{i}\right]
+\end{align}
+Now we have an expression for a quantity proportional to the log-hyperposterior we desire!  Though the constant of proportionality, $p(\{\vec{d}_{i}\})$ is in general not possible to calculate, we may still characterize the log-hyperposterior by way of MCMC sampling.
 
-This approach makes several assumptions that must be explicitly stated.
+Several assumptions were noted in the above derivation; for clarity, they will be enumerated below, where their limitations will be discussed.
 \begin{enumerate}
-\item The PGM is an expression of our beliefs about the physics of the problem, and the inference will only be valid to the degree that the model is complete.
-\item We must choose a hyperprior $p(\vec{\theta})$; though we aim to choose a sufficiently general hyperprior that will not be a dominant source of information in the hyperposterior, it must still be assumed that whatever hyperprior is chosen will be accurate.
-\item We have assumed independence of galaxies in our catalog such that each galaxy's photometry $\vec{d}_{i}$ is independent from all other galaxies' photometry $\{\vec{d}_{i'\neq i}\}$ and all other galaxies' redshifts $\{z_{i'\neq i}\}$.
+\item The PGM is an expression of our beliefs about the physics of the problem, and the inference will only be valid to the degree that the model is correct.  One can easily think of ways in which the PGM of Fig. \ref{fig:pgm} is incomplete; for example, intrinsic galaxy SEDs will evolve with redshift.  However, we assume that physical processes not represented in the PGM of Fig. \ref{fig:pgm} are subdominant and may thus be neglected.
+\item We must choose a hyperprior $p(\vec{\theta})$; we assume that our choice of a sufficiently general hyperprior that will not be a dominant source of information in the hyperposterior is successful.  If we choose poorly, the hyperprior may dominate over the hyperlikelihood, downweighting the significance of the data in determining the hyperposterior or biasing the result based on a misunderstanding of the underlying physics.
+\item We assume independence of galaxies in our catalog such that each galaxy's photometry $\vec{d}_{i}$ is independent from all other galaxies' photometry $\{\vec{d}_{i'\neq i}\}$ and all other galaxies' redshifts $\{z_{i'\neq i}\}$.  However, the photometry $\{\vec{d}_{i}\}$ will inherently share instrumental and systematic effects due to being observed with the same telescope as part of a single survey project.  Furthermore, there may be blended objects or other correlations between the redshifts of different galaxies.  We must assume that such effects are negligible and will not consider them in this treatment.  
+\item We assume that the interim prior is known to us, either as input to or output of the method producing the photo-$z$ interim posteriors.  Furthermore, it must be representable in the parametrization of $f_{\vec{\theta}}(z)$, i.e. our model $f_{\vec{\theta}}(z)$ for $n(z)$ must be flexible enough to encompass both the true distribution we aim to probe and the interim prior.
+\item Finally, we assume that the photo-$z$ interim posteriors $\{p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})\}$ are accurate.  There is some evidence that photo-$z$ PDFs derived by different methods disagree with one another or are strongly dependent on the interim prior.  However, the choice of the technique by which the photo-$z$ interim posteriors are determined is outside the scope of this paper.
 \end{enumerate}
 
+\subsection{Model Specifics}
+\label{sec:choices}
 
-\section{Alternative methods}
+\subsection{Alternative methods}
 \label{sec:alternatives}
 
 \section{Experiments}
