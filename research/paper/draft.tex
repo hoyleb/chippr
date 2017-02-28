@@ -57,8 +57,65 @@ It is desirable to create rigorous methods for using photo-$z$ PDFs in inference
 \section{Method}
 \label{sec:method}
 
-\section{Model specifics}
-\label{sec:model_specifics}
+The redshift distribution $n(z)$ may be understood as the probability of finding a galaxy at a redshift $z$.  We may express $n(z)$ in terms of some functional form $f_{\vec{\theta}}(z)$ with parameters comprising $\vec{\theta}$ according to Eq. \ref{eq:parametrization}.  
+\begin{align}
+\label{eq:parametrization}
+n(z) &\equiv f_{\vec{\theta}}(z)\ \equiv\ p(z|\vec{\theta})
+\end{align}
+In this work, we wish to characterize the posterior distribution $p(\vec{\theta}|D)$ of the parameters contained in $\vec{\theta}$ defining $n(z)$ given all available data $D$.  The likelihood $p(z|\vec{\theta})$ represents the probability of a random variable, in this case redshift $z$, given the parameters in $\vec{\theta}$ defining the distribution $n(z)$ from which it is drawn.  Our model for inferring $p(\vec{\theta}|D)$ will be introduced in Sec. \ref{sec:derivation}, and alternative methods of estimating $\vec{\theta}$ will be presented in Sec. \ref{sec:alternatives}.
+
+\subsection{Model Specifics}
+\label{sec:derivation}
+
+Inference of $p(\vec{\theta}|D)$ is perfectly suited to a hierarchical Bayesian model.  In this problem, the available data $D$ is a catalog of photometry $\{\vec{d}_{i}\}$ of individual galaxies $i$ where each $\vec{d}_{i}$ is a random variable that is a function of its redshift parameter $z_{i}$; the redshift parameters $\{z_{i}\}$ are independently drawn from a function defined by hyperparameters in $\vec{\theta}$.  These physical relationships may be illustrated in Fig. \ref{fig:pgm} by a directed acyclic graph representing a probabilistic graphical model (PGM).
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.5\textwidth]{pgm.png}
+\caption{This directed acyclic graph corresponds to a PGM for a hierarchical inference of $p(\vec{\theta}|\{\vec{d}_{i}\})$.  In this graph, all random variables are shown in circles, with observed variables shown in shaded circles.  Relationships between variables are indicated by arrows.  The box indicates that there are a number of copies of the relationships between boxed parameters, each independent of all others.  The hyperparameters $\vec{\theta}$ representing $n(z)$ are at the top.  Independently drawn from a function of the hyperparameters $\vec{\theta}$ are galaxy redshifts $\{z_{i}\}$ below.  The observed galaxy photometry $\{\vec{d}_{i}\}$, shown in shaded circles, is determined by the redshifts above.}
+\label{fig:pgm}
+\end{center}
+\end{figure}
+This PGM may be used as the basis for a derivation of the desired hyperposterior $p(\vec{\theta}|\{\vec{d}_{i}\})$, assuming our physical model is complete.  From this point on, we will work solely with log probabilities.
+
+We begin with Eq. \ref{eq:bayes} by applying Bayes' Rule to express the log-hyperposterior $\ln\left[p(\vec{\theta}|\{\vec{d}_{i}\})\right]$ in terms of the log-hyperlikelihood $\ln\left[p(\{\vec{d}_{i}\}|\vec{\theta})\right]$.
+\begin{align}
+\label{eq:bayes}
+\ln\left[p(\vec{\theta}|\{\vec{d}_{i}\})\right] &\propto \ln\left[p(\vec{\theta})\right] + \ln\left[p(\{\vec{d}_{i}\}|\vec{\theta})\right]
+\end{align}
+To do this, we will choose a log-hyperprior distribution $\ln\left[p(\vec{\theta})\right]$ representing our beliefs about the distribution of the hyperparameters $\vec{\theta}$ in terms of fixed variables that we will assume are known.
+
+The log-hyperlikelihood $\ln\left[p(\{\vec{d}_{i}\}|\vec{\theta})\right]$ contains no explicit reference to redshifts, therefore, we employ the PGM to write the marginalization over the redshifts in Eq. \ref{eq:marginalization}.
+\begin{align}
+\label{eq:marginalization}
+\ln\left[p(\{\vec{d}_{i}\}|\vec{\theta})\right] &= \ln\left[\int\ p(\{\vec{d}_{i}\}|\{z_{i}\})\ p(\{z_{i}\}|\vec{\theta})\ d\{z_{i}\}\right]
+\end{align}
+We shall handle the two terms in the integral separately.
+
+The first term is the likelihood of all galaxy photometry given all galaxy redshifts.  If we assume independence of galaxy photometry, such that $p(\vec{d}_{i}|\{\vec{d}_{i'\neq i}\}, \{z_{i}\})=p(\vec{d}_{i}|z_{i})$, then we may write Eq. \ref{eq:independence}.
+\begin{align}
+\label{eq:independence}
+\ln\left[p(\{\vec{d}_{i}\}|\{z_{i}\})\right] &= \sum_{i}\ln\left[p(\vec{d}_{i}|z_{i})\right]
+\end{align}
+The second term may also be expanded by assuming that all galaxy redshifts are drawn independently from $n(z)$.
+\begin{align}
+\label{eq:poisson}
+\ln\left[p(\{z_{i}\}|\vec{\theta})\right] &= \sum_{i}\ln\left[p(z_{i}|\vec{\theta})\right]
+\end{align}
+
+
+
+Photo-$z$ PDFs, on the other hand, are posteriors, probabilities of a parameter, in this case redshift $z$, given the random variable derived from the parameter, in this case photometric data $\vec{d}$.  Though they are commonly written as $p(z)$, a photo-$z$ PDF for galaxy $i$ in the catalog is truly a posterior $p(z_{i}|\vec{d}_{i})$ where $\vec{d}_{i}$ represents photometric data.
+
+This approach makes several assumptions that must be explicitly stated.
+\begin{enumerate}
+\item The PGM is an expression of our beliefs about the physics of the problem, and the inference will only be valid to the degree that the model is complete.
+\item We must choose a hyperprior $p(\vec{\theta})$; though we aim to choose a sufficiently general hyperprior that will not be a dominant source of information in the hyperposterior, it must still be assumed that whatever hyperprior is chosen will be accurate.
+\item We have assumed independence of galaxies in our catalog such that each galaxy's photometry $\vec{d}_{i}$ is independent from all other galaxies' photometry $\{\vec{d}_{i'\neq i}\}$ and all other galaxies' redshifts $\{z_{i'\neq i}\}$.
+\end{enumerate}
+
+
+\section{Alternative methods}
+\label{sec:alternatives}
 
 \section{Experiments}
 \label{sec:experiments}
@@ -69,7 +126,7 @@ It is desirable to create rigorous methods for using photo-$z$ PDFs in inference
 %\appendix{}
 
 \begin{acknowledgements}
-AIM thanks Mohammadjavad Vakili for insightful input on statistics, Geoffrey Ryan for assistance in debugging code, and Boris Leistedt for helpful comments provided in the preparation of this paper.
+AIM thanks Phil Marshall for advising on the production of usable code, Mohammadjavad Vakili for insightful input on statistics, Geoffrey Ryan for assistance in debugging code, and Boris Leistedt for helpful comments provided in the preparation of this paper.
 \end{acknowledgements}
 
 \bibliographystyle{apj}
