@@ -136,7 +136,7 @@ Finally we may return to Eq. \ref{eq:hyperbayes} to express the log-hyperposteri
 \label{eq:final}
 \ln\left[p(\vec{\theta}|\{\vec{d}_{i}\})\right] &\propto \ln\left[p(\vec{\theta})\right] + \sum_{i}\ln\left[\int\ p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})\ \frac{p(z_{i}|\vec{\theta})}{p(z_{i}|\vec{\theta}^{*})}\ dz_{i}\right]
 \end{align}
-Now we have an expression for a quantity proportional to the log-hyperposterior we desire!  Though the constant of proportionality, $p(\{\vec{d}_{i}\})$ is in general not possible to calculate, we may still characterize the log-hyperposterior by way of MCMC sampling.
+Now we have an expression for a quantity proportional to the log-hyperposterior we desire!  Though the constant of proportionality, $p(\{\vec{d}_{i}\})$ is in general not possible to calculate, we may still characterize the log-hyperposterior by way of MCMC sampling and optimization, which will be discussed in Sec. \ref{sec:implementation}.
 
 Several assumptions were noted in the above derivation; for clarity, they will be enumerated below, where their limitations will be discussed.
 \begin{enumerate}
@@ -147,11 +147,19 @@ Several assumptions were noted in the above derivation; for clarity, they will b
 \item Finally, we assume that the photo-$z$ interim posteriors $\{p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})\}$ are accurate.  There is some evidence that photo-$z$ PDFs derived by different methods disagree with one another or are strongly dependent on the interim prior.  However, the choice of the technique by which the photo-$z$ interim posteriors are determined is outside the scope of this paper.
 \end{enumerate}
 
-\subsection{Model Specifics}
-\label{sec:choices}
-
 \subsection{Alternative methods}
 \label{sec:alternatives}
+
+This method is presented in contrast to existing methods for inferring $n(z)$ from photo-$z$ PDFs, which fall into two broad categories: stacking and point estimation.  Stacking assumes Eq. \ref{eq:stacking}, where the constant of proportionality is chosen to ensure $\int f_{\vec{\theta}}(z)\ dz$ is unity.
+\begin{align}
+\label{eq:stacking}
+f_{\vec{\theta}}(z) &\propto \sum_{i}p(z_{i}|\vec{d}_{i}, \vec{\theta}^{*})
+\end{align}
+
+\section{Implementation}
+\label{sec:implementation}
+
+We introduce the Cosmological Hierarchical Inference with Probabilistic Photometric Redshifts (CHIPPR) code as a comprehensive package for estimating $n(z)$ from catalogs of photo-$z$ PDFs.  In particular, CHIPPR implements both sampling and optimization of Eq. \ref{eq:final} and compares the results to those of the more traditional approaches presented in Sec. \ref{sec:alternatives}.
 
 \section{Experiments}
 \label{sec:experiments}
