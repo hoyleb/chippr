@@ -51,7 +51,7 @@ def plot_step(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001
     plot_h(sub_plot, bin_ends, plot, s, c, a, w, d, l, r)
     plot_v(sub_plot, bin_ends, plot, s, c, a, w, d, r)
 
-def plot_h(sub_plot, bin_ends,plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], l=None, r=False):
+def plot_h(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], l=None, r=False):
     """
     Helper function to plot horizontal lines of a step function
 

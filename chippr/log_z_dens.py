@@ -41,6 +41,7 @@ class log_z_dens(object):
         self.bin_range = self.bin_ends[:-1]-self.bin_ends[0]
         self.bin_mids = (self.bin_ends[1:]+self.bin_ends[:-1])/2.
         self.bin_difs = self.bin_ends[1:]-self.bin_ends[:-1]
+        self.log_bin_difs = u.safe_log(self.bin_difs)
         self.n_bins = len(self.bin_mids)
         self.info['bin_ends'] = self.bin_ends
 
@@ -103,14 +104,16 @@ class log_z_dens(object):
 
         Returns
         -------
-        log_hyper_lf: float
+        log_hyper_likelihood: float
             log likelihood probability associated with parameters in log_nz
         """
-        norm_nz = np.exp(log_nz)# - np.max(log_nz))
-        #norm_nz /= np.sum(norm_nz)
-        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)
-        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs))
-
+        #log_hyper_lfs = np.logaddexp(self.log_pdfs - self.log_int_pr + self.log_bin_difs, log_nz)#u.safe_log(np.sum((self.log_pdfs + const_terms), axis=1))
+        #log_hyper_likelihood = np.sum(log_hyper_lfs)
+        nz = np.exp(log_nz)
+        n = np.dot(nz, self.bin_difs)
+        norm_nz = nz / n
+        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)#log_nz + self.log_pdfs - self.int_pr#
+        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - n
         return log_hyper_likelihood
 
     def evaluate_log_hyper_prior(self, log_nz):
@@ -127,8 +130,9 @@ class log_z_dens(object):
         log_hyper_prior: float
             log prior probability associated with parameters in log_nz
         """
-        log_hyper_prior = -0.5 * np.dot(np.dot(self.hyper_prior.invvar, log_nz), log_nz)
-        log_hyper_prior -= np.dot(np.exp(log_nz), self.bin_difs)
+        norm_log_nz = log_nz - self.hyper_prior.mean
+        log_hyper_prior = -0.5 * np.dot(np.dot(self.hyper_prior.invvar, norm_log_nz), norm_log_nz)#u.safe_log(self.hyper_prior.evaluate_one(log_nz))
+        #log_hyper_prior = np.log(self.hyper_prior.evaluate_one(log_nz))
 
         return log_hyper_prior
 
@@ -223,7 +227,7 @@ class log_z_dens(object):
         """
         if 'log_stacked_nz' not in self.info['estimators']:
             self.stk_nz = np.sum(self.pdfs, axis=0)
-            self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
+            self.stk_nz /= self.n_pdfs
             self.log_stk_nz = u.safe_log(self.stk_nz)
             self.info['estimators']['log_stacked_nz'] = self.log_stk_nz
         else:
@@ -348,6 +352,7 @@ class log_z_dens(object):
             self.burning_in = True
             vals = ivals
             if vb:
+                plots.plot_ivals(ivals, self.info, self.plot_dir)
                 canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers)
             full_chain = np.array([[ivals[w]] for w in range(self.n_walkers)])
             while self.burning_in:

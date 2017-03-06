@@ -52,8 +52,9 @@ class mvn(object):
         p: float
             probability associated with x
         """
+        norm_x = x - self.mean
         p = max(d.eps, 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
-                np.exp(-0.5 * (x - self.mean) * self.invvar * (x - self.mean)))
+                np.exp(-0.5 * np.dot(np.dot(norm_x, self.invvar), norm_x)))
         return p
 
     def evaluate(self, xs):

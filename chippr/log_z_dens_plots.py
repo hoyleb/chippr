@@ -27,21 +27,52 @@ s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '--', 1.5, 1., 'b', [(0, (1, 1))], 'M
 cmap = np.linspace(0., 1., d.plot_colors)
 colors = [cm.viridis(i) for i in cmap]
 
-def plot_ivals(info):
+def plot_ivals(ivals, info, plot_dir):
     """
     Plots the initial values given to the sampler
 
     Parameters
     ----------
+    ivals: np.ndarray, float
+        (n_walkers, n_bins) array of initial values for sampler
     info: dict
         dictionary of stored information from log_z_dens object
+    plot_dir: string
+        location into which the plot will be saved
 
     Returns
     -------
     f: matplotlib figure
         figure object
     """
-    return f
+    pu.set_up_plot()
+    n_walkers = len(ivals)
+    walkers = [np.random.randint(0, n_walkers) for i in range(d.plot_colors)]
+
+    f = plt.figure(figsize=(10, 5))
+    sps_samp = f.add_subplot(1, 2, 1)
+    for i in range(d.plot_colors):
+        pu.plot_step(sps_samp, info['bin_ends'], ivals[walkers[i]], c=colors[i])
+    pu.plot_step(sps_samp, info['bin_ends'], info['log_interim_prior'], w=w_int, s=s_int, a=a_int, c=c_int, d=d_int, l=l_int+nz)
+    if info['truth'] is not None:
+        sps_samp.plot(info['truth']['z_grid'], np.log(info['truth']['nz_grid']), linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+nz)
+    sps_samp.set_xlabel(r'$z$')
+    sps_samp.set_ylabel(r'$\ln\left[n(z)\right]$')
+
+    sps_sum = f.add_subplot(1, 2, 2)
+    bin_difs = info['bin_ends'][1:]-info['bin_ends'][:-1]
+    ival_integrals = np.dot(np.exp(ivals), bin_difs)
+    log_ival_integrals = u.safe_log(ival_integrals)
+    sps_sum.hist(log_ival_integrals, color='k', normed=1)
+    sps_sum.vlines(u.safe_log(np.dot(np.exp(info['log_interim_prior']), bin_difs)), 0., 1., linewidth=w_int, linestyle=s_int, alpha=a_int, color=c_int, dashes=d_int, label=l_int+nz)
+    sps_sum.vlines(np.mean(log_ival_integrals), 0., 1., linewidth=w_bfe, linestyle=s_bfe, alpha=a_bfe, color=c_bfe, dashes=d_bfe, label=l_bfe+lnz)
+
+    sps_sum.set_xlabel(r'$\ln\left[\int n(z)dz\right]$')
+    sps_sum.set_ylabel(r'$p\left(\ln\left[\int n(z)dz\right]\right)$')
+
+    f.savefig(os.path.join(plot_dir, 'ivals.png'), bbox_inches='tight', pad_inches = 0)
+
+    return
 
 def set_up_burn_in_plots(n_bins, n_walkers):
     """
@@ -297,6 +328,8 @@ def plot_samples(info, plot_dir):
     ----------
     info: dict
         dictionary of stored information from log_z_dens object
+    plot_dir: string
+        directory into which plot should be stored
     """
     pu.set_up_plot()
 
