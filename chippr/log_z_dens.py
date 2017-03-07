@@ -138,7 +138,6 @@ class log_z_dens(object):
         #norm_log_nz = log_nz - self.hyper_prior.mean
         log_hyper_prior = np.log(self.hyper_prior.evaluate_one(log_nz))#-0.5 * np.dot(np.dot(self.hyper_prior.invvar, norm_log_nz), norm_log_nz)#u.safe_log(self.hyper_prior.evaluate_one(log_nz))
         #log_hyper_prior = np.log(self.hyper_prior.evaluate_one(log_nz))
-
         return log_hyper_prior
 
     def evaluate_log_hyper_posterior(self, log_nz):
