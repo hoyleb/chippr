@@ -112,7 +112,8 @@ class log_z_dens(object):
         nz = np.exp(log_nz)
         n = np.dot(nz, self.bin_difs)
         norm_nz = nz / n
-        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)#log_nz + self.log_pdfs - self.int_pr#
+        #hyper_lfs = np.sum(np.exp(log_nz + self.log_pdfs - self.log_int_pr + self.log_bin_difs), axis=1)
+        hyper_lfs = np.dot(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], self.bin_difs)#, axis=1)#log_nz + self.log_pdfs - self.int_pr#
         log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - n
         return log_hyper_likelihood
 
@@ -130,8 +131,12 @@ class log_z_dens(object):
         log_hyper_prior: float
             log prior probability associated with parameters in log_nz
         """
-        norm_log_nz = log_nz - self.hyper_prior.mean
-        log_hyper_prior = -0.5 * np.dot(np.dot(self.hyper_prior.invvar, norm_log_nz), norm_log_nz)#u.safe_log(self.hyper_prior.evaluate_one(log_nz))
+        #nz = np.exp(log_nz)
+        #n = np.dot(nz, self.bin_difs)
+        #norm_nz = nz / n
+        #norm_log_nz = u.safe_log(norm_nz) - self.hyper_prior.mean
+        #norm_log_nz = log_nz - self.hyper_prior.mean
+        log_hyper_prior = np.log(self.hyper_prior.evaluate_one(log_nz))#-0.5 * np.dot(np.dot(self.hyper_prior.invvar, norm_log_nz), norm_log_nz)#u.safe_log(self.hyper_prior.evaluate_one(log_nz))
         #log_hyper_prior = np.log(self.hyper_prior.evaluate_one(log_nz))
 
         return log_hyper_prior

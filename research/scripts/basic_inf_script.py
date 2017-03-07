@@ -46,9 +46,15 @@ def set_up_prior(data):
     z_mids = (zs[1:]+zs[:-1])/2.
     n_bins = len(z_mids)
 
+    n_pdfs = len(log_z_posts)
+
+    a = 1.# / n_bins
+    b = 30.#1. / z_difs ** 2
+    c = a / n_pdfs
     prior_var = np.eye(n_bins)
     for k in range(n_bins):
-        prior_var[k] = 1. * np.exp(-0.5 * (z_mids[k] - z_mids) ** 2 / 0.16 ** 2)
+        prior_var[k] = a * np.exp(-0.5 * b * (z_mids[k] - z_mids) ** 2)
+    prior_var += c * np.identity(n_bins)
     prior_mean = log_nz_intp
     prior = mvn(prior_mean, prior_var)
     return (prior, prior_var)
@@ -77,19 +83,26 @@ def do_inference(given_key):
     saved_location = 'data'
     saved_type = '.txt'
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
+    zs = data['bin_ends']
+    z_difs = zs[1:]-zs[:-1]
 
     (prior, cov) = set_up_prior(data)
 
     nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
     nz_stacked = nz.calculate_stacked()
+    print('stacked: '+str(np.dot(np.exp(nz_stacked), z_difs)))
     nz_mmap = nz.calculate_mmap()
+    print('MMAP: '+str(np.dot(np.exp(nz_mmap), z_difs)))
     nz_mexp = nz.calculate_mexp()
+    print('MExp: '+str(np.dot(np.exp(nz_mexp), z_difs)))
     nz_mmle = nz.calculate_mmle(nz_stacked)
+    print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs)))
     nz.plot_estimators()
     nz.write('nz.p')
 
-    start = prior#mvn(data['log_interim_prior'], cov)
+    start_mean = mvn(nz_mmle, cov).sample_one()
+    start = mvn(data['log_interim_prior'], cov)
 
     n_bins = len(nz_mmle)
     if params['n_walkers'] is not None:
