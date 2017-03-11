@@ -24,7 +24,7 @@ def make_true_nz(test_name):
 
     return(true_nz)
 
-def set_up_prior(data):
+def set_up_prior(data, params):
     """
     Function to create prior distribution from data
 
@@ -32,6 +32,8 @@ def set_up_prior(data):
     ----------
     data: dict
         catalog dictionary containing bin endpoints, log interim prior, and log interim posteriors
+    params: dict
+        dictionary of parameter values for creation of prior
 
     Returns
     -------
@@ -55,8 +57,13 @@ def set_up_prior(data):
     for k in range(n_bins):
         prior_var[k] = a * np.exp(-0.5 * b * (z_mids[k] - z_mids) ** 2)
     prior_var += c * np.identity(n_bins)
+
     prior_mean = log_nz_intp
     prior = mvn(prior_mean, prior_var)
+    if params['prior_mean'] is 'sample':
+        prior_mean = prior.sample_one()
+        prior = mvn(prior_mean, prior_var)
+
     return (prior, prior_var)
 
 def do_inference(given_key):
@@ -86,7 +93,7 @@ def do_inference(given_key):
     zs = data['bin_ends']
     z_difs = zs[1:]-zs[:-1]
 
-    (prior, cov) = set_up_prior(data)
+    (prior, cov) = set_up_prior(data, params)
 
     nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
@@ -101,8 +108,8 @@ def do_inference(given_key):
     nz.plot_estimators()
     nz.write('nz.p')
 
-    start_mean = mvn(nz_mmle, cov).sample_one()
-    start = mvn(data['log_interim_prior'], cov)
+    #start_mean = mvn(nz_mmle, cov).sample_one()
+    start = prior#mvn(data['log_interim_prior'], cov)
 
     n_bins = len(nz_mmle)
     if params['n_walkers'] is not None:
