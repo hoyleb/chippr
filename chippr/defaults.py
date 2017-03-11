@@ -132,6 +132,7 @@ def check_inf_params(params={}):
     params: dict
         dictionary containing final key/value pairs for inference
     """
+    params = check_prob_params(params)
     params = check_sampler_params(params)
     return params
 
@@ -163,4 +164,29 @@ def check_sampler_params(params):
         params['n_walkers'] = None
     else:
         params['n_walkers'] = int(params['n_walkers'][0])
+    if 'prior_mean' not in params:
+        params['prior_mean'] = 'interim'
+    else:
+        params['prior_mean'] = params['prior_mean'][0]
     return params
+
+def check_prob_params(params):
+    """
+    Sets parameter values pertaining to components of probability
+    Parameters
+    ----------
+    params: dict
+        dictionary containing key/value pairs for probability
+    Returns
+    -------
+    params: dict
+        dictionary containing key/value pairs for probability
+    """
+    if 'prior_only' not in params:
+        params['prior_only'] = 0
+    else:
+        params['prior_only'] = int(params['prior_only'][0])
+    if 'data_only' not in params:
+        params['data_only'] = 0
+    else:
+        params['data_only'] = int(params['data_only'][0])
