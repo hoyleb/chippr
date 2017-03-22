@@ -111,7 +111,7 @@ def do_inference(given_key):
     params = chippr.utils.ingest(param_file_name)
     params = check_prob_params(params)
     params = defaults.check_inf_params(params)
-    print(params)
+    print('script sees params: '+str(params))
 
     test_dir = os.path.join(result_dir, test_name)
     simulated_posteriors = catalog(params=param_file_name, loc=test_dir)
