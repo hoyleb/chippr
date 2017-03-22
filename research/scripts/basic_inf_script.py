@@ -1,3 +1,29 @@
+def check_prob_params(params):
+    """
+    Sets parameter values pertaining to components of probability
+    Parameters
+    ----------
+    params: dict
+        dictionary containing key/value pairs for probability
+    Returns
+    -------
+    params: dict
+        dictionary containing key/value pairs for probability
+    """
+    if 'prior_mean' not in params:
+        params['prior_mean'] = 'interim'
+    else:
+        params['prior_mean'] = params['prior_mean'][0]
+    if 'no_prior' not in params:
+        params['no_prior'] = 0
+    else:
+        params['no_prior'] = int(params['no_prior'][0])
+    if 'no_data' not in params:
+        params['no_data'] = 0
+    else:
+        params['no_data'] = int(params['no_data'][0])
+    return params
+
 def make_true_nz(test_name):
     """
     Function to create true redshift distribution to be shared among several test cases
@@ -83,7 +109,7 @@ def do_inference(given_key):
     param_file_name = test_name + '.txt'
 
     params = chippr.utils.ingest(param_file_name)
-    params = defaults.check_prob_params(params)
+    params = check_prob_params(params)
     params = defaults.check_inf_params(params)
     print(params)
 
@@ -105,7 +131,7 @@ def do_inference(given_key):
     print('MMAP: '+str(np.dot(np.exp(nz_mmap), z_difs)))
     nz_mexp = nz.calculate_mexp()
     print('MExp: '+str(np.dot(np.exp(nz_mexp), z_difs)))
-    nz_mmle = nz.calculate_mmle(nz_stacked)
+    nz_mmle = nz.calculate_mmle(nz_stacked, no_data=params['no_data'], no_prior=params['no_prior'])
     print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs)))
     nz.plot_estimators()
     nz.write('nz.p')
@@ -120,7 +146,7 @@ def do_inference(given_key):
         n_ivals = 10 * n_bins
     initial_values = start.sample(n_ivals)
 
-    nz_samps = nz.calculate_samples(initial_values)
+    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
 

@@ -114,7 +114,7 @@ class log_z_dens(object):
         norm_nz = nz / n
         #hyper_lfs = np.sum(np.exp(log_nz + self.log_pdfs - self.log_int_pr + self.log_bin_difs), axis=1)
         hyper_lfs = np.dot(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], self.bin_difs)#, axis=1)#log_nz + self.log_pdfs - self.int_pr#
-        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - n
+        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs))# - n
         return log_hyper_likelihood
 
     def evaluate_log_hyper_prior(self, log_nz):
@@ -159,7 +159,7 @@ class log_z_dens(object):
         log_hyper_posterior = log_hyper_likelihood + log_hyper_prior
         return log_hyper_posterior
 
-    def optimize(self, start, vb=True):
+    def optimize(self, start, no_data, no_prior, vb=True):
         """
         Maximizes the hyperposterior of the redshift density
 
@@ -167,6 +167,10 @@ class log_z_dens(object):
         ----------
         start: numpy.ndarray
             array of log redshift density function bin values at which to begin optimization
+        no_data: boolean
+            True to exclude data contribution to hyperposterior
+        no_prior: boolean
+            True to exclude prior contribution to hyperposterior
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
 
@@ -175,8 +179,15 @@ class log_z_dens(object):
         res.x: numpy.ndarray
             array of logged redshift density function bin values maximizing hyperposterior
         """
-        def _objective(log_nz):
-            return -2. * self.evaluate_log_hyper_posterior(log_nz)
+        if no_data:
+            def _objective(log_nz):
+                return -2. * self.evaluate_log_hyper_prior(log_nz)
+        elif no_prior:
+            def _objective(log_nz):
+                return -2. * self.evaluate_log_hyper_likelihood(log_nz)
+        else:
+            def _objective(log_nz):
+                return -2. * self.evaluate_log_hyper_posterior(log_nz)
 
         if vb:
             print("starting at", start, _objective(start))
@@ -187,7 +198,7 @@ class log_z_dens(object):
             print(res)
         return res.x
 
-    def calculate_mmle(self, start, vb=True):
+    def calculate_mmle(self, start, vb=True, no_data=0, no_prior=0):
         """
         Calculates the marginalized maximum likelihood estimator of the redshift density function
 
@@ -197,6 +208,10 @@ class log_z_dens(object):
             array of log redshift density function bin values at which to begin optimization
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
+        no_data: boolean, optional
+            True to exclude data contribution to hyperposterior
+        no_prior: boolean, optional
+            True to exclude prior contribution to hyperposterior
 
         Returns
         -------
@@ -204,7 +219,7 @@ class log_z_dens(object):
             array of logged redshift density function bin values maximizing hyperposterior
         """
         if 'log_mmle_nz' not in self.info['estimators']:
-            log_mle = self.optimize(start)
+            log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior)
             mle_nz = np.exp(log_mle)
             self.mle_nz = mle_nz# / np.dot(mle_nz, self.bin_difs)
             self.log_mle_nz = log_mle#u.safe_log(self.mle_nz)
@@ -329,7 +344,7 @@ class log_z_dens(object):
         mcmc_outputs['acors'] = acors
         return mcmc_outputs
 
-    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burn_test=d.n_burned, vb=True):
+    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burn_test=d.n_burned, vb=True, no_data=0, no_prior=0):
         """
         Calculates samples estimating the redshift density function
 
@@ -343,6 +358,10 @@ class log_z_dens(object):
             initial values of log n(z) for each walker
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
+        no_data: boolean, optional
+            True to exclude data contribution to hyperposterior
+        no_prior: boolean, optional
+            True to exclude prior contribution to hyperposterior
 
         Returns
         -------
@@ -351,7 +370,16 @@ class log_z_dens(object):
         """
         if 'log_mean_sampled_nz' not in self.info['estimators']:
             self.n_walkers = len(ivals)
-            self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
+            if no_data:
+                def distribution(log_nz):
+                    return self.evaluate_log_hyper_prior(log_nz)
+            elif no_prior:
+                def distribution(log_nz):
+                    return self.evaluate_log_hyper_likelihood(log_nz)
+            else:
+                def distribution(log_nz):
+                    return self.evaluate_log_hyper_posterior(log_nz)
+            self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, distribution)
             self.burn_ins = 0
             self.burning_in = True
             vals = ivals
