@@ -131,17 +131,23 @@ if __name__ == "__main__":
 
     import numpy as np
     import os
+    import multiprocessing as mp
 
     import chippr
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    test_name = 'null_test\n'
-    all_tests = {}
-    true_nz = make_true_nz(test_name)
-    test_info = {}
-    test_info['name'] = test_name
-    test_info['truth'] = true_nz
-    all_tests[test_name] = test_info
+    name_file = 'which_inf_tests.txt'
 
-    do_inference(test_name)
+    with open(name_file) as tests_to_run:
+        all_tests = {}
+        for test_name in tests_to_run:
+            true_nz = make_true_nz(test_name)
+            test_info = {}
+            test_info['name'] = test_name
+            test_info['truth'] = true_nz
+            all_tests[test_name] = test_info
+
+    nps = mp.cpu_count()-1
+    pool = mp.Pool(nps)
+    pool.map(do_inference, all_tests.keys())

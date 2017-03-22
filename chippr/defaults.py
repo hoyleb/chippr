@@ -14,8 +14,8 @@ constant_sigma = 0.05
 
 gr_threshold = 1.02
 
-n_accepted = 10**3
-n_burned = 10**2
+n_accepted = 3
+n_burned = 2
 
 plot_colors = 10
 
@@ -182,7 +182,6 @@ def check_prob_params(params):
         params['prior_mean'] = 'interim'
     else:
         params['prior_mean'] = params['prior_mean'][0]
-    print(params['prior_mean'])
     # if 'prior_only' not in params:
     #     params['prior_only'] = 0
     # else:
@@ -191,3 +190,4 @@ def check_prob_params(params):
     #     params['data_only'] = 0
     # else:
     #     params['data_only'] = int(params['data_only'][0])
+    return params
