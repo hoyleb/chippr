@@ -136,21 +136,21 @@ def do_inference(given_key):
     nz.plot_estimators()
     nz.write('nz.p')
 
-    #start_mean = mvn(nz_mmle, cov).sample_one()
-    start = prior#mvn(data['log_interim_prior'], cov)
-
-    n_bins = len(nz_mmle)
-    if params['n_walkers'] is not None:
-        n_ivals = params['n_walkers']
-    else:
-        n_ivals = 10 * n_bins
-    initial_values = start.sample(n_ivals)
-
-    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
-
-    nz_stats = nz.compare()
-
-    nz.plot_estimators()
+    # #start_mean = mvn(nz_mmle, cov).sample_one()
+    # start = prior#mvn(data['log_interim_prior'], cov)
+    #
+    # n_bins = len(nz_mmle)
+    # if params['n_walkers'] is not None:
+    #     n_ivals = params['n_walkers']
+    # else:
+    #     n_ivals = 10 * n_bins
+    # initial_values = start.sample(n_ivals)
+    #
+    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    #
+    # nz_stats = nz.compare()
+    #
+    # nz.plot_estimators()
     nz.write('nz.p')
 
 if __name__ == "__main__":
