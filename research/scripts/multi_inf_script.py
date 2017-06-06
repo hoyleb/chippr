@@ -86,9 +86,12 @@ def set_up_prior(data, params):
 
     prior_mean = log_nz_intp
     prior = mvn(prior_mean, prior_var)
-    if params['prior_mean'] is 'sample':
-        prior_mean = prior.sample_one()
-        prior = mvn(prior_mean, prior_var)
+    if params['prior_mean'] == 'sample':
+        new_mean = prior.sample_one()
+        prior = mvn(new_mean, prior_var)
+        print(params['prior_mean'], prior_mean, new_mean)
+    else:
+        print(params['prior_mean'], prior_mean)
 
     return (prior, prior_var)
 
@@ -136,16 +139,13 @@ def do_inference(given_key):
     nz.plot_estimators()
     nz.write('nz.p')
 
-    # #start_mean = mvn(nz_mmle, cov).sample_one()
-    # start = prior#mvn(data['log_interim_prior'], cov)
-    #
     # n_bins = len(nz_mmle)
-    # if params['n_walkers'] is not None:
-    #     n_ivals = params['n_walkers']
-    # else:
-    #     n_ivals = 10 * n_bins
-    # initial_values = start.sample(n_ivals)
-    #
+    if params['n_walkers'] is not None:
+        n_ivals = params['n_walkers']
+    else:
+        n_ivals = 10 * n_bins
+    initial_values = prior.sample(n_ivals)
+    log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
     # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
     #
     # nz_stats = nz.compare()
