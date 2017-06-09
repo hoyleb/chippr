@@ -80,8 +80,6 @@ of $n(z)$?
 \section{Method}
 \label{sec:method}
 
-
-
 \subsection{Model}
 \label{sec:model}
 
@@ -130,8 +128,15 @@ particular $z_{spec}$ to have the same colors)
 \subsection{Variations on Interim Priors}
 \label{sec:priors}
 
+I will show that a really wacky interim prior, something very far from the true 
+$n(z)$, will imprint itself on the stacked estimator but will have no effect on 
+\chippr's result.
+
 \subsection{Variations on True Hyperparameters}
 \label{sec:truth}
+
+I will show that if $n(z)$ has significant features, stacking will not recover 
+them but \chippr will.
 
 \section{Application}
 \label{sec:application}
@@ -148,7 +153,7 @@ I will review the questions from the introduction:
 
 \begin{itemize}
 	\item Existing methods have shortcomings that propagate to inaccuracies 
-in characterizing the cosmological parameters.\\
+in characterizing the cosmological parameters.
 	\item Photo-$z$ PDFs are probabilistic data products so must be handled 
 in a mathematically consistent manner; \chippr is one such method, conditioned 
 on some assumptions.
