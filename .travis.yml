@@ -9,6 +9,7 @@ install:
   - sudo apt-get install texlive-latex-recommended
   - sudo apt-get install texlive-latex-extra
   - sudo apt-get install texlive-fonts-recommended
+  - sudo apt-get install texlive-publishers
   - sudo apt-get install chktex
   - sudo apt-get install dvipng
   - pip install --upgrade jupyter
