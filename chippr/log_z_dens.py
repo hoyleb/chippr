@@ -107,14 +107,20 @@ class log_z_dens(object):
         log_hyper_likelihood: float
             log likelihood probability associated with parameters in log_nz
         """
-        #log_hyper_lfs = np.logaddexp(self.log_pdfs - self.log_int_pr + self.log_bin_difs, log_nz)#u.safe_log(np.sum((self.log_pdfs + const_terms), axis=1))
-        #log_hyper_likelihood = np.sum(log_hyper_lfs)
-        nz = np.exp(log_nz)
-        n = np.dot(nz, self.bin_difs)
-        norm_nz = nz / n
-        #hyper_lfs = np.sum(np.exp(log_nz + self.log_pdfs - self.log_int_pr + self.log_bin_difs), axis=1)
-        hyper_lfs = np.dot(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], self.bin_difs)#, axis=1)#log_nz + self.log_pdfs - self.int_pr#
-        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs))# - n
+        # #log_hyper_lfs = np.logaddexp(self.log_pdfs - self.log_int_pr + self.log_bin_difs, log_nz)#u.safe_log(np.sum((self.log_pdfs + const_terms), axis=1))
+        # #log_hyper_likelihood = np.sum(log_hyper_lfs)
+        # #nz = np.exp(log_nz)
+        # #norm_nz = nz / np.dot(nz, self.bin_difs)
+        # hyper_lfs = np.sum(np.exp(log_nz + self.log_pdfs - self.log_int_pr) * self.bin_difs, axis=1)
+        # #hyper_lfs = np.dot(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], self.bin_difs)#, axis=1)#log_nz + self.log_pdfs - self.int_pr#
+        # log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs))# - np.dot(np.exp(log_nz), self.bin_difs)
+        # terms = self.log_pdfs + log_nz[np.newaxis, :] - self.log_int_pr[np.newaxis, :]
+        # galterms = np.sum(np.exp(terms) * self.bin_difs[np.newaxis, :], axis = 1)
+        # log_hyper_likelihood = np.sum(u.safe_log(galterms)) - np.dot(np.exp(log_nz), self.bin_difs)
+        nz = np.exp(log_nz)# - np.max(log_nz))
+        norm_nz = nz / np.dot(nz, self.bin_difs)
+        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)
+        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - np.dot(norm_nz, self.bin_difs)
         return log_hyper_likelihood
 
     def evaluate_log_hyper_prior(self, log_nz):
@@ -221,8 +227,8 @@ class log_z_dens(object):
         if 'log_mmle_nz' not in self.info['estimators']:
             log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior)
             mle_nz = np.exp(log_mle)
-            self.mle_nz = mle_nz# / np.dot(mle_nz, self.bin_difs)
-            self.log_mle_nz = log_mle#u.safe_log(self.mle_nz)
+            self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
+            self.log_mle_nz = u.safe_log(self.mle_nz)
             self.info['estimators']['log_mmle_nz'] = self.log_mle_nz
         else:
             self.log_mle_nz = self.info['estimators']['log_mmle_nz']
@@ -344,18 +350,20 @@ class log_z_dens(object):
         mcmc_outputs['acors'] = acors
         return mcmc_outputs
 
-    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burn_test=d.n_burned, vb=True, no_data=0, no_prior=0):
+    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burned=d.n_burned, vb=True, n_procs=1, no_data=0, no_prior=0):
         """
         Calculates samples estimating the redshift density function
 
         Parameters
         ----------
-        n_accepted: int, optional
-            number of samples to accept per walker
-        n_intermediate: int, optional
-            duration of interval between burn-in tests
         ivals: numpy.ndarray, float
             initial values of log n(z) for each walker
+        n_accepted: int, optional
+            number of samples to accept per walker
+        n_burned: int, optional
+            number of samples between tests of burn-in condition
+        n_procs: int, optional
+            number of processors to use, defaults to single-thread
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         no_data: boolean, optional
@@ -379,9 +387,12 @@ class log_z_dens(object):
             else:
                 def distribution(log_nz):
                     return self.evaluate_log_hyper_posterior(log_nz)
-            self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, distribution)
+            self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, distribution, threads=n_procs)
             self.burn_ins = 0
-            self.burning_in = True
+            if n_burned == 0:
+                self.burning_in = False
+            else:
+                self.burning_in = True
             vals = ivals
             if vb:
                 plots.plot_ivals(ivals, self.info, self.plot_dir)
@@ -402,6 +413,7 @@ class log_z_dens(object):
 
             mcmc_outputs = self.sample(vals, n_accepted)
             full_chain = np.concatenate((full_chain, mcmc_outputs['chains']), axis=1)
+            full_chain -= u.safe_log(np.sum(np.exp(full_chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))
             with open(os.path.join(self.res_dir, 'full_chain.p'), 'wb') as file_location:
                 cpkl.dump(full_chain, file_location)
 

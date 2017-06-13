@@ -64,7 +64,7 @@ def plot_ivals(ivals, info, plot_dir):
     ival_integrals = np.dot(np.exp(ivals), bin_difs)
     log_ival_integrals = u.safe_log(ival_integrals)
     sps_sum.hist(log_ival_integrals, color='k', normed=1)
-    sps_sum.vlines(u.safe_log(np.dot(np.exp(info['log_interim_prior']), bin_difs)), 0., 1., linewidth=w_int, linestyle=s_int, alpha=a_int, color=c_int, dashes=d_int, label=l_int+nz)
+    sps_sum.vlines(np.log(np.dot(np.exp(info['log_interim_prior']), bin_difs)), 0., 1., linewidth=w_int, linestyle=s_int, alpha=a_int, color=c_int, dashes=d_int, label=l_int+nz)
     sps_sum.vlines(np.mean(log_ival_integrals), 0., 1., linewidth=w_bfe, linestyle=s_bfe, alpha=a_bfe, color=c_bfe, dashes=d_bfe, label=l_bfe+lnz)
 
     sps_sum.set_xlabel(r'$\ln\left[\int n(z)dz\right]$')

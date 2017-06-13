@@ -23,10 +23,12 @@ def safe_log(arr, threshold=d.eps):
     logged: ndarray
         logarithms, with approximation in place of zeros and negative numbers
     """
-    shape = np.shape(arr)
-    flat = arr.flatten()
-    logged = np.log(np.array([max(a,threshold) for a in flat])).reshape(shape)
-    return logged
+    # shape = np.shape(arr)
+    # flat = arr.flatten()
+    # logged = np.log(np.array([max(a,threshold) for a in flat])).reshape(shape)
+    arr[arr < threshold] = threshold
+    return np.log(arr)
+    # return logged
 
 def ingest(in_info):
     """
