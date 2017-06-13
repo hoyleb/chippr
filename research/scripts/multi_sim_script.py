@@ -1,6 +1,7 @@
 def make_true_nz(test_name):
     """
-    Function to create true redshift distribution to be shared among several test cases
+    Function to create true redshift distribution to be shared among several
+    test cases
 
     Parameters
     ----------
@@ -14,7 +15,8 @@ def make_true_nz(test_name):
 
     Notes
     -----
-    test_name is currently ignored but will soon be used to load parameters for making true_nz instead of hardcoded values.
+    test_name is currently ignored but will soon be used to load parameters for
+    making true_nz instead of hardcoded values.
     """
     true_amps = np.array([0.20, 0.35, 0.55])
     true_means = np.array([0.5, 0.2, 0.75])

@@ -1,10 +1,12 @@
 def check_prob_params(params):
     """
     Sets parameter values pertaining to components of probability
+
     Parameters
     ----------
     params: dict
         dictionary containing key/value pairs for probability
+
     Returns
     -------
     params: dict
@@ -26,7 +28,8 @@ def check_prob_params(params):
 
 def make_true_nz(test_name):
     """
-    Function to create true redshift distribution to be shared among several test cases
+    Function to create true redshift distribution to be shared among several
+    test cases
 
     Parameters
     ----------
@@ -48,7 +51,7 @@ def make_true_nz(test_name):
 
     true_nz = chippr.gmix(true_amps, true_means, true_sigmas, limits=(0., 1.))
 
-    return(true_nz)
+    return true_nz
 
 def set_up_prior(data, params):
     """
@@ -57,7 +60,8 @@ def set_up_prior(data, params):
     Parameters
     ----------
     data: dict
-        catalog dictionary containing bin endpoints, log interim prior, and log interim posteriors
+        catalog dictionary containing bin endpoints, log interim prior, and log
+        interim posteriors
     params: dict
         dictionary of parameter values for creation of prior
 

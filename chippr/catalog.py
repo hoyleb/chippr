@@ -16,14 +16,15 @@ from chippr import catalog_plots as plots
 
 class catalog(object):
 
-    def __init__(self, params={}, vb=True, loc=''):
+    def __init__(self, params={}, vb=True, loc='.'):
         """
         Object containing catalog of photo-z interim posteriors
 
         Parameters
         ----------
         params: dict or string, optional
-            dictionary containing parameter values for catalog creation or string containing location of parameter file
+            dictionary containing parameter values for catalog creation or
+            string containing location of parameter file
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         loc: string, optional
@@ -61,19 +62,19 @@ class catalog(object):
             True to print progress messages to stdout, False to suppress
         """
         self.n_coarse = self.params['n_bins']
-        x_min = self.params['bin_min']
-        x_max = self.params['bin_max']
+        z_min = self.params['bin_min']
+        z_max = self.params['bin_max']
         self.n_fine = self.n_coarse
         self.n_tot = self.n_coarse * self.n_fine
-        x_range = x_max-x_min
+        z_range = z_max - z_min
 
-        self.dx_coarse = x_range / self.n_coarse
-        self.dx_fine = x_range / self.n_tot
+        self.dz_coarse = z_range / self.n_coarse
+        self.dz_fine = z_range / self.n_tot
 
-        self.x_coarse = np.arange(x_min + 0.5 * self.dx_coarse, x_max, self.dx_coarse)
-        self.x_fine = np.arange(x_min + 0.5 * self.dx_fine, x_max, self.dx_fine)
+        self.z_coarse = np.arange(z_min + 0.5 * self.dz_coarse, z_max, self.dz_coarse)
+        self.z_fine = np.arange(z_min + 0.5 * self.dz_fine, z_max, self.dz_fine)
 
-        self.bin_ends = np.arange(x_min, x_max + self.dx_coarse, self.dx_coarse)
+        self.bin_ends = np.arange(z_min, z_max + self.dz_coarse, self.dz_coarse)
 
         return
 
@@ -91,24 +92,24 @@ class catalog(object):
         coarse: numpy.ndarray, float
             vector of binned values of function
         """
-        coarse = fine / (np.sum(fine) * self.dx_fine)
-        coarse = np.array([np.sum(coarse[k * self.n_fine : (k+1) * self.n_fine]) * self.dx_fine for k in range(self.n_coarse)])
-        coarse /= self.dx_coarse
+        coarse = fine / (np.sum(fine) * self.dz_fine)
+        coarse = np.array([np.sum(coarse[k * self.n_fine : (k+1) * self.n_fine]) * self.dz_fine for k in range(self.n_coarse)])
+        coarse /= self.dz_coarse
 
         return coarse
 
     def create(self, truth, int_pr, vb=True):
         """
-        Function creating a catalog of interim posterior probability distributions, will split this up into helper functions
+        Function creating a catalog of interim posterior probability
+        distributions, will split this up into helper functions
 
         Parameters
         ----------
         truth: numpy.ndarray, float
             vector of true redshifts
-        int_pr: chippr.gmix object or chippr.gauss object or chippr.discrete object
+        int_pr: chippr.gmix object or chippr.gauss object or chippr.discrete
+        object
             interim prior distribution object
-        bins: int, optional
-            number of evenly spaced bins
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
 
@@ -132,7 +133,7 @@ class catalog(object):
 
         self.obs_lfs = self.evaluate_lfs()
 
-        int_pr_fine = int_pr.evaluate(self.x_fine)
+        int_pr_fine = int_pr.evaluate(self.z_fine)
         int_pr_coarse = self.coarsify(int_pr_fine)
 
         pfs = np.zeros((self.n_items, self.n_coarse))
@@ -154,7 +155,7 @@ class catalog(object):
         Returns
         -------
         obs_samps: numpy.ndarray, float
-            observed values
+            "observed" values
         """
         if not self.params['variable_sigmas']:
             true_lfs = [gauss(self.true_samps[n], self.params['constant_sigma']**2) for n in self.samp_range]
@@ -174,11 +175,12 @@ class catalog(object):
 
         Returns
         -------
-        obs_lfs: numpy.ndarray, float
-            array of likelihood values for each item as a function of fine binning
+        obs_lfs.T: numpy.ndarray, float
+            array of likelihood values for each item as a function of fine
+            binning
         """
         if not self.params['variable_sigmas']:
-            lfs_fine = [gauss(self.x_fine[kk], self.params['constant_sigma']**2) for kk in range(self.n_tot)]
+            lfs_fine = [gauss(self.z_fine[kk], self.params['constant_sigma']**2) for kk in range(self.n_tot)]
             obs_lfs = (1.-self.params['outlier_fraction']) * np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)])
         if self.params['outlier_fraction'] > 0.:
             outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)

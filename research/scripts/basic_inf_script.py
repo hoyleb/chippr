@@ -1,10 +1,12 @@
 def check_prob_params(params):
     """
     Sets parameter values pertaining to components of probability
+
     Parameters
     ----------
     params: dict
         dictionary containing key/value pairs for probability
+
     Returns
     -------
     params: dict
@@ -26,7 +28,8 @@ def check_prob_params(params):
 
 def make_true_nz(test_name):
     """
-    Function to create true redshift distribution to be shared among several test cases
+    Function to create true redshift distribution to be shared among several
+    test cases
 
     Parameters
     ----------
@@ -40,7 +43,8 @@ def make_true_nz(test_name):
 
     Notes
     -----
-    test_name is currently ignored but will soon be used to load parameters for making true_nz instead of hardcoded values.
+    test_name is currently ignored but will soon be used to load parameters for
+    making true_nz instead of hardcoded values.
     """
     true_amps = np.array([0.20, 0.35, 0.55])
     true_means = np.array([0.5, 0.2, 0.75])
@@ -57,7 +61,8 @@ def set_up_prior(data, params):
     Parameters
     ----------
     data: dict
-        catalog dictionary containing bin endpoints, log interim prior, and log interim posteriors
+        catalog dictionary containing bin endpoints, log interim prior, and log
+        interim posteriors
     params: dict
         dictionary of parameter values for creation of prior
 

@@ -18,7 +18,7 @@ from chippr import log_z_dens_plots as plots
 
 class log_z_dens(object):
 
-    def __init__(self, catalog, hyperprior, truth=None, loc='', vb=True):
+    def __init__(self, catalog, hyperprior, truth=None, loc='.', vb=True):
         """
         An object representing the redshift density function (normalized
         redshift distribution function)
@@ -111,17 +111,7 @@ class log_z_dens(object):
         log_hyper_likelihood: float
             log likelihood probability associated with parameters in log_nz
         """
-        # #log_hyper_lfs = np.logaddexp(self.log_pdfs - self.log_int_pr + self.log_bin_difs, log_nz)#u.safe_log(np.sum((self.log_pdfs + const_terms), axis=1))
-        # #log_hyper_likelihood = np.sum(log_hyper_lfs)
-        # #nz = np.exp(log_nz)
-        # #norm_nz = nz / np.dot(nz, self.bin_difs)
-        # hyper_lfs = np.sum(np.exp(log_nz + self.log_pdfs - self.log_int_pr) * self.bin_difs, axis=1)
-        # #hyper_lfs = np.dot(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], self.bin_difs)#, axis=1)#log_nz + self.log_pdfs - self.int_pr#
-        # log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs))# - np.dot(np.exp(log_nz), self.bin_difs)
-        # terms = self.log_pdfs + log_nz[np.newaxis, :] - self.log_int_pr[np.newaxis, :]
-        # galterms = np.sum(np.exp(terms) * self.bin_difs[np.newaxis, :], axis = 1)
-        # log_hyper_likelihood = np.sum(u.safe_log(galterms)) - np.dot(np.exp(log_nz), self.bin_difs)
-        nz = np.exp(log_nz)# - np.max(log_nz))
+        nz = np.exp(log_nz)
         norm_nz = nz / np.dot(nz, self.bin_difs)
         hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)
         log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - np.dot(norm_nz, self.bin_difs)
@@ -142,13 +132,7 @@ class log_z_dens(object):
         log_hyper_prior: float
             log prior probability associated with parameters in log_nz
         """
-        #nz = np.exp(log_nz)
-        #n = np.dot(nz, self.bin_difs)
-        #norm_nz = nz / n
-        #norm_log_nz = u.safe_log(norm_nz) - self.hyper_prior.mean
-        #norm_log_nz = log_nz - self.hyper_prior.mean
-        log_hyper_prior = np.log(self.hyper_prior.evaluate_one(log_nz))#-0.5 * np.dot(np.dot(self.hyper_prior.invvar, norm_log_nz), norm_log_nz)#u.safe_log(self.hyper_prior.evaluate_one(log_nz))
-        #log_hyper_prior = np.log(self.hyper_prior.evaluate_one(log_nz))
+        log_hyper_prior = np.log(self.hyper_prior.evaluate_one(log_nz))
         return log_hyper_prior
 
     def evaluate_log_hyper_posterior(self, log_nz):
@@ -177,7 +161,7 @@ class log_z_dens(object):
 
         Parameters
         ----------
-        start: numpy.ndarray
+        start: numpy.ndarray, float
             array of log redshift density function bin values at which to begin
             optimization
         no_data: boolean
@@ -189,7 +173,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        res.x: numpy.ndarray
+        res.x: numpy.ndarray, float
             array of logged redshift density function bin values maximizing
             hyperposterior
         """
@@ -219,7 +203,7 @@ class log_z_dens(object):
 
         Parameters
         ----------
-        start: numpy.ndarray
+        start: numpy.ndarray, float
             array of log redshift density function bin values at which to begin
             optimization
         vb: boolean, optional
@@ -231,7 +215,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        log_mle_nz: numpy.ndarray
+        log_mle_nz: numpy.ndarray, float
             array of logged redshift density function bin values maximizing
             hyperposterior
         """
@@ -258,7 +242,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        log_stk_nz: ndarray
+        log_stk_nz: ndarray, float
             array of logged redshift density function bin values
         """
         if 'log_stacked_nz' not in self.info['estimators']:
@@ -284,7 +268,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        log_map_nz: ndarray
+        log_map_nz: ndarray, float
             array of logged redshift density function bin values
         """
         if 'log_mmap_nz' not in self.info['estimators']:
@@ -313,7 +297,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        log_exp_nz: ndarray
+        log_exp_nz: ndarray, float
             array of logged redshift density function bin values
         """
         if 'log_mexp_nz' not in self.info['estimators']:
@@ -388,7 +372,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        log_samples_nz: ndarray
+        log_samples_nz: ndarray, float
             array of sampled log redshift density function bin values
         """
         if 'log_mean_sampled_nz' not in self.info['estimators']:
@@ -433,15 +417,13 @@ class log_z_dens(object):
             chain = mcmc_outputs['chains']
             mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
             full_chain = np.concatenate((full_chain, mcmc_outputs['chains']), axis=1)
-            # full_chain -= u.safe_log(np.sum(np.exp(full_chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
             with open(os.path.join(self.res_dir, 'full_chain.p'), 'wb') as file_location:
                 cpkl.dump(full_chain, file_location)
 
             self.log_smp_nz = mcmc_outputs['chains']
             self.smp_nz = np.exp(self.log_smp_nz)
-            #self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
             self.info['log_sampled_nz_meta_data'] = mcmc_outputs
-            self.log_bfe_nz = s.norm_fit(self.log_smp_nz)[0]# s.mean(self.log_smp_nz)
+            self.log_bfe_nz = s.norm_fit(self.log_smp_nz)[0]
             self.bfe_nz = np.exp(self.log_bfe_nz)
             self.info['estimators']['log_mean_sampled_nz'] = self.log_bfe_nz
         else:
@@ -466,7 +448,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        info['stats']: dict
+        out_info: dict
             dictionary of all available statistics
         """
         self.info['stats']['kld'] = {}
@@ -480,9 +462,10 @@ class log_z_dens(object):
                 self.info['stats']['log_rms'][key_1 + '__' + key_2] = s.calculate_rms(self.info['estimators'][key_1], self.info['estimators'][key_2])
                 self.info['stats']['rms'][key_1[4:] + '__' + key_2[4:]] = s.calculate_rms(np.exp(self.info['estimators'][key_1]), np.exp(self.info['estimators'][key_2]))
 
+        out_info = self.info['stats']
         if vb:
-            print(self.info['stats'])
-        return self.info['stats']
+            print(out_info)
+        return out_info
 
     def plot_estimators(self):
         """

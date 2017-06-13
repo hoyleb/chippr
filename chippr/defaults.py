@@ -22,7 +22,8 @@ plot_colors = 10
 
 def check_sim_params(params={}):
     """
-    Checks simulation parameter dictionary for various keywords and sets to default values if not present
+    Checks simulation parameter dictionary for various keywords and sets to
+    default values if not present
 
     Parameters
     ----------
@@ -98,7 +99,8 @@ def check_variable_sigmas(params):
 
 def check_catastrophic_outliers(params):
     """
-    Sets parameter values pertaining to presence of a catastrophic outlier population
+    Sets parameter values pertaining to presence of a catastrophic outlier
+    population
 
     Parameters
     ----------
@@ -123,11 +125,14 @@ def check_catastrophic_outliers(params):
 
 def check_inf_params(params={}):
     """
-    Checks inference parameter dictionary for various keywords and sets to default values if not present
+    Checks inference parameter dictionary for various keywords and sets to
+    default values if not present
+
     Parameters
     ----------
     params: dict, optional
         dictionary containing initial key/value pairs for inference
+        
     Returns
     -------
     params: dict

@@ -1,6 +1,0 @@
-posterior_interim
-posterior_sample
-likelihood_interim
-likelihood_sample
-prior_interim
-prior_sample

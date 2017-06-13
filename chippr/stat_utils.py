@@ -58,9 +58,11 @@ def calculate_kld(pe, qe, vb=True):
     Parameters
     ----------
     pe: numpy.ndarray, float
-        probability distribution evaluated on a grid whose distance from `q` will be calculated.
+        probability distribution evaluated on a grid whose distance from `q`
+        will be calculated.
     qe: numpy.ndarray, float
-        probability distribution evaluated on a grid whose distance to `p` will be calculated.
+        probability distribution evaluated on a grid whose distance to `p` will
+        be calculated.
     vb: boolean
         report on progress to stdout?
 
@@ -87,9 +89,11 @@ def calculate_rms(pe, qe, vb=True):
     Parameters
     ----------
     pe: numpy.ndarray, float
-        probability distribution evaluated on a grid whose distance _from_ `q` will be calculated.
+        probability distribution evaluated on a grid whose distance _from_ `q`
+        will be calculated.
     qe: numpy.ndarray, float
-        probability distribution evaluated on a grid whose distance _to_ `p` will be calculated.
+        probability distribution evaluated on a grid whose distance _to_ `p`
+        will be calculated.
     vb: boolean
         report on progress to stdout?
 
@@ -106,7 +110,8 @@ def calculate_rms(pe, qe, vb=True):
 
 def single_parameter_gr_stat(chain):
     """
-    Calculates the Gelman-Rubin test statistic of convergence of an MCMC chain over one parameter
+    Calculates the Gelman-Rubin test statistic of convergence of an MCMC chain
+    over one parameter
 
     Parameters
     ----------
@@ -131,7 +136,8 @@ def single_parameter_gr_stat(chain):
 
 def multi_parameter_gr_stat(sample):
     """
-    Calculates the Gelman-Rubin test statistic of convergence of an MCMC chain over multiple parameters
+    Calculates the Gelman-Rubin test statistic of convergence of an MCMC chain
+    over multiple parameters
 
     Parameters
     ----------
@@ -172,9 +178,10 @@ def gr_test(sample, threshold=d.gr_threshold):
     """
     gr = multi_parameter_gr_stat(sample)
     print('Gelman-Rubin test statistic = '+str(gr))
-    return np.max(gr) > threshold
+    test_result = np.max(gr) > threshold
+    return test_result
 
-def cft(xtimes, lag):
+def cft(xtimes, lag):#xtimes has ntimes elements
     """
     Helper function to calculate autocorrelation time for chain of MCMC samples
 
@@ -221,14 +228,17 @@ def cfs(x, mode):#xbinstimes has nbins by ntimes elements
     Parameters
     ----------
     x: numpy.ndarray, float
-        input parameter values of length number of iterations by number of walkers if mode='walkers' or dimension of parameters if mode='bins'
+        input parameter values of length number of iterations by number of
+        walkers if mode='walkers' or dimension of parameters if mode='bins'
     mode: string
-        'bins' for one autocorrelation time per parameter, 'walkers' for one autocorrelation time per walker
+        'bins' for one autocorrelation time per parameter, 'walkers' for one
+        autocorrelation time per walker
 
     Returns
     -------
     cfs: numpy.ndarray, float
-        autocorrelation times for all walkers if mode='walkers' or all parameters if mode='bins'
+        autocorrelation times for all walkers if mode='walkers' or all
+        parameters if mode='bins'
     """
     if mode == 'walkers':
         xbinstimes = x
@@ -247,7 +257,8 @@ def acors(xtimeswalkersbins, mode='bins'):
     xtimeswalkersbins: numpy.ndarray, float
         emcee chain values of dimensions (n_iterations, n_walkers, n_parameters)
     mode: string, optional
-        'bins' for one autocorrelation time per parameter, 'walkers' for one autocorrelation time per walker
+        'bins' for one autocorrelation time per parameter, 'walkers' for one
+        autocorrelation time per walker
 
     Returns
     -------

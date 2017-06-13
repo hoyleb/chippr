@@ -13,6 +13,8 @@ from chippr import utils as u
 from chippr import plot_utils as pu
 from chippr import stat_utils as s
 
+# defining some shared variables
+
 lnz, nz = r'$\ln[n(z)]$', r'$n(z)$'
 
 s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '--', 0.5, 1., 'k', [(0, (1, 1))], 'True '
@@ -82,6 +84,8 @@ def set_up_burn_in_plots(n_bins, n_walkers):
     ----------
     n_bins: int
         number of parameters defining n(z)
+    n_walkers: int
+        number of walkers for the sampler
 
     Returns
     -------
@@ -133,6 +137,7 @@ def set_up_burn_in_plots(n_bins, n_walkers):
     chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
 
     plot_information = (gelman_rubin_evolution_plot, autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
+
     return plot_information
 
 def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins, plot_dir):
@@ -146,11 +151,14 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
         autocorrelation times, acceptance fractions, posterior probabilities,
         and chain evolution
     sampler_output: dict
-        dictionary containing array of sampled redshift density function bin values as well as posterior probabilities, acceptance fractions, and autocorrelation times
+        dictionary containing array of sampled redshift density function bin
+        values as well as posterior probabilities, acceptance fractions, and
+        autocorrelation times
     full_chain: ndarray, float
         array of all accepted samples so far
     burn_ins: int
-        number of between-convergence-check intervals that have already been performed
+        number of between-convergence-check intervals that have already been
+        performed
     plot_dir: string
         location in which to store the plots
 
@@ -245,6 +253,7 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
     f_chain_evolution.savefig(os.path.join(plot_dir, 'chain_evolution.png'), bbox_inches='tight', pad_inches = 0)
 
     plot_information = (gelman_rubin_evolution_plot, autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
+
     return plot_information
 
 def plot_estimators(info, plot_dir):
@@ -256,12 +265,7 @@ def plot_estimators(info, plot_dir):
     info: dict
         dictionary of stored information from log_z_dens object
     plot_dir: string
-        location into which the plot will be saved
-
-    Returns
-    -------
-    f: matplotlib figure
-        figure object
+        location where the plot will be saved
     """
     pu.set_up_plot()
 
@@ -329,7 +333,7 @@ def plot_samples(info, plot_dir):
     info: dict
         dictionary of stored information from log_z_dens object
     plot_dir: string
-        directory into which plot should be stored
+        directory where plot should be stored
     """
     pu.set_up_plot()
 
@@ -372,4 +376,5 @@ def plot_samples(info, plot_dir):
     sps_log.set_ylabel('Log probability density')
     sps.set_ylabel('Probability density')
     f.savefig(os.path.join(plot_dir, 'samples.png'), bbox_inches='tight', pad_inches = 0)
+
     return
