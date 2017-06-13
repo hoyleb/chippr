@@ -20,7 +20,7 @@ def set_up_plot():
 
     return
 
-def plot_step(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], l=None, r=False):
+def plot_step(sub_plot, bin_ends, to_plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], l=None, r=False):
     """
     Plots a step function
 
@@ -30,7 +30,7 @@ def plot_step(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001
         subplot into which step function is drawn
     bin_ends: list or ndarray
         list or array of endpoints of bins
-    plot: list or ndarray
+    to_plot: list or ndarray
         list or array of values within each bin
     s: string, optional
         matplotlib.pyplot linestyle
@@ -41,17 +41,20 @@ def plot_step(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001
     w: int or float, optional
         matplotlib.pyplot linewidth
     d: list of tuple, optional
-        matplotlib.pyplot dash style, of form [(start_point, (points_on, points_off, ...))]
+        matplotlib.pyplot dash style, of form
+        [(start_point, (points_on, points_off, ...))]
     l: string, optional
         label for function
     r: boolean, optional
         True for rasterized, False for vectorized
     """
 
-    plot_h(sub_plot, bin_ends, plot, s, c, a, w, d, l, r)
-    plot_v(sub_plot, bin_ends, plot, s, c, a, w, d, r)
+    plot_h(sub_plot, bin_ends, to_plot, s, c, a, w, d, l, r)
+    plot_v(sub_plot, bin_ends, to_plot, s, c, a, w, d, r)
 
-def plot_h(sub_plot, bin_ends,plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], l=None, r=False):
+    return
+
+def plot_h(sub_plot, bin_ends, to_plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], l=None, r=False):
     """
     Helper function to plot horizontal lines of a step function
 
@@ -61,7 +64,7 @@ def plot_h(sub_plot, bin_ends,plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))],
         subplot into which step function is drawn
     bin_ends: list or ndarray
         list or array of endpoints of bins
-    plot: list or ndarray
+    to_plot: list or ndarray
         list or array of values within each bin
     s: string, optional
         matplotlib.pyplot linestyle
@@ -72,14 +75,15 @@ def plot_h(sub_plot, bin_ends,plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))],
     w: int or float, optional
         matplotlib.pyplot linewidth
     d: list of tuple, optional
-        matplotlib.pyplot dash style, of form [(start_point, (points_on, points_off, ...))]
+        matplotlib.pyplot dash style, of form
+        [(start_point, (points_on, points_off, ...))]
     l: string, optional
         label for function
     r: boolean, optional
         True for rasterized, False for vectorized
     """
 
-    sub_plot.hlines(plot,
+    sub_plot.hlines(to_plot,
                    bin_ends[:-1],
                    bin_ends[1:],
                    linewidth=w,
@@ -90,7 +94,9 @@ def plot_h(sub_plot, bin_ends,plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))],
                    label=l,
                    rasterized=r)
 
-def plot_v(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], r=False):
+    return
+
+def plot_v(sub_plot, bin_ends, to_plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))], r=False):
     """
     Helper function to plot vertical lines of a step function
 
@@ -100,7 +106,7 @@ def plot_v(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))]
         subplot into which step function is drawn
     bin_ends: list or ndarray
         list or array of endpoints of bins
-    plot: list or ndarray
+    to_plot: list or ndarray
         list or array of values within each bin
     s: string, optional
         matplotlib.pyplot linestyle
@@ -111,17 +117,20 @@ def plot_v(sub_plot, bin_ends, plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0001))]
     w: int or float, optional
         matplotlib.pyplot linewidth
     d: list of tuple, optional
-        matplotlib.pyplot dash style, of form [(start_point, (points_on, points_off, ...))]
+        matplotlib.pyplot dash style, of form
+        [(start_point, (points_on, points_off, ...))]
     r: boolean, optional
         True for rasterized, False for vectorized
     """
 
     sub_plot.vlines(bin_ends[1:-1],
-                   plot[:-1],
-                   plot[1:],
+                   to_plot[:-1],
+                   to_plot[1:],
                    linewidth=w,
                    linestyle=s,
                    dashes=d,
                    color=c,
                    alpha=a,
                    rasterized=r)
+
+    return

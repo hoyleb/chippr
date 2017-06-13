@@ -1,6 +1,7 @@
 def make_true_nz(test_name):
     """
-    Function to create true redshift distribution to be shared among several test cases
+    Function to create true redshift distribution to be shared among several
+    test cases
 
     Parameters
     ----------
@@ -14,7 +15,8 @@ def make_true_nz(test_name):
 
     Notes
     -----
-    test_name is currently ignored but will soon be used to load parameters for making true_nz instead of hardcoded values.
+    test_name is currently ignored but will soon be used to load parameters for
+    making true_nz instead of hardcoded values.
     """
     true_amps = np.array([0.20, 0.35, 0.55])
     true_means = np.array([0.5, 0.2, 0.75])
@@ -55,7 +57,7 @@ def make_catalog(given_key):
             test_name = test_name[:-1]
             param_file_name = test_name + '.txt'
 
-            params = chippr.sim_utils.ingest(param_file_name)
+            params = chippr.utils.ingest(param_file_name)
             params = defaults.check_sim_params(params)
 
             bin_ends = np.array([params['bin_min'], params['bin_max']])
@@ -99,6 +101,9 @@ if __name__ == "__main__":
             test_info['true_zs'] = true_zs
             all_tests[test_name] = test_info
 
-    nps = mp.cpu_count()-1
-    pool = mp.Pool(nps)
-    pool.map(make_catalog, all_tests.keys())
+#     nps = mp.cpu_count()-1
+#     pool = mp.Pool(nps)
+#     pool.map(make_catalog, all_tests.keys())
+
+    for key in all_tests.keys():
+        make_catalog(key)
