@@ -2,7 +2,8 @@ import sys
 
 seed = 42
 
-eps = sys.float_info.epsilon
+eps = sys.float_info.min
+log_eps = sys.float_info.min_exp
 
 min_x = 0.
 max_x = 1.
@@ -12,16 +13,17 @@ n_bins = 10
 
 constant_sigma = 0.05
 
-gr_threshold = 1.1
+gr_threshold = 1.2
 
-n_accepted = 10**3
-n_burned = 10**2
+n_accepted = 3
+n_burned = 2
 
 plot_colors = 10
 
 def check_sim_params(params={}):
     """
-    Checks simulation parameter dictionary for various keywords and sets to default values if not present
+    Checks simulation parameter dictionary for various keywords and sets to
+    default values if not present
 
     Parameters
     ----------
@@ -97,7 +99,8 @@ def check_variable_sigmas(params):
 
 def check_catastrophic_outliers(params):
     """
-    Sets parameter values pertaining to presence of a catastrophic outlier population
+    Sets parameter values pertaining to presence of a catastrophic outlier
+    population
 
     Parameters
     ----------
@@ -118,4 +121,52 @@ def check_catastrophic_outliers(params):
         params['outlier_sigma'] = float(params['outlier_sigma'][0])
     else:
         params['outlier_fraction'] = 0.
+    return params
+
+def check_inf_params(params={}):
+    """
+    Checks inference parameter dictionary for various keywords and sets to
+    default values if not present
+
+    Parameters
+    ----------
+    params: dict, optional
+        dictionary containing initial key/value pairs for inference
+        
+    Returns
+    -------
+    params: dict
+        dictionary containing final key/value pairs for inference
+    """
+    params = check_sampler_params(params)
+    return params
+
+def check_sampler_params(params):
+    """
+    Sets parameter values pertaining to basic constants of inference
+    Parameters
+    ----------
+    params: dict
+        dictionary containing key/value pairs for inference
+    Returns
+    -------
+    params: dict
+        dictionary containing key/value pairs for inference
+    """
+    if 'gr_threshold' not in params:
+        params['gr_threshold'] = gr_threshold
+    else:
+        params['gr_threshold'] = float(params['gr_threshold'][0])
+    if 'n_accepted' not in params:
+        params['n_accepted'] = 10 ** n_accepted
+    else:
+        params['n_accepted'] = 10 ** int(params['n_accepted'][0])
+    if 'n_burned' not in params:
+        params['n_burned'] = 10 ** n_burned
+    else:
+        params['n_burned'] = 10 ** int(params['n_burned'][0])
+    if 'n_walkers' not in params:
+        params['n_walkers'] = None
+    else:
+        params['n_walkers'] = int(params['n_walkers'][0])
     return params

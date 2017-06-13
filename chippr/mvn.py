@@ -29,40 +29,56 @@ class mvn(object):
     def norm_var(self):
         """
         Function to normalize covariance matrix
+
+        Returns
+        -------
+        det: float
+            determinant of variance
         """
-        return np.linalg.det(self.var)
+        det = np.linalg.det(self.var)
+        return det
 
     def invert_var(self):
         """
         Function to invert covariance matrix
-        """
-        return np.linalg.inv(self.var)
 
-    def evaluate_one(self, x):
+        Returns
+        -------
+        inv: numpy.ndarray, float
+            inverse variance
         """
-        Function to evaluate multivariate Gaussian probability distribution once
+        inv = np.linalg.inv(self.var)
+        return inv
+
+    def evaluate_one(self, z):
+        """
+        Function to evaluate multivariate Gaussian probability distribution
+        once
 
         Parameters
         ----------
-        x: numpy.ndarray, float
-            value at which to evaluate multivariate Gaussian probability distribution
+        z: numpy.ndarray, float
+            value at which to evaluate multivariate Gaussian probability
+            distribution
 
         Returns
         -------
         p: float
-            probability associated with x
+            probability associated with z
         """
+        norm_z = z - self.mean
         p = max(d.eps, 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
-                np.exp(-0.5 * (x - self.mean) * self.invvar * (x - self.mean)))
+                np.exp(-0.5 * np.dot(np.dot(norm_z, self.invvar), norm_z)))
         return p
 
-    def evaluate(self, xs):
+    def evaluate(self, zs):
         """
-        Function to evaluate multivariate Gaussian probability distribution at multiple points
+        Function to evaluate multivariate Gaussian probability distribution at
+        multiple points
 
         Parameters
         ----------
-        xs: ndarray, float
+        zs: ndarray, float
             input vectors at which to evaluate probability
 
         Returns
@@ -70,22 +86,23 @@ class mvn(object):
         ps: ndarray, float
             output probabilities
         """
-        ps = np.zeros(len(xs))
-        for n, x in enumerate(xs):
-            ps[n] += self.evaluate_one(x)
+        ps = np.zeros(len(zs))
+        for n, z in enumerate(zs):
+            ps[n] += self.evaluate_one(z)
         return ps
 
     def sample_one(self):
         """
-        Function to take one sample from multivariate Gaussian probability distribution
+        Function to take one sample from multivariate Gaussian probability
+        distribution
 
         Returns
         -------
-        x: numpy.ndarray, float
+        z: numpy.ndarray, float
             single sample from multivariate Gaussian probability distribution
         """
-        x = self.mean + np.dot(self.var, np.random.normal(size = self.dim))
-        return x
+        z = np.random.multivariate_normal(self.mean, self.var, 1)[0]#self.mean + np.dot(self.var, np.random.normal(size = self.dim))
+        return z
 
     def sample(self, n_samps):
         """
@@ -98,8 +115,9 @@ class mvn(object):
 
         Returns
         -------
-        xs: ndarray, float
-            array of n_samps samples from multivariate Gaussian probability distribution
+        zs: ndarray, float
+            array of n_samps samples from multivariate Gaussian probability
+            distribution
         """
-        xs = np.array([self.sample_one() for n in range(n_samps)])
-        return xs
+        zs = np.array([self.sample_one() for n in range(n_samps)])
+        return zs

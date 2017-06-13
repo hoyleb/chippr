@@ -13,6 +13,8 @@ from chippr import utils as u
 from chippr import plot_utils as pu
 from chippr import stat_utils as s
 
+# defining some shared variables
+
 lnz, nz = r'$\ln[n(z)]$', r'$n(z)$'
 
 s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '--', 0.5, 1., 'k', [(0, (1, 1))], 'True '
@@ -27,21 +29,52 @@ s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '--', 1.5, 1., 'b', [(0, (1, 1))], 'M
 cmap = np.linspace(0., 1., d.plot_colors)
 colors = [cm.viridis(i) for i in cmap]
 
-def plot_ivals(info):
+def plot_ivals(ivals, info, plot_dir):
     """
     Plots the initial values given to the sampler
 
     Parameters
     ----------
+    ivals: np.ndarray, float
+        (n_walkers, n_bins) array of initial values for sampler
     info: dict
         dictionary of stored information from log_z_dens object
+    plot_dir: string
+        location into which the plot will be saved
 
     Returns
     -------
     f: matplotlib figure
         figure object
     """
-    return f
+    pu.set_up_plot()
+    n_walkers = len(ivals)
+    walkers = [np.random.randint(0, n_walkers) for i in range(d.plot_colors)]
+
+    f = plt.figure(figsize=(10, 5))
+    sps_samp = f.add_subplot(1, 2, 1)
+    for i in range(d.plot_colors):
+        pu.plot_step(sps_samp, info['bin_ends'], ivals[walkers[i]], c=colors[i])
+    pu.plot_step(sps_samp, info['bin_ends'], info['log_interim_prior'], w=w_int, s=s_int, a=a_int, c=c_int, d=d_int, l=l_int+nz)
+    if info['truth'] is not None:
+        sps_samp.plot(info['truth']['z_grid'], np.log(info['truth']['nz_grid']), linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+nz)
+    sps_samp.set_xlabel(r'$z$')
+    sps_samp.set_ylabel(r'$\ln\left[n(z)\right]$')
+
+    sps_sum = f.add_subplot(1, 2, 2)
+    bin_difs = info['bin_ends'][1:]-info['bin_ends'][:-1]
+    ival_integrals = np.dot(np.exp(ivals), bin_difs)
+    log_ival_integrals = u.safe_log(ival_integrals)
+    sps_sum.hist(log_ival_integrals, color='k', normed=1)
+    sps_sum.vlines(np.log(np.dot(np.exp(info['log_interim_prior']), bin_difs)), 0., 1., linewidth=w_int, linestyle=s_int, alpha=a_int, color=c_int, dashes=d_int, label=l_int+nz)
+    sps_sum.vlines(np.mean(log_ival_integrals), 0., 1., linewidth=w_bfe, linestyle=s_bfe, alpha=a_bfe, color=c_bfe, dashes=d_bfe, label=l_bfe+lnz)
+
+    sps_sum.set_xlabel(r'$\ln\left[\int n(z)dz\right]$')
+    sps_sum.set_ylabel(r'$p\left(\ln\left[\int n(z)dz\right]\right)$')
+
+    f.savefig(os.path.join(plot_dir, 'ivals.png'), bbox_inches='tight', pad_inches = 0)
+
+    return
 
 def set_up_burn_in_plots(n_bins, n_walkers):
     """
@@ -51,13 +84,24 @@ def set_up_burn_in_plots(n_bins, n_walkers):
     ----------
     n_bins: int
         number of parameters defining n(z)
+    n_walkers: int
+        number of walkers for the sampler
 
     Returns
     -------
     plot_information: tuple
-        contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
+        contains figure and subplot objects for Gelman-Rubin evolution,
+        autocorrelation times, acceptance fractions, posterior probabilities,
+        and chain evolution
     """
     pu.set_up_plot()
+
+    f_gelman_rubin_evolution = plt.figure(figsize=(5, 5))
+    sps_gelman_rubin_evolution = f_gelman_rubin_evolution.add_subplot(1, 1, 1)
+    f_gelman_rubin_evolution.subplots_adjust(hspace=0, wspace=0)
+    sps_gelman_rubin_evolution.set_ylabel(r'Gelman-Rubin Statistic')
+    sps_gelman_rubin_evolution.set_xlabel(r'accepted sample number')
+    gelman_rubin_evolution_plot = [f_gelman_rubin_evolution, sps_gelman_rubin_evolution]
 
     f_autocorrelation_times = plt.figure(figsize=(5, 5))
     sps_autocorrelation_times = f_autocorrelation_times.add_subplot(1, 1, 1)
@@ -92,38 +136,61 @@ def set_up_burn_in_plots(n_bins, n_walkers):
     random_walkers = [np.random.randint(0, n_walkers) for i in range(d.plot_colors)]
     chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
 
-    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
+    plot_information = (gelman_rubin_evolution_plot, autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
+
     return plot_information
 
-def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
+def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins, plot_dir):
     """
     Plots new information into burn-in progress plots
 
     Parameters
     ----------
     plot_information: tuple
-        contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
+        contains figure and subplot objects for Gelman-Rubin evolution,
+        autocorrelation times, acceptance fractions, posterior probabilities,
+        and chain evolution
     sampler_output: dict
-        dictionary containing array of sampled redshift density function bin values as well as posterior probabilities, acceptance fractions, and autocorrelation times
+        dictionary containing array of sampled redshift density function bin
+        values as well as posterior probabilities, acceptance fractions, and
+        autocorrelation times
+    full_chain: ndarray, float
+        array of all accepted samples so far
     burn_ins: int
-        number of between-convergence-check intervals that have already been performed
+        number of between-convergence-check intervals that have already been
+        performed
     plot_dir: string
         location in which to store the plots
 
     Returns
     -------
     plot_information: tuple
-        contains figure and subplot objects for autocorrelation times, acceptance fractions, and posterior probabilities
+        contains figure and subplot objects for Gelman-Rubin evolution,
+        autocorrelation times, acceptance fractions, posterior probabilities,
+        and chain evolution
     """
     (n_walkers, n_burn_test, n_bins) = np.shape(sampler_output['chains'])
 
     burn_test_range = range(n_burn_test)
     bin_range = range(n_bins)
 
-    (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot) = plot_information
+    (gelman_rubin_evolution_plot, autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot) = plot_information
+
+    [f_gelman_rubin_evolution, sps_gelman_rubin_evolution] = gelman_rubin_evolution_plot
+    gelman_rubin = s.multi_parameter_gr_stat(full_chain)
+    x_some = [(burn_ins + 1) * n_burn_test] * n_bins
+    sps_gelman_rubin_evolution.scatter(x_some,
+                           gelman_rubin,
+                           c='k',
+                           alpha=0.5,
+                           linewidth=0.1,
+                           s=2)
+    sps_gelman_rubin_evolution.set_xlim(0, (burn_ins + 2) * n_burn_test)
+    gelman_rubin_evolution_plot = [f_gelman_rubin_evolution, sps_gelman_rubin_evolution]
+    f_gelman_rubin_evolution.savefig(os.path.join(plot_dir, 'gelman_rubin_evolution.png'), bbox_inches='tight', pad_inches = 0)
 
     [f_autocorrelation_times, sps_autocorrelation_times] = autocorrelation_times_plot
-    autocorrelation_times = sampler_output['acors']
+    autocorrelation_times = s.acors(full_chain)# sampler_output['acors']
     # default to bins mode for autocorrelation times, will need to fix this later
     # if something == 'bins':
     x_some = [(burn_ins + 1) * n_burn_test] * n_bins
@@ -185,7 +252,8 @@ def plot_sampler_progress(plot_information, sampler_output, burn_ins, plot_dir):
     chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
     f_chain_evolution.savefig(os.path.join(plot_dir, 'chain_evolution.png'), bbox_inches='tight', pad_inches = 0)
 
-    plot_information = (autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
+    plot_information = (gelman_rubin_evolution_plot, autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
+
     return plot_information
 
 def plot_estimators(info, plot_dir):
@@ -197,12 +265,7 @@ def plot_estimators(info, plot_dir):
     info: dict
         dictionary of stored information from log_z_dens object
     plot_dir: string
-        location into which the plot will be saved
-
-    Returns
-    -------
-    f: matplotlib figure
-        figure object
+        location where the plot will be saved
     """
     pu.set_up_plot()
 
@@ -269,6 +332,8 @@ def plot_samples(info, plot_dir):
     ----------
     info: dict
         dictionary of stored information from log_z_dens object
+    plot_dir: string
+        directory where plot should be stored
     """
     pu.set_up_plot()
 
@@ -311,4 +376,5 @@ def plot_samples(info, plot_dir):
     sps_log.set_ylabel('Log probability density')
     sps.set_ylabel('Probability density')
     f.savefig(os.path.join(plot_dir, 'samples.png'), bbox_inches='tight', pad_inches = 0)
+
     return
