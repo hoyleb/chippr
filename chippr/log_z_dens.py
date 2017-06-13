@@ -20,16 +20,19 @@ class log_z_dens(object):
 
     def __init__(self, catalog, hyperprior, truth=None, loc='', vb=True):
         """
-        An object representing the redshift density function (normalized redshift distribution function)
+        An object representing the redshift density function (normalized
+        redshift distribution function)
 
         Parameters
         ----------
         catalog: chippr.catalog object
-            dict containing bin endpoints, interim prior bin values, and interim posterior PDF bin values
+            dict containing bin endpoints, interim prior bin values, and
+            interim posterior PDF bin values
         hyperprior: chippr.mvn object
             multivariate Gaussian distribution for hyperprior distribution
         truth: chippr.gmix object, optional
-            true redshift density function expressed as univariate Gaussian mixture
+            true redshift density function expressed as univariate Gaussian
+            mixture
         loc: string, optional
             directory into which to save results and plots made along the way
         vb: boolean, optional
@@ -55,7 +58,7 @@ class log_z_dens(object):
         self.info['log_interim_posteriors'] = self.log_pdfs
 
         if vb:
-            print(str(self.n_bins)+' bins, '+str(len(self.log_pdfs))+' interim posterior PDFs')
+            print(str(self.n_bins) + ' bins, ' + str(len(self.log_pdfs)) + ' interim posterior PDFs')
 
         self.hyper_prior = hyperprior
 
@@ -100,7 +103,8 @@ class log_z_dens(object):
         Parameters
         ----------
         log_nz: numpy.ndarray, float
-            vector of logged redshift density bin values at which to evaluate the hyperlikelihood
+            vector of logged redshift density bin values at which to evaluate
+            the hyperlikelihood
 
         Returns
         -------
@@ -130,7 +134,8 @@ class log_z_dens(object):
         Parameters
         ----------
         log_nz: numpy.ndarray, float
-            vector of logged redshift density bin values at which to evaluate the hyperprior
+            vector of logged redshift density bin values at which to evaluate
+            the hyperprior
 
         Returns
         -------
@@ -153,7 +158,8 @@ class log_z_dens(object):
         Parameters
         ----------
         log_nz: numpy.ndarray, float
-            vector of logged redshift density bin values at which to evaluate the full posterior
+            vector of logged redshift density bin values at which to evaluate
+            the full posterior
 
         Returns
         -------
@@ -172,7 +178,8 @@ class log_z_dens(object):
         Parameters
         ----------
         start: numpy.ndarray
-            array of log redshift density function bin values at which to begin optimization
+            array of log redshift density function bin values at which to begin
+            optimization
         no_data: boolean
             True to exclude data contribution to hyperposterior
         no_prior: boolean
@@ -183,7 +190,8 @@ class log_z_dens(object):
         Returns
         -------
         res.x: numpy.ndarray
-            array of logged redshift density function bin values maximizing hyperposterior
+            array of logged redshift density function bin values maximizing
+            hyperposterior
         """
         if no_data:
             def _objective(log_nz):
@@ -206,12 +214,14 @@ class log_z_dens(object):
 
     def calculate_mmle(self, start, vb=True, no_data=0, no_prior=0):
         """
-        Calculates the marginalized maximum likelihood estimator of the redshift density function
+        Calculates the marginalized maximum likelihood estimator of the
+        redshift density function
 
         Parameters
         ----------
         start: numpy.ndarray
-            array of log redshift density function bin values at which to begin optimization
+            array of log redshift density function bin values at which to begin
+            optimization
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         no_data: boolean, optional
@@ -222,7 +232,8 @@ class log_z_dens(object):
         Returns
         -------
         log_mle_nz: numpy.ndarray
-            array of logged redshift density function bin values maximizing hyperposterior
+            array of logged redshift density function bin values maximizing
+            hyperposterior
         """
         if 'log_mmle_nz' not in self.info['estimators']:
             log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior)
@@ -263,7 +274,8 @@ class log_z_dens(object):
 
     def calculate_mmap(self, vb=True):
         """
-        Calculates the marginalized maximum a posteriori estimator of the redshift density function
+        Calculates the marginalized maximum a posteriori estimator of the
+        redshift density function
 
         Parameters
         ----------
@@ -291,7 +303,8 @@ class log_z_dens(object):
 
     def calculate_mexp(self, vb=True):
         """
-        Calculates the marginalized expected value estimator of the redshift density function
+        Calculates the marginalized expected value estimator of the redshift
+        density function
 
         Parameters
         ----------
@@ -335,7 +348,9 @@ class log_z_dens(object):
         Returns
         -------
         mcmc_outputs: dict
-            dictionary containing array of sampled redshift density function bin values as well as posterior probabilities, acceptance fractions, and autocorrelation times
+            dictionary containing array of sampled redshift density function
+            bin values as well as posterior probabilities, acceptance
+            fractions, and autocorrelation times
         """
         self.sampler.reset()
         pos, prob, state = self.sampler.run_mcmc(ivals, n_samps)
@@ -350,7 +365,7 @@ class log_z_dens(object):
         mcmc_outputs['acors'] = acors
         return mcmc_outputs
 
-    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burned=d.n_burned, vb=True, n_procs=1, no_data=0, no_prior=0):
+    def calculate_samples(self, ivals, n_accepted=10**d.n_accepted, n_burned=10**d.n_burned, vb=True, n_procs=1, no_data=0, no_prior=0):
         """
         Calculates samples estimating the redshift density function
 
@@ -359,9 +374,9 @@ class log_z_dens(object):
         ivals: numpy.ndarray, float
             initial values of log n(z) for each walker
         n_accepted: int, optional
-            number of samples to accept per walker
+            log10 number of samples to accept per walker
         n_burned: int, optional
-            number of samples between tests of burn-in condition
+            log10 number of samples between tests of burn-in condition
         n_procs: int, optional
             number of processors to use, defaults to single-thread
         vb: boolean, optional
@@ -394,14 +409,17 @@ class log_z_dens(object):
             else:
                 self.burning_in = True
             vals = ivals
+            vals -= u.safe_log(np.sum(np.exp(ivals) * self.bin_difs[np.newaxis, :], axis=1))[:, np.newaxis]
             if vb:
-                plots.plot_ivals(ivals, self.info, self.plot_dir)
+                plots.plot_ivals(vals, self.info, self.plot_dir)
                 canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers)
-            full_chain = np.array([[ivals[w]] for w in range(self.n_walkers)])
+            full_chain = np.array([[vals[w]] for w in range(self.n_walkers)])
             while self.burning_in:
                 if vb:
                     print('beginning sampling '+str(self.burn_ins))
-                burn_in_mcmc_outputs = self.sample(vals, n_burn_test)
+                burn_in_mcmc_outputs = self.sample(vals, n_burned)
+                chain = burn_in_mcmc_outputs['chains']
+                burn_in_mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
                 with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
                     cpkl.dump(burn_in_mcmc_outputs, file_location)
                 full_chain = np.concatenate((full_chain, burn_in_mcmc_outputs['chains']), axis=1)
@@ -412,8 +430,10 @@ class log_z_dens(object):
                 self.burn_ins += 1
 
             mcmc_outputs = self.sample(vals, n_accepted)
+            chain = mcmc_outputs['chains']
+            mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
             full_chain = np.concatenate((full_chain, mcmc_outputs['chains']), axis=1)
-            full_chain -= u.safe_log(np.sum(np.exp(full_chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))
+            # full_chain -= u.safe_log(np.sum(np.exp(full_chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
             with open(os.path.join(self.res_dir, 'full_chain.p'), 'wb') as file_location:
                 cpkl.dump(full_chain, file_location)
 
