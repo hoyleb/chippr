@@ -33,7 +33,9 @@ script:
 #    if [ -n "$GITHUB_API_KEY" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
 after_success: |
     if [ -n "$GITHUB_API_KEY" ]; then
-        git checkout --orphan html
+        git checkout --orphan pdf
         git rm -rf .
+        git add -f draft.pdf
         git -c user.name='travis' -c user.email='travis' commit -m init
+        git push -q -f https://aimalz:$GITHUB_API_KEY@github.com/aimalz/chippr pdf
     fi
