@@ -63,7 +63,7 @@ This paper presents a mathematically consistent method for obtaining the posteri
 \subsection{Model}
 \label{sec:model}
 
-We present the two attributes of a probabilistic graphical model (PGM) for the redshift distribution $n(z)$: the directed acyclic graph of Fig. \ref{fig:pgm} and its mathematical interpretation below.  The assumption underlying the concept of photo-$z$ estimation is that each galaxy $i$ has some observed photometric data $\vec{d}_{i}$ (fluxes, magnitudes, or colors) that is drawn from a function of its redshift $z_{i}$, which is a parameter in this model.  The redshifts $\{z_{i}\}$ for all galaxies in a survey are random draws from the redshift distribution, a function which itself may be parametrized by hyperparameters comprising $\vec{\phi}$ that are shared among all $N$ galaxies in the survey.  From this perspective, $n(z)$ is itself a probability distribution for galaxy redshifts, i.e. $z_{i} \sim n(z)$.  Given a functional form of $n(z)$, we can say $n(z) = p(z_{i}|\vec{\phi})$ for any $i = 1, \dots, N$, determining that $n(z)$ is itself a likelihood.  This PGM enables hierarchical Bayesian inference; we will directly infer the posterior probability distribution $p(\vec{\phi} | \{\vec{d}_{i}\})$ of $\vec{\phi}$ given the observations.   
+We present the two attributes of a probabilistic graphical model (PGM) for the redshift distribution $n(z)$: the directed acyclic graph of Fig. \ref{fig:pgm} and its mathematical interpretation below.  The assumption underlying the concept of photo-$z$ estimation is that each galaxy $i$ has some observed photometric data $\vec{d}_{i}$ (fluxes, magnitudes, or colors) that is drawn from a function of its redshift $z_{i}$, which is a parameter in this model.  The redshifts $\{z_{i}\}$ for all galaxies in a survey are random draws from the redshift distribution, a function which itself may be parametrized by hyperparameters comprising $\vec{\phi}$ that are shared among all $N$ galaxies in the survey.  From this perspective, $n(z)$ is itself a probability distribution for galaxy redshifts, i.e. $z_{i} \sim n(z)$.  Given a functional form of $n(z)$, we can say $n(z) = p(z_{i}|\vec{\phi})$ for any $i = 1, \dots, N$, determining that $n(z)$ is in particular a likelihood.  
 
 \begin{figure}
 	\begin{center}
@@ -73,7 +73,13 @@ We present the two attributes of a probabilistic graphical model (PGM) for the r
 	\end{center}
 \end{figure}
 
+It would be easy to estimate $\vec{\phi}$ given $\{z_{i}\}_{N}$, however, what we actually have is photometric data $\{\vec{d}_{i}\}_{N}$ which we used to derive photo-$z$ PDFs.  Because a photo-$z$ PDF is a probability distribution conditioned on the photometric data, it must be interpreted as a posterior probability distribution.  
 
+In addition to the data, the posterior probability distribution is conditioned on other information about how it was made, which is in general specific to the method that produced it.  This information only influences the posterior by its implicit distribution over redshifts, which we call the interim prior over redshift.  The interim prior, like the redshift distribution we wish to infer, has some functional form with some parameters, but since the redshift distribution and interim prior need not share the same parametrization, we will use $\vec{\alpha}$ to represent the parameters for the interim prior.  Thus, the posterior probability that is often oversimplified as "$p(z_{i})$" is really the interim posterior probability $p(z_{i} | \vec{d}_{i}, \vec{\alpha})$.  Note that we will assume that all galaxies whose photo-$z$ interim posteriors are derived by a single method share the same interim prior $p(z | \vec{\alpha})$; depending on the method, this may not always be true.
+
+Given a catalog of photo-$z$ interim posteriors $\{p(z_{i} | \vec{d}_{i}, \vec{\alpha})\}$
+
+To make use of the photo-$z$ interim priors, it is absolutely essential that $\vec{\alpha}$ be known.  
 
 This framework entails a number of choices and assumptions that must be addressed explicitly.
 
