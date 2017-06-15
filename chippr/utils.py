@@ -5,6 +5,7 @@ import numpy as np
 import chippr
 from chippr import defaults as d
 
+# Choose random seed at import, hopefully carries through everywhere
 np.random.seed(d.seed)
 
 def safe_log(arr, threshold=d.eps):
@@ -13,33 +14,36 @@ def safe_log(arr, threshold=d.eps):
 
     Parameters
     ----------
-    arr: ndarray
-        values to be logged
+    arr: ndarray, float
+        array of values to be logged
     threshold: float, optional
         small, positive value to replace zeros and negative numbers
 
     Returns
     -------
     logged: ndarray
-        logarithms, with approximation in place of zeros and negative numbers
+        logged values, with small value replacing un-loggable values
     """
-    shape = np.shape(arr)
-    flat = arr.flatten()
-    logged = np.log(np.array([max(a,threshold) for a in flat])).reshape(shape)
+    arr[arr < threshold] = threshold
+    logged = np.log(arr)
     return logged
 
 def ingest(in_info):
     """
-    Function reading in parameter file to define functions necessary for simulation and inference
+    Function reading in parameter file to define functions necessary for
+    generation of posterior probability distributions
+
     Parameters
     ----------
     in_info: string or dict
-        string containing path to plaintext input file or dict containing input parameters
+        string containing path to plaintext input file or dict containing
+        likelihood input parameters
 
     Returns
     -------
     in_dict: dict
-        dict containing keys and values necessary for simulation or inference
+        dict containing keys and values necessary for posterior probability
+        distributions
     """
     if type(in_info) == str:
         with open(in_info) as infile:

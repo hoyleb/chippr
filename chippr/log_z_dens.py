@@ -18,20 +18,21 @@ from chippr import log_z_dens_plots as plots
 
 class log_z_dens(object):
 
-    def __init__(self, catalog, hyperprior, truth=None, params={}, loc='', vb=True):
+    def __init__(self, catalog, hyperprior, truth=None, loc='.', vb=True):
         """
-        An object representing the redshift density function (normalized redshift distribution function)
+        An object representing the redshift density function (normalized
+        redshift distribution function)
 
         Parameters
         ----------
         catalog: chippr.catalog object
-            dict containing bin endpoints, interim prior bin values, and interim posterior PDF bin values
+            dict containing bin endpoints, interim prior bin values, and
+            interim posterior PDF bin values
         hyperprior: chippr.mvn object
             multivariate Gaussian distribution for hyperprior distribution
         truth: chippr.gmix object, optional
-            true redshift density function expressed as univariate Gaussian mixture
-        params: dict or string, optional
-            dictionary containing parameter values for catalog creation or string containing location of parameter file
+            true redshift density function expressed as univariate Gaussian
+            mixture
         loc: string, optional
             directory into which to save results and plots made along the way
         vb: boolean, optional
@@ -43,6 +44,7 @@ class log_z_dens(object):
         self.bin_range = self.bin_ends[:-1]-self.bin_ends[0]
         self.bin_mids = (self.bin_ends[1:]+self.bin_ends[:-1])/2.
         self.bin_difs = self.bin_ends[1:]-self.bin_ends[:-1]
+        self.log_bin_difs = u.safe_log(self.bin_difs)
         self.n_bins = len(self.bin_mids)
         self.info['bin_ends'] = self.bin_ends
 
@@ -56,7 +58,7 @@ class log_z_dens(object):
         self.info['log_interim_posteriors'] = self.log_pdfs
 
         if vb:
-            print(str(self.n_bins)+' bins, '+str(len(self.log_pdfs))+' interim posterior PDFs')
+            print(str(self.n_bins) + ' bins, ' + str(len(self.log_pdfs)) + ' interim posterior PDFs')
 
         self.hyper_prior = hyperprior
 
@@ -108,18 +110,18 @@ class log_z_dens(object):
         Parameters
         ----------
         log_nz: numpy.ndarray, float
-            vector of logged redshift density bin values at which to evaluate the hyperlikelihood
+            vector of logged redshift density bin values at which to evaluate
+            the hyperlikelihood
 
         Returns
         -------
-        log_hyper_lf: float
+        log_hyper_likelihood: float
             log likelihood probability associated with parameters in log_nz
         """
-        norm_nz = np.exp(log_nz - np.max(log_nz))
-        norm_nz /= np.sum(norm_nz)#, self.bin_difs)
-        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:], axis=1)
-        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs))
-
+        nz = np.exp(log_nz)
+        norm_nz = nz / np.dot(nz, self.bin_difs)
+        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)
+        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - np.dot(norm_nz, self.bin_difs)
         return log_hyper_likelihood
 
     def evaluate_log_hyper_prior(self, log_nz):
@@ -129,15 +131,15 @@ class log_z_dens(object):
         Parameters
         ----------
         log_nz: numpy.ndarray, float
-            vector of logged redshift density bin values at which to evaluate the hyperprior
+            vector of logged redshift density bin values at which to evaluate
+            the hyperprior
 
         Returns
         -------
         log_hyper_prior: float
             log prior probability associated with parameters in log_nz
         """
-        log_hyper_prior = -0.5 * np.dot(np.dot(self.hyper_prior.invvar, log_nz), log_nz)
-
+        log_hyper_prior = np.log(self.hyper_prior.evaluate_one(log_nz))
         return log_hyper_prior
 
     def evaluate_log_hyper_posterior(self, log_nz):
@@ -147,7 +149,8 @@ class log_z_dens(object):
         Parameters
         ----------
         log_nz: numpy.ndarray, float
-            vector of logged redshift density bin values at which to evaluate the full posterior
+            vector of logged redshift density bin values at which to evaluate
+            the full posterior
 
         Returns
         -------
@@ -159,24 +162,37 @@ class log_z_dens(object):
         log_hyper_posterior = log_hyper_likelihood + log_hyper_prior
         return log_hyper_posterior
 
-    def optimize(self, start, vb=True):
+    def optimize(self, start, no_data, no_prior, vb=True):
         """
         Maximizes the hyperposterior of the redshift density
 
         Parameters
         ----------
-        start: numpy.ndarray
-            array of log redshift density function bin values at which to begin optimization
+        start: numpy.ndarray, float
+            array of log redshift density function bin values at which to begin
+            optimization
+        no_data: boolean
+            True to exclude data contribution to hyperposterior
+        no_prior: boolean
+            True to exclude prior contribution to hyperposterior
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
 
         Returns
         -------
-        res.x: numpy.ndarray
-            array of logged redshift density function bin values maximizing hyperposterior
+        res.x: numpy.ndarray, float
+            array of logged redshift density function bin values maximizing
+            hyperposterior
         """
-        def _objective(log_nz):
-            return -2. * self.evaluate_log_hyper_posterior(log_nz)
+        if no_data:
+            def _objective(log_nz):
+                return -2. * self.evaluate_log_hyper_prior(log_nz)
+        elif no_prior:
+            def _objective(log_nz):
+                return -2. * self.evaluate_log_hyper_likelihood(log_nz)
+        else:
+            def _objective(log_nz):
+                return -2. * self.evaluate_log_hyper_posterior(log_nz)
 
         if vb:
             print(self.dir + 'starting at', start, _objective(start))
@@ -187,24 +203,31 @@ class log_z_dens(object):
             print(self.dir + ': ' + str(res))
         return res.x
 
-    def calculate_mmle(self, start, vb=True):
+    def calculate_mmle(self, start, vb=True, no_data=0, no_prior=0):
         """
-        Calculates the marginalized maximum likelihood estimator of the redshift density function
+        Calculates the marginalized maximum likelihood estimator of the
+        redshift density function
 
         Parameters
         ----------
-        start: numpy.ndarray
-            array of log redshift density function bin values at which to begin optimization
+        start: numpy.ndarray, float
+            array of log redshift density function bin values at which to begin
+            optimization
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
+        no_data: boolean, optional
+            True to exclude data contribution to hyperposterior
+        no_prior: boolean, optional
+            True to exclude prior contribution to hyperposterior
 
         Returns
         -------
-        log_mle_nz: numpy.ndarray
-            array of logged redshift density function bin values maximizing hyperposterior
+        log_mle_nz: numpy.ndarray, float
+            array of logged redshift density function bin values maximizing
+            hyperposterior
         """
         if 'log_mmle_nz' not in self.info['estimators']:
-            log_mle = self.optimize(start)
+            log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior)
             mle_nz = np.exp(log_mle)
             self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
             self.log_mle_nz = u.safe_log(self.mle_nz)
@@ -226,12 +249,12 @@ class log_z_dens(object):
 
         Returns
         -------
-        log_stk_nz: ndarray
+        log_stk_nz: ndarray, float
             array of logged redshift density function bin values
         """
         if 'log_stacked_nz' not in self.info['estimators']:
             self.stk_nz = np.sum(self.pdfs, axis=0)
-            self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
+            self.stk_nz /= self.n_pdfs
             self.log_stk_nz = u.safe_log(self.stk_nz)
             self.info['estimators']['log_stacked_nz'] = self.log_stk_nz
         else:
@@ -242,7 +265,8 @@ class log_z_dens(object):
 
     def calculate_mmap(self, vb=True):
         """
-        Calculates the marginalized maximum a posteriori estimator of the redshift density function
+        Calculates the marginalized maximum a posteriori estimator of the
+        redshift density function
 
         Parameters
         ----------
@@ -251,7 +275,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        log_map_nz: ndarray
+        log_map_nz: ndarray, float
             array of logged redshift density function bin values
         """
         if 'log_mmap_nz' not in self.info['estimators']:
@@ -270,7 +294,8 @@ class log_z_dens(object):
 
     def calculate_mexp(self, vb=True):
         """
-        Calculates the marginalized expected value estimator of the redshift density function
+        Calculates the marginalized expected value estimator of the redshift
+        density function
 
         Parameters
         ----------
@@ -279,7 +304,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        log_exp_nz: ndarray
+        log_exp_nz: ndarray, float
             array of logged redshift density function bin values
         """
         if 'log_mexp_nz' not in self.info['estimators']:
@@ -304,6 +329,8 @@ class log_z_dens(object):
 
         Parameters
         ----------
+        ivals: numpy.ndarray, float
+            initial values of the walkers
         n_samps: int
             number of samples to accept before stopping
         vb: boolean, optional
@@ -312,7 +339,9 @@ class log_z_dens(object):
         Returns
         -------
         mcmc_outputs: dict
-            dictionary containing array of sampled redshift density function bin values as well as posterior probabilities, acceptance fractions, and autocorrelation times
+            dictionary containing array of sampled redshift density function
+            bin values as well as posterior probabilities, acceptance
+            fractions, and autocorrelation times
         """
         self.sampler.reset()
         pos, prob, state = self.sampler.run_mcmc(ivals, n_samps)
@@ -327,7 +356,7 @@ class log_z_dens(object):
         mcmc_outputs['acors'] = acors
         return mcmc_outputs
 
-    def calculate_samples(self, ivals, vb=True):
+    def calculate_samples(self, ivals, n_accepted=10**d.n_accepted, n_burned=10**d.n_burned, vb=True, n_procs=1, no_data=0, no_prior=0):
         """
         Calculates samples estimating the redshift density function
 
@@ -335,47 +364,73 @@ class log_z_dens(object):
         ----------
         ivals: numpy.ndarray, float
             initial values of log n(z) for each walker
+        n_accepted: int, optional
+            log10 number of samples to accept per walker
+        n_burned: int, optional
+            log10 number of samples between tests of burn-in condition
+        n_procs: int, optional
+            number of processors to use, defaults to single-thread
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
+        no_data: boolean, optional
+            True to exclude data contribution to hyperposterior
+        no_prior: boolean, optional
+            True to exclude prior contribution to hyperposterior
 
         Returns
         -------
-        log_samples_nz: ndarray
+        log_samples_nz: ndarray, float
             array of sampled log redshift density function bin values
         """
-        if 'log_sampled_nz' not in self.info['estimators']:
+        if 'log_mean_sampled_nz' not in self.info['estimators']:
             self.n_walkers = len(ivals)
-            self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, self.evaluate_log_hyper_posterior)
+            if no_data:
+                def distribution(log_nz):
+                    return self.evaluate_log_hyper_prior(log_nz)
+            elif no_prior:
+                def distribution(log_nz):
+                    return self.evaluate_log_hyper_likelihood(log_nz)
+            else:
+                def distribution(log_nz):
+                    return self.evaluate_log_hyper_posterior(log_nz)
+            self.sampler = emcee.EnsembleSampler(self.n_walkers, self.n_bins, distribution, threads=n_procs)
             self.burn_ins = 0
-            self.burning_in = True
+            if n_burned == 0:
+                self.burning_in = False
+            else:
+                self.burning_in = True
             vals = ivals
+            vals -= u.safe_log(np.sum(np.exp(ivals) * self.bin_difs[np.newaxis, :], axis=1))[:, np.newaxis]
             if vb:
+                plots.plot_ivals(vals, self.info, self.plot_dir)
                 canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers)
-                plots.plot_ivals(self.info, ivals, self.plot_dir)
-            full_chain = np.array([[ivals[w]] for w in range(self.n_walkers)])
+            full_chain = np.array([[vals[w]] for w in range(self.n_walkers)])
             while self.burning_in:
                 if vb:
-                    print(self.dir + ': beginning sampling '+str(self.burn_ins))
-                burn_in_mcmc_outputs = self.sample(vals, self.params['n_burned'])
-                if vb:
-                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, self.burn_ins, self.plot_dir)
+                    print('beginning sampling '+str(self.burn_ins))
+                burn_in_mcmc_outputs = self.sample(vals, n_burned)
+                chain = burn_in_mcmc_outputs['chains']
+                burn_in_mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
                 with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
                     cpkl.dump(burn_in_mcmc_outputs, file_location)
                 full_chain = np.concatenate((full_chain, burn_in_mcmc_outputs['chains']), axis=1)
-                self.burning_in = s.gr_test(full_chain, self.params['gr_threshold'])
+                if vb:
+                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, full_chain, self.burn_ins, self.plot_dir)
+                self.burning_in = s.gr_test(full_chain)
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
                 self.burn_ins += 1
 
-            mcmc_outputs = self.sample(vals, self.params['n_accepted'])
+            mcmc_outputs = self.sample(vals, n_accepted)
+            chain = mcmc_outputs['chains']
+            mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
             full_chain = np.concatenate((full_chain, mcmc_outputs['chains']), axis=1)
             with open(os.path.join(self.res_dir, 'full_chain.p'), 'wb') as file_location:
                 cpkl.dump(full_chain, file_location)
 
             self.log_smp_nz = mcmc_outputs['chains']
             self.smp_nz = np.exp(self.log_smp_nz)
-            #self.info['estimators']['log_sampled_nz'] = self.log_smp_nz
             self.info['log_sampled_nz_meta_data'] = mcmc_outputs
-            self.log_bfe_nz = s.norm_fit(self.log_smp_nz)[0]# s.mean(self.log_smp_nz)
+            self.log_bfe_nz = s.norm_fit(self.log_smp_nz)[0]
             self.bfe_nz = np.exp(self.log_bfe_nz)
             self.info['estimators']['log_mean_sampled_nz'] = self.log_bfe_nz
         else:
@@ -400,7 +455,7 @@ class log_z_dens(object):
 
         Returns
         -------
-        info['stats']: dict
+        out_info: dict
             dictionary of all available statistics
         """
         self.info['stats']['kld'] = {}
@@ -414,9 +469,10 @@ class log_z_dens(object):
                 self.info['stats']['log_rms'][key_1 + '__' + key_2] = s.calculate_rms(self.info['estimators'][key_1], self.info['estimators'][key_2])
                 self.info['stats']['rms'][key_1[4:] + '__' + key_2[4:]] = s.calculate_rms(np.exp(self.info['estimators'][key_1]), np.exp(self.info['estimators'][key_2]))
 
+        out_info = self.info['stats']
         if vb:
-            print(self.dir + ': ' + str(self.info['stats']))
-        return self.info['stats']
+            print(out_info)
+        return out_info
 
     def plot_estimators(self):
         """

@@ -9,6 +9,7 @@ install:
   - sudo apt-get install texlive-latex-recommended
   - sudo apt-get install texlive-latex-extra
   - sudo apt-get install texlive-fonts-recommended
+  - sudo apt-get install texlive-publishers
   - sudo apt-get install chktex
   - sudo apt-get install dvipng
   - pip install --upgrade jupyter
@@ -24,13 +25,17 @@ script:
   - jupyter nbconvert --ExecutePreprocessor.kernel_name=python --ExecutePreprocessor.timeout=600 --to notebook --execute docs/notebooks/demo2.ipynb
   # Build the docs, the same way readthedocs does it:
   - cd docs ; sphinx-build -b html . _build/html ; cd -
+  # Compile the paper
+  - cd research/paper; make
 
 # Finally, if it's the master branch being updated, force-push the
 # notebook html pages to an otherwise empty "html" branch:
 #    if [ -n "$GITHUB_API_KEY" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
 after_success: |
     if [ -n "$GITHUB_API_KEY" ]; then
-        git checkout --orphan html
+        git checkout --orphan pdf
         git rm -rf .
+        git add -f draft.pdf
         git -c user.name='travis' -c user.email='travis' commit -m init
+        git push -q -f https://aimalz:$GITHUB_API_KEY@github.com/aimalz/chippr pdf
     fi

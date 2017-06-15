@@ -2,7 +2,8 @@ import sys
 
 seed = 42
 
-eps = sys.float_info.epsilon
+eps = sys.float_info.min
+log_eps = sys.float_info.min_exp
 
 min_x = 0.
 max_x = 1.
@@ -12,9 +13,7 @@ n_bins = 10
 
 constant_sigma = 0.03
 
-n_walkers = 2 * n_bins
-
-gr_threshold = 1.25
+gr_threshold = 1.2
 
 n_accepted = 3
 n_burned = 2
@@ -23,7 +22,8 @@ plot_colors = 10
 
 def check_sim_params(params={}):
     """
-    Checks simulation parameter dictionary for various keywords and sets to default values if not present
+    Checks simulation parameter dictionary for various keywords and sets to
+    default values if not present
 
     Parameters
     ----------
@@ -99,7 +99,8 @@ def check_variable_sigmas(params):
 
 def check_catastrophic_outliers(params):
     """
-    Sets parameter values pertaining to presence of a catastrophic outlier population
+    Sets parameter values pertaining to presence of a catastrophic outlier
+    population
 
     Parameters
     ----------
@@ -124,7 +125,8 @@ def check_catastrophic_outliers(params):
 
 def check_inf_params(params={}):
     """
-    Checks inference parameter dictionary for various keywords and sets to default values if not present
+    Checks inference parameter dictionary for various keywords and sets to
+    default values if not present
 
     Parameters
     ----------

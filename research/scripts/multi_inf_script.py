@@ -43,8 +43,7 @@ def make_true_nz(test_name):
 
     Notes
     -----
-    test_name is currently ignored but will soon be used to load parameters for
-    making true_nz instead of hardcoded values.
+    test_name is currently ignored but will soon be used to load parameters for making true_nz instead of hardcoded values.
     """
     true_amps = np.array([0.20, 0.35, 0.55])
     true_means = np.array([0.5, 0.2, 0.75])
@@ -52,7 +51,7 @@ def make_true_nz(test_name):
 
     true_nz = chippr.gmix(true_amps, true_means, true_sigmas, limits=(0., 1.))
 
-    return(true_nz)
+    return true_nz
 
 def set_up_prior(data, params):
     """
@@ -91,9 +90,12 @@ def set_up_prior(data, params):
 
     prior_mean = log_nz_intp
     prior = mvn(prior_mean, prior_var)
-    if params['prior_mean'] is 'sample':
-        prior_mean = prior.sample_one()
-        prior = mvn(prior_mean, prior_var)
+    if params['prior_mean'] == 'sample':
+        new_mean = prior.sample_one()
+        prior = mvn(new_mean, prior_var)
+        print(params['prior_mean'], prior_mean, new_mean)
+    else:
+        print(params['prior_mean'], prior_mean)
 
     return (prior, prior_var)
 
@@ -116,7 +118,7 @@ def do_inference(given_key):
     params = chippr.utils.ingest(param_file_name)
     params = check_prob_params(params)
     params = defaults.check_inf_params(params)
-    print('script sees params: '+str(params))
+    print(params)
 
     test_dir = os.path.join(result_dir, test_name)
     simulated_posteriors = catalog(params=param_file_name, loc=test_dir)
@@ -128,7 +130,7 @@ def do_inference(given_key):
 
     (prior, cov) = set_up_prior(data, params)
 
-    nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, params=param_file_name, vb=True)
+    nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
     nz_stacked = nz.calculate_stacked()
     print('stacked: '+str(np.dot(np.exp(nz_stacked), z_difs)))
@@ -141,38 +143,41 @@ def do_inference(given_key):
     nz.plot_estimators()
     nz.write('nz.p')
 
-    #start_mean = mvn(nz_mmle, cov).sample_one()
-    start = prior#mvn(data['log_interim_prior'], cov)
-
-    n_bins = len(nz_mmle)
+    # n_bins = len(nz_mmle)
     if params['n_walkers'] is not None:
         n_ivals = params['n_walkers']
     else:
         n_ivals = 10 * n_bins
-    initial_values = start.sample(n_ivals)
-
-    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
-
-    nz_stats = nz.compare()
-
-    nz.plot_estimators()
+    initial_values = prior.sample(n_ivals)
+    log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
+    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    #
+    # nz_stats = nz.compare()
+    #
+    # nz.plot_estimators()
     nz.write('nz.p')
 
 if __name__ == "__main__":
 
     import numpy as np
     import os
+    import multiprocessing as mp
 
     import chippr
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    test_name = 'null_test\n'
-    all_tests = {}
-    true_nz = make_true_nz(test_name)
-    test_info = {}
-    test_info['name'] = test_name
-    test_info['truth'] = true_nz
-    all_tests[test_name] = test_info
+    name_file = 'which_inf_tests.txt'
 
-    do_inference(test_name)
+    with open(name_file) as tests_to_run:
+        all_tests = {}
+        for test_name in tests_to_run:
+            true_nz = make_true_nz(test_name)
+            test_info = {}
+            test_info['name'] = test_name
+            test_info['truth'] = true_nz
+            all_tests[test_name] = test_info
+
+    nps = mp.cpu_count()-1
+    pool = mp.Pool(nps)
+    pool.map(do_inference, all_tests.keys())
