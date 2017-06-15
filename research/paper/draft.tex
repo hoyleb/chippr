@@ -97,9 +97,18 @@ interpretation of which will be presented below.
 
 \begin{figure}
 	\begin{center}
-		\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{\textbf{Replace \texttt{daft} version with more 
-polished \texttt{tikz} version.}}
+ 		\includegraphics[width=0.5\textwidth]{fig/pgm.png}
+		\caption{This directed acyclic graph corresponds to a PGM for a 
+hierarchical inference of $p(\vec{\theta}|\{\vec{d}_{i}\})$.  In this graph, 
+all random variables are shown in circles, with observed random variables shown 
+in shaded circles.  Relationships between variables are indicated by arrows 
+from parameters to the variables distributed according to functions of them.  
+The box indicates that there are a number of copies of the relationships 
+between boxed parameters, each independent of all others.  The hyperparameters 
+$\vec{\theta}$ representing $n(z)$ are at the top.  Independently drawn from a 
+function of the hyperparameters $\vec{\theta}$ are galaxy redshifts $\{z_{i}\}$ 
+below.  The observed galaxy photometry $\{\vec{d}_{i}\}$, shown in shaded 
+circles, is determined by the redshifts above.}
 	\label{fig:pgm}
 	\end{center}
 \end{figure}
@@ -163,7 +172,22 @@ posteriors are derived from photometric data.
 \subsubsection{Mock Data}
 \label{sec:mockdata}
 
-The mock data used here are produced by the following steps.  
+The mock data used here are produced by the following steps.
+
+\begin{enumerate}
+	\item Choose a true $n(z)$ that is a continuous function with known 
+parameters $\vec{\theta}$.
+	\item Sample the true $n(z)$ to create a catalog of $N$ true redshifts 
+$z_{i}$.
+	\item Choose a true intrinsic scatter $\sigma$, and sample Gaussians 
+$p(z'_{i} | z_{i}, \sigma) = \mathcal{N}(z_{i}, \sigma)$ to get "observed" 
+redshifts $z'_{i}$ defining Gaussian likelihoods $p(\vec{d}_{i} | z'_{i}, 
+\sigma) = \mathcal{N}(z'_{i}, \sigma)$.
+	\item Choose a parametrization and the parameters $\vec{\phi}^{*}$ of 
+the interim prior.
+	\item Create interim posteriors $p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*}) 
+= p(\vec{d}_{i} | z_{i})\ p(z_{i} | \vec{\phi}^{*})$ in this parametrization.
+\end{enumerate}
 
 This method for deriving mock data is referred to as the fiducial case, and 
 variations on it will refer directly to the steps that are altered.
@@ -176,6 +200,50 @@ estimators of $n(z)$ in cases of mock data with known true redshifts.
 
 \textbf{Review precision and bias from \texttt{kld.ipynb} and interpret in 
 terms of a \% difference.}
+
+\subsection{Underlying $n(z)$ Effects}
+\label{sec:truth}
+
+Existing $n(z)$ estimators are systematically smoother than the true $n(z)$.  
+Here we show that the traditional estimators of $n(z)$ cannot recover a highly 
+featured $n(z)$.  The implication of this failure is quite serious; the 
+consistently smooth, unimodal $n(z)$ estimates appearing in the literature 
+could result from much more featured true redshift distributions, and there 
+would be no way to catch this error without using a fully probabilistic method.
+
+\subsubsection{Featureless $n(z)$}
+\label{sec:smooth}
+
+In this test, we choose a weakly featured true $n(z)$ of Fig. \ref{fig:smooth} 
+with a smooth, unimodal shape.
+
+\begin{figure}
+	\begin{center}
+		%\includegraphics[width=0.5\textwidth]{pgm.png}
+		\caption{[plot of a weakly featured true $n(z)$, probably SDSS 
+interim prior]}
+		\label{fig:featured}
+	\end{center}
+\end{figure}
+
+\subsubsection{Featured $n(z)$}
+\label{sec:featured}
+
+In this test, we choose the true $n(z)$ of Fig. \ref{fig:featured} with 
+nontrivial structure.
+
+\begin{figure}
+	\begin{center}
+		
+\includegraphics[width=0.5\textwidth]{fig/fiducial/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/fiducial/estimators.png}		
+		\caption{[plot of a highly featured, multimodal true $n(z)$]}
+		\label{fig:featured}
+	\end{center}
+\end{figure}
+
+This featured true $n(z)$ will henceforth be referred to as the fiducial $n(z)$
 
 \subsection{Emulated Data Quality Effects}
 \label{sec:likelihoods}
@@ -301,31 +369,6 @@ corresponding to a training set biased in this way.
 		\caption{[plot of training-like (low-$z$ favoring) interim 
 prior]}
 		\label{fig:trainintpr}
-	\end{center}
-\end{figure}
-
-\subsection{Underlying $n(z)$ Effects}
-\label{sec:truth}
-
-Existing $n(z)$ estimators are systematically smoother than the true $n(z)$.  
-Here we show that the traditional estimators of $n(z)$ cannot recover a highly 
-featured $n(z)$.  The implication of this failure is quite serious; the 
-consistently smooth, unimodal $n(z)$ estimates appearing in the literature 
-could result from much more featured true redshift distributions, and there 
-would be no way to catch this error without using a fully probabilistic method.
-
-\subsubsection{Featured $n(z)$}
-\label{sec:featured}
-
-In this test, we choose the true $n(z)$ of Fig. \ref{fig:featured}, which has 
-nontrivial structure.
-
-\begin{figure}
-	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of a highly featured (delta function or 
-multimodal?) true $n(z)$]}
-		\label{fig:featured}
 	\end{center}
 \end{figure}
 
