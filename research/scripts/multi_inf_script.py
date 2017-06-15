@@ -140,6 +140,8 @@ def do_inference(given_key):
     print('MExp: '+str(np.dot(np.exp(nz_mexp), z_difs)))
     nz_mmle = nz.calculate_mmle(nz_stacked, no_data=params['no_data'], no_prior=params['no_prior'])
     print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs)))
+
+    nz_stats = nz.compare()
     nz.plot_estimators()
     nz.write('nz.p')
 
