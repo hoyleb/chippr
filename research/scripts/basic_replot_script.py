@@ -80,7 +80,7 @@ def just_plot(given_key):
     n_ivals = 2 * n_bins
     initial_values = prior.sample(n_ivals)
 
-    nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, params=param_file_name, vb=True)
+    nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
     nz.info = nz.read('nz.p')
     nz.plot_estimators()
@@ -97,17 +97,13 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    name_file = 'which_inf_tests.txt'
+    test_name = 'null_test\n'
 
-    with open(name_file) as tests_to_run:
-        all_tests = {}
-        for test_name in tests_to_run:
-            true_nz = make_true_nz(test_name)
-            test_info = {}
-            test_info['name'] = test_name
-            test_info['truth'] = true_nz
-            all_tests[test_name] = test_info
+    all_tests = {}
+    true_nz = make_true_nz(test_name)
+    test_info = {}
+    test_info['name'] = test_name
+    test_info['truth'] = true_nz
+    all_tests[test_name] = test_info
 
-    nps = mp.cpu_count()-1
-    pool = mp.Pool(nps)
-    pool.map(just_plot, all_tests.keys())
+    just_plot(test_name)

@@ -128,7 +128,7 @@ def do_inference(given_key):
 
     (prior, cov) = set_up_prior(data, params)
 
-    nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, params=param_file_name, vb=True)
+    nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
     nz_stacked = nz.calculate_stacked()
     print('stacked: '+str(np.dot(np.exp(nz_stacked), z_difs)))

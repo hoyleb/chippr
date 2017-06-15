@@ -188,7 +188,7 @@ class log_z_dens(object):
                 return -2. * self.evaluate_log_hyper_posterior(log_nz)
 
         if vb:
-            print(self.dir + 'starting at', start, _objective(start))
+            print(self.dir + ' starting at ', start, _objective(start))
 
         res = op.minimize(_objective, start, method="Nelder-Mead", options={"maxfev": 1e5, "maxiter":1e5})
 

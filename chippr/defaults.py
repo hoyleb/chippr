@@ -9,7 +9,6 @@ min_x = 0.
 max_x = 1.
 
 n_bins = 10
-# n_items = 4
 
 constant_sigma = 0.03
 
