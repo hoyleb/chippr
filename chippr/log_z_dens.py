@@ -94,13 +94,6 @@ class log_z_dens(object):
         if not os.path.exists(self.res_dir):
             os.makedirs(self.res_dir)
 
-        if type(params) == str:
-            self.params = u.ingest(params)
-        else:
-            self.params = params
-        self.params = d.check_inf_params(self.params)
-        if vb:
-            print self.dir + ': ' + str(self.params)
         return
 
     def evaluate_log_hyper_likelihood(self, log_nz):
@@ -356,7 +349,7 @@ class log_z_dens(object):
         mcmc_outputs['acors'] = acors
         return mcmc_outputs
 
-    def calculate_samples(self, ivals, n_accepted=10**d.n_accepted, n_burned=10**d.n_burned, vb=True, n_procs=1, no_data=0, no_prior=0):
+    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burned=d.n_burned, vb=True, n_procs=1, no_data=0, no_prior=0):
         """
         Calculates samples estimating the redshift density function
 
@@ -408,7 +401,7 @@ class log_z_dens(object):
             while self.burning_in:
                 if vb:
                     print('beginning sampling '+str(self.burn_ins))
-                burn_in_mcmc_outputs = self.sample(vals, n_burned)
+                burn_in_mcmc_outputs = self.sample(vals, 10**n_burned)
                 chain = burn_in_mcmc_outputs['chains']
                 burn_in_mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
                 with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
@@ -420,7 +413,7 @@ class log_z_dens(object):
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
                 self.burn_ins += 1
 
-            mcmc_outputs = self.sample(vals, n_accepted)
+            mcmc_outputs = self.sample(vals, 10**n_accepted)
             chain = mcmc_outputs['chains']
             mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
             full_chain = np.concatenate((full_chain, mcmc_outputs['chains']), axis=1)
