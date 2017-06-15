@@ -125,26 +125,33 @@ class catalog(object):
         self.samp_range = range(self.n_items)
 
         self.obs_samps = self.sample_obs()
-        if vb:
-            plots.plot_obs_scatter(self.true_samps, self.obs_samps, plot_loc=self.plot_dir)
 
         self.int_pr = int_pr
         self.proc_bins()
 
         self.obs_lfs = self.evaluate_lfs()
 
-        int_pr_fine = int_pr.evaluate(self.z_fine)
+        int_pr_fine = self.int_pr.evaluate(self.z_fine)
         int_pr_coarse = self.coarsify(int_pr_fine)
 
-        pfs = np.zeros((self.n_items, self.n_coarse))
+        # rewrite to take advantage of numpy array manipulation
+        pfs_fine = np.zeros((self.n_items, self.n_tot))
         for n in self.samp_range:
-            pf = int_pr_fine * self.obs_lfs[n]
-            pf = self.coarsify(pf)
-            pfs[n] += pf
+            pfs_fine[n] += int_pr_fine * self.obs_lfs[n]
+            pfs_fine[n] /= np.sum(pfs_fine[n]) * self.dz_fine
+
+        if vb:
+            plots.plot_obs_scatter(self.true_samps, pfs_fine, self.z_fine, plot_loc=self.plot_dir)
+
+        # rewrite to take advantage of numpy array manipulation
+        pfs_coarse = np.zeros((self.n_items, self.n_coarse))
+        for n in self.samp_range:
+            pfs_coarse[n] += self.coarsify(pfs_fine[n])
+            pfs_coarse[n] /= np.sum(pfs_coarse[n]) * self.dz_coarse
 
         self.cat['bin_ends'] = self.bin_ends
         self.cat['log_interim_prior'] = u.safe_log(int_pr_coarse)
-        self.cat['log_interim_posteriors'] = u.safe_log(pfs)
+        self.cat['log_interim_posteriors'] = u.safe_log(pfs_coarse)
 
         return self.cat
 

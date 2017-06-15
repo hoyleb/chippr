@@ -18,7 +18,8 @@ gr_threshold = 1.2
 n_accepted = 3
 n_burned = 2
 
-plot_colors = 10
+plot_colors = 5
+dpi = 250
 
 def check_sim_params(params={}):
     """
