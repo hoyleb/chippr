@@ -168,12 +168,15 @@ class catalog(object):
             true_lfs = [gauss(self.true_samps[n], self.params['constant_sigma']**2) for n in self.samp_range]
         if self.params['outlier_fraction'] > 0.:
             outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
-        obs_samps = np.zeros(self.n_items)
+
+        obs_samps = np.zeros(self.n_items) - 1.
         for n in self.samp_range:
-            if np.random.uniform() < self.params['outlier_fraction']:
-                obs_samps[n] = outlier_lf.sample_one()
-            else:
-                obs_samps[n] = true_lfs[n].sample_one()
+            while obs_samps[n] < self.params['bin_min'] or obs_samps[n] > self.params['bin_max']:
+                if np.random.uniform() < self.params['outlier_fraction']:
+                    obs_samps[n] = outlier_lf.sample_one()
+                else:
+                    obs_samps[n] = true_lfs[n].sample_one()
+
         return obs_samps
 
     def evaluate_lfs(self):

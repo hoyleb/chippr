@@ -304,7 +304,7 @@ def plot_estimators(info, plot_dir):
         pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mexp_nz'], w=w_exp, s=s_exp, a=a_exp, c=c_exp, d=d_exp, l=l_exp+lnz)
 
     sps_log.legend(fontsize='x-small', loc='upper left')
-    f.savefig(os.path.join(plot_dir, 'all_estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f.savefig(os.path.join(plot_dir, 'estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     return
 
