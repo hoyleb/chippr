@@ -83,19 +83,14 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    name_file = 'which_sim_tests.txt'
-
-    with open(name_file) as tests_to_run:
-        all_tests = {}
-        for test_name in tests_to_run:
-            true_nz = make_true_nz(test_name)
-            true_zs = make_true_zs(true_nz)
-            test_info = {}
-            test_info['name'] = test_name
-            test_info['true_nz'] = true_nz
-            test_info['true_zs'] = true_zs
-            all_tests[test_name] = test_info
-
-    nps = mp.cpu_count()-1
-    pool = mp.Pool(nps)
-    pool.map(make_catalog, all_tests.keys())
+    test_name = 'null_test\n'
+    all_tests = {}
+    true_nz = make_true_nz(test_name)
+    true_zs = make_true_zs(true_nz)
+    test_info = {}
+    test_info['name'] = test_name
+    test_info['true_nz'] = true_nz
+    test_info['true_zs'] = true_zs
+    all_tests[test_name] = test_info
+    
+    make_catalog(test_name)
