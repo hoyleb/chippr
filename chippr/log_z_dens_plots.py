@@ -5,6 +5,7 @@ import scipy as sp
 import matplotlib as mpl
 mpl.use('PS')
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 
 import chippr
 from chippr import defaults as d
@@ -16,15 +17,15 @@ from chippr import stat_utils as s
 
 lnz, nz = r'$\ln[n(z)]$', r'$n(z)$'
 
-s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 0.5, 1., 'k', [(0, (1, 1))], 'True '
-s_tbp, w_tbp, a_tbp, c_tbp, d_tbp, l_tbp = '-', 0.5, 0.75, 'k', [(0, (1, 1))], 'Binned True '
-s_int, w_int, a_int, c_int, d_int, l_int = '-', 0.5, 0.5, 'k', [(0, (1, 1))], 'Interim '
-s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 1.5, 0.75, pu.colors[4], [(0, (7.5, 7.5))], 'Stacked '#'g'
-s_map, w_map, a_map, c_map, d_map, l_map = '--', 1., 0.75, pu.colors[3], [(0, (5., 5.))], 'MMAP '#'r'
-s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 0.5, 0.75, pu.colors[2], [(0, (2.5, 2.5))], 'MExp '#'r'
-s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 1.5, 0.75, pu.colors[1], [(0, (1, 1))], 'MMLE '#'b'
-s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '-', 1., 1., 'k', [(0, (1, 1))], 'Sampled '
-s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 2.5, 0.75, pu.colors[0], [(0, (1, 1))], 'Mean of\n Samples '#'b'
+s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 2., 1., 'k', [(0, (1, 1))], 'True '
+s_tbp, w_tbp, a_tbp, c_tbp, d_tbp, l_tbp = ':', 2., 0.75, 'k', [(0, (1, 1))], 'Binned True '
+s_int, w_int, a_int, c_int, d_int, l_int = '-', 2., 0.5, 'k', [(0, (1, 1))], 'Interim '
+s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 2.5, 0.75, 'g', [(0, (7.5, 7.5))], 'Stacked '
+s_map, w_map, a_map, c_map, d_map, l_map = '--', 2., 0.75, 'r', [(0, (5., 5.))], 'MMAP '
+s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 2., 0.75, 'r', [(0, (2.5, 2.5))], 'MExp '
+s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 3., 0.75, 'b', [(0, (1, 1))], 'MMLE '
+s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '-', 2., 1., 'k', [(0, (1, 1))], 'Sampled '
+s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 3.5, 0.75, 'b', [(0, (1, 1))], 'Mean of\n Samples '
 
 def plot_ivals(ivals, info, plot_dir):
     """
@@ -266,44 +267,108 @@ def plot_estimators(info, plot_dir):
     """
     pu.set_up_plot()
 
-    f = plt.figure(figsize=(5, 5))
-    sps = f.add_subplot(1, 1, 1)
-    f.subplots_adjust(hspace=0, wspace=0)
-    sps_log = sps
+    if info['truth'] is not None:
+        f = plt.figure(figsize=(5, 7.5))
+        gs = gridspec.GridSpec(3, 1)
+        sps_log = f.add_subplot(gs[:-1, :])
+        sps_log.set_xticklabels([])
+        mini_sps = f.add_subplot(gs[-1, :])
+        mini_sps.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
+        mini_sps.set_xlabel(r'$z$')
+        mini_sps.set_ylabel(r'$\hat{n}(z) / n_{true}(z)$')
+        # mini_sps.ticklabel_format(style='sci',axis='y')
+        bin_log_true = info['log_tru_nz']
+        bin_true = np.exp(bin_log_true)
 
+        sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']),
+                        linewidth=w_tru, alpha=a_tru, color=c_tru,
+                        label=l_tru+lnz)
+        pu.plot_step(sps_log, info['bin_ends'], bin_log_true, w=w_tbp,
+                        s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp, l=l_tbp+lnz)
+        pu.plot_step(mini_sps, info['bin_ends'], bin_true / bin_true,
+                        w=w_tbp, s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp)
+    else:
+        f = plt.figure(figsize=(5, 5))
+        sps_log = f.add_subplot(1, 1, 1)
+        sps_log.set_xlabel(r'$z$')
+
+    # sps_log.set_yscale("log")
+    sps_log.ticklabel_format(style='sci',axis='y')
+    # print('this far')
     sps_log.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
     sps_log.set_ylabel(r'$\ln[n(z)]$')
-    sps_log.set_xlabel(r'$z$')
-    sps_log.ticklabel_format(style='sci',axis='y')
 
-    pu.plot_step(sps_log, info['bin_ends'], info['log_interim_prior'], w=w_int, s=s_int, a=a_int, c=c_int, d=d_int, l=l_int+lnz)
-
-    if info['truth'] is not None:
-        sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']), linewidth=w_tru, alpha=a_tru, color=c_tru, label=l_tru+lnz)
-        pu.plot_step(sps_log, info['bin_ends'], info['log_tru_nz'], w=w_tbp, s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp, l=l_tbp+lnz)
+    pu.plot_step(sps_log, info['bin_ends'], info['log_interim_prior'], w=w_int,
+                    s=s_int, a=a_int, c=c_int, d=d_int, l=l_int+lnz)
+    # if info['truth'] is not None:
+    #     pu.plot_step(mini_sps, info['bin_ends'],
+    #                     np.exp(info['log_interim_prior']) / bin_true,
+    #                     w=w_int, s=s_int, a=a_int, c=c_int, d=d_int)
 
     if 'log_mean_sampled_nz' in info['estimators']:
         plot_samples(info, plot_dir)
         (locs, scales) = s.norm_fit(info['log_sampled_nz_meta_data']['chains'])
         for k in range(len(info['bin_ends'])-1):
-            x_errs = [info['bin_ends'][k], info['bin_ends'][k], info['bin_ends'][k+1], info['bin_ends'][k+1]]
-            log_y_errs = [locs[k] - scales[k], locs[k] + scales[k], locs[k] + scales[k], locs[k] - scales[k]]
-            sps_log.fill(x_errs, log_y_errs, color='k', alpha=0.1, linewidth=0.)
-        pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mean_sampled_nz'], w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
+            x_errs = [info['bin_ends'][k], info['bin_ends'][k],
+                        info['bin_ends'][k+1], info['bin_ends'][k+1]]
+            log_y_errs_1 = np.array([locs[k] - scales[k], locs[k] + scales[k],
+                                locs[k] + scales[k], locs[k] - scales[k]])
+            log_y_errs_2 = np.array([locs[k] - 2 * scales[k], locs[k] + 2 * scales[k],
+                                locs[k] + 2 * scales[k], locs[k] - 2 * scales[k]])
+            # y_errs_1 = [np.exp(locs[k] - scales[k]), np.exp(locs[k] + scales[k]),
+            #             np.exp(locs[k] + scales[k]), np.exp(locs[k] - scales[k])]
+            # y_errs_2 = [np.exp(locs[k] - 2 * scales[k]), np.exp(locs[k] + 2 * scales[k]),
+            #             np.exp(locs[k] + 2 * scales[k]), np.exp(locs[k] - 2 * scales[k])]
+            sps_log.fill(x_errs, log_y_errs_1, color='k', alpha=0.3,
+                            linewidth=0.)
+            sps_log.fill(x_errs, log_y_errs_2, color='k', alpha=0.1,
+                            linewidth=0.)
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_mean_sampled_nz'],
+                        w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
+        if info['truth'] is not None:
+            pu.plot_step(mini_sps, info['bin_ends'],
+                            np.exp(info['estimators']['log_mean_sampled_nz']) / bin_true,
+                            w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe)
 
     if 'log_mmle_nz' in info['estimators']:
-        pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mmle_nz'], w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz)
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_mmle_nz'], w=w_mle,
+                        s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz)
+        if info['truth'] is not None:
+            pu.plot_step(mini_sps, info['bin_ends'],
+                            np.exp(info['estimators']['log_mmle_nz']) / bin_true,
+                            w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle)
 
     if 'log_stacked_nz' in info['estimators']:
-        pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_stacked_nz'], w=w_stk, s=s_stk, a=a_stk, c=c_stk, d=d_stk, l=l_stk+lnz)
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_stacked_nz'], w=w_stk,
+                        s=s_stk, a=a_stk, c=c_stk, d=d_stk, l=l_stk+lnz)
+        if info['truth'] is not None:
+            pu.plot_step(mini_sps, info['bin_ends'],
+                            np.exp(info['estimators']['log_stacked_nz']) / bin_true,
+                            w=w_stk, s=s_stk, a=a_stk, c=c_stk, d=d_stk)
 
     if 'log_mmap_nz' in info['estimators']:
-        pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mmap_nz'], w=w_map, s=s_map, a=a_map, c=c_map, d=d_map, l=l_map+lnz)
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_mmap_nz'], w=w_map,
+                        s=s_map, a=a_map, c=c_map, d=d_map, l=l_map+lnz)
+        if info['truth'] is not None:
+            pu.plot_step(mini_sps, info['bin_ends'],
+                            np.exp(info['estimators']['log_mmap_nz']) / bin_true,
+                            w=w_map, s=s_map, a=a_map, c=c_map, d=d_map)
 
     if 'log_mexp_nz' in info['estimators']:
-        pu.plot_step(sps_log, info['bin_ends'], info['estimators']['log_mexp_nz'], w=w_exp, s=s_exp, a=a_exp, c=c_exp, d=d_exp, l=l_exp+lnz)
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_mexp_nz'], w=w_exp,
+                        s=s_exp, a=a_exp, c=c_exp, d=d_exp, l=l_exp+lnz)
+        if info['truth'] is not None:
+            pu.plot_step(mini_sps, info['bin_ends'],
+                            np.exp(info['estimators']['log_mexp_nz']) / bin_true,
+                            w=w_exp, s=s_exp, a=a_exp, c=c_exp, d=d_exp)
 
     sps_log.legend(fontsize='x-small', loc='upper left')
+    f.subplots_adjust(hspace=0, wspace=0)
     f.savefig(os.path.join(plot_dir, 'estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     return

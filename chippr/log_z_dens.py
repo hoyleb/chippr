@@ -499,6 +499,8 @@ class log_z_dens(object):
             print('The following quantities were read from '+read_loc+' in the '+style+' format:')
             for key in self.info:
                 print(key)
+            if 'estimators' in self.info:
+                print(self.info['estimators'].keys())
         return self.info
 
     def write(self, write_loc, style='pickle', vb=True):
