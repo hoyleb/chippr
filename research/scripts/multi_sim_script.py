@@ -1,12 +1,42 @@
-def make_true_nz(test_name):
+def check_extra_params(params):
+    """
+    Sets parameter values pertaining to true n(z)
+
+    Parameters
+    ----------
+    params: dict
+        dictionary containing key/value pairs for simulation
+
+    Returns
+    -------
+    params: dict
+        dictionary containing key/value pairs for simulation
+    """
+    if 'smooth_truth' not in params:
+        params['smooth_truth'] = 0
+    else:
+        params['smooth_truth'] = int(params['smooth_truth'][0])
+
+    if 'interim_prior' not in params:
+        params['interim_prior'] = 'flat'
+    else:
+        params['interim_prior'] = str(params['interim_prior'][0])
+    if 'n_galaxies' not in params:
+        params['n_galaxies'] = 10**4
+    else:
+        params['n_galaxies'] = 10**int(params['n_galaxies'][0])
+
+    return(params)
+
+def make_true(given_key):
     """
     Function to create true redshift distribution to be shared among several
     test cases
 
     Parameters
     ----------
-    test_name: string
-        name used to look up parameters for making true_nz
+    given_key: string
+        name of test case for which true n(z) is to be made
 
     Returns
     -------
@@ -18,24 +48,81 @@ def make_true_nz(test_name):
     test_name is currently ignored but will soon be used to load parameters for
     making true_nz instead of hardcoded values.
     """
-    true_amps = np.array([0.20, 0.35, 0.55])
-    true_means = np.array([0.5, 0.2, 0.75])
-    true_sigmas = np.array([0.4, 0.2, 0.1])
-    true_nz = chippr.gmix(true_amps, true_means, true_sigmas, limits=(0., 1.))
-    return(true_nz)
+    test_info = all_tests[given_key]
 
-def make_true_zs(true_nz):
+    if test_info['params']['smooth_truth'] == 1:
+        bin_mids = (test_info['bin_ends'][1:] + test_info['bin_ends'][:-1]) / 2.
+        bin_difs = test_info['bin_ends'][1:] - test_info['bin_ends'][:-1]
+        true_amps = np.array([0.150,0.822,1.837,2.815,3.909,
+                              5.116,6.065,6.477,6.834,7.304,
+                              7.068,6.771,6.587,6.089,5.165,
+                              4.729,4.228,3.664,3.078,2.604,
+                              2.130,1.683,1.348,0.977,0.703,
+                              0.521,0.339,0.283,0.187,0.141,
+                              0.104,0.081,0.055,0.043,0.034])
+        true_means = bin_mids
+        true_sigmas = bin_difs
+    else:
+        bin_range = max(test_info['bin_ends']) - min(test_info['bin_ends'])
+        true_amps = np.array([0.20, 0.35, 0.55])
+        true_means = np.array([0.5, 0.2, 0.75]) * bin_range + min(test_info['bin_ends'])
+        true_sigmas = np.array([0.4, 0.2, 0.1]) * bin_range
+
+    true_nz = chippr.gmix(true_amps, true_means, true_sigmas,
+            limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
+
+    true_dict = {'amps': true_amps, 'means': true_means, 'sigmas': true_sigmas}
+    true_dict['bins'] = test_info['bin_ends']
+
+    true_zs = true_nz.sample(test_info['params']['n_galaxies'])
+    true_dict['zs'] = true_zs
+    test_info['truth'] = true_dict
+
+    return(test_info)
+
+def make_interim_prior(given_key):
     """
-    Function to create true redshifts to be shared among several test cases
+    Function to make the histogram-parametrized interim prior
+
+    Parameters
+    ----------
+    given_key: string
+        name of test case for which interim prior is to be made
 
     Returns
     -------
-    true_zs: numpy.ndarray, float
-        array of true redshift values
+    interim_prior: chippr.discrete or chippr.gauss or chippr.gmix object
+        the discrete distribution that will be the interim prior
     """
-    N =10**4
-    true_zs = true_nz.sample(N)
-    return(true_zs)
+    test_info = all_tests[given_key]
+
+    if test_info['params']['interim_prior'] == 'template':
+        bin_range = max(test_info['bin_ends']) - min(test_info['bin_ends'])
+        int_amps = np.array([0.3, 0.5, 0.1])
+        int_means = np.array([0.25, 0.5, 0.75]) * bin_range + min(test_info['bin_ends'])
+        int_sigmas = np.array([0.2, 0.1, 0.3]) * bin_range
+        int_nz = chippr.gmix(int_amps, int_means, int_sigmas,
+            limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
+    elif test_info['params']['interim_prior'] == 'training':
+        bin_mids = (test_info['bin_ends'][1:] + test_info['bin_ends'][:-1]) / 2.
+        bin_difs = test_info['bin_ends'][1:] - test_info['bin_ends'][:-1]
+        int_amps = np.array([0.150,0.822,1.837,2.815,3.909,
+                              5.116,6.065,6.477,6.834,7.304,
+                              7.068,6.771,6.587,6.089,5.165,
+                              4.729,4.228,3.664,3.078,2.604,
+                              2.130,1.683,1.348,0.977,0.703,
+                              0.521,0.339,0.283,0.187,0.141,
+                              0.104,0.081,0.055,0.043,0.034])
+        int_means = bin_mids
+        intsigmas = bin_difs
+        interim_prior = chippr.gmix(int_amps, int_means, int_sigmas,
+                limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
+    else:
+        bin_ends = np.array([test_info['params']['bin_min'], test_info['params']['bin_max']])
+        weights = np.array([1.])
+        interim_prior = chippr.discrete(bin_ends, weights)
+
+    return(interim_prior)
 
 def make_catalog(given_key):
     """
@@ -49,36 +136,40 @@ def make_catalog(given_key):
     test_info = all_tests[given_key]
     test_name = test_info['name']
 
-    true_nz = test_info['true_nz']
-    true_zs = test_info['true_zs']
-
-    test_name = test_name[:-1]
-    param_file_name = test_name + '.txt'
-
-    params = chippr.utils.ingest(param_file_name)
-    params = defaults.check_sim_params(params)
-
-    bin_ends = np.array([params['bin_min'], params['bin_max']])
-    weights = np.array([1.])
-
-    interim_prior = chippr.discrete(bin_ends, weights)
-
     test_dir = os.path.join(result_dir, test_name)
+    test_info['dir'] = test_dir
     if os.path.exists(test_dir):
         shutil.rmtree(test_dir)
     os.makedirs(test_dir)
 
+    param_file_name = test_name + '.txt'
+    params = chippr.utils.ingest(param_file_name)
+    params = defaults.check_sim_params(params)
+    params = check_extra_params(params)
+    test_info['params'] = params
+
+    test_info['bin_ends'] = np.linspace(test_info['params']['bin_min'],
+                                test_info['params']['bin_max'],
+                                test_info['params']['n_bins'] + 1)
+
+    test_info = make_true(given_key)
+    true_zs = test_info['truth']['zs']
+
+    interim_prior = make_interim_prior(given_key)
+
     posteriors = chippr.catalog(param_file_name, loc=test_dir)
     output = posteriors.create(true_zs, interim_prior)
-
-    data = np.exp(output['log_interim_posteriors'])
-
+    # data = np.exp(output['log_interim_posteriors'])
     posteriors.write()
+    data_dir = posteriors.data_dir
+    with open(os.path.join(data_dir, 'true_params.hkl'), 'w') as true_file:
+        hkl.dump(test_info['truth'], true_file)
 
 if __name__ == "__main__":
 
     import numpy as np
     import os
+    import hickle as hkl
     import shutil
     import multiprocessing as mp
 
@@ -91,12 +182,8 @@ if __name__ == "__main__":
     with open(name_file) as tests_to_run:
         all_tests = {}
         for test_name in tests_to_run:
-            true_nz = make_true_nz(test_name)
-            true_zs = make_true_zs(true_nz)
             test_info = {}
-            test_info['name'] = test_name
-            test_info['true_nz'] = true_nz
-            test_info['true_zs'] = true_zs
+            test_info['name'] = test_name[:-1]
             all_tests[test_name] = test_info
 
     nps = mp.cpu_count()-1
