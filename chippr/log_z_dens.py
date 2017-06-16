@@ -77,6 +77,7 @@ class log_z_dens(object):
                 self.fine_nz.extend(fine_n)
                 coarse_nz = np.sum(fine_n) * fine_dz
                 self.tru_nz[b] += coarse_nz
+            self.tru_nz /= np.dot(self.tru_nz, self.bin_difs)
             self.log_tru_nz = u.safe_log(self.tru_nz)
             self.info['log_tru_nz'] = self.log_tru_nz
             self.info['truth']['z_grid'] = np.array(self.fine_zs)

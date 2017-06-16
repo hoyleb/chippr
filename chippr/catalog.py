@@ -171,11 +171,11 @@ class catalog(object):
 
         obs_samps = np.zeros(self.n_items) - 1.
         for n in self.samp_range:
-            while obs_samps[n] < self.params['bin_min'] or obs_samps[n] > self.params['bin_max']:
-                if np.random.uniform() < self.params['outlier_fraction']:
-                    obs_samps[n] = outlier_lf.sample_one()
-                else:
-                    obs_samps[n] = true_lfs[n].sample_one()
+            # while obs_samps[n] < self.params['bin_min'] or obs_samps[n] > self.params['bin_max']:
+            if np.random.uniform() < self.params['outlier_fraction']:
+                obs_samps[n] = outlier_lf.sample_one()
+            else:
+                obs_samps[n] = true_lfs[n].sample_one()
 
         return obs_samps
 
