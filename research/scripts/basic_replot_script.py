@@ -1,29 +1,3 @@
-def make_true_nz(test_name):
-    """
-    Function to create true redshift distribution to be shared among several test cases
-
-    Parameters
-    ----------
-    test_name: string
-        name used to look up parameters for making true_nz
-
-    Returns
-    -------
-    true_nz: chippr.gmix object
-        gaussian mixture probability distribution
-
-    Notes
-    -----
-    test_name is currently ignored but will soon be used to load parameters for making true_nz instead of hardcoded values.
-    """
-    true_amps = np.array([0.20, 0.35, 0.55])
-    true_means = np.array([0.5, 0.2, 0.75])
-    true_sigmas = np.array([0.4, 0.2, 0.1])
-
-    true_nz = chippr.gmix(true_amps, true_means, true_sigmas, limits=(0., 1.))
-
-    return(true_nz)
-
 def set_up_prior(data):
     """
     Function to create prior distribution from data
@@ -74,6 +48,10 @@ def just_plot(given_key):
     saved_location = 'data'
     saved_type = '.txt'
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
+    with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
+        true_nz_params = pickle.load(true_file)
+    chippr.gmix(true_nz_params['true_amps'], true_nz_params['true_means'], true_nz_params['true_sigmas'],
+        limits=(data.z_min, data.z_max))
 
     prior = set_up_prior(data)
     n_bins = len(data['log_interim_prior'])
@@ -90,6 +68,7 @@ def just_plot(given_key):
 if __name__ == "__main__":
 
     import numpy as np
+    import pickle
     import os
     import multiprocessing as mp
 
@@ -100,10 +79,8 @@ if __name__ == "__main__":
     test_name = 'null_test\n'
 
     all_tests = {}
-    true_nz = make_true_nz(test_name)
     test_info = {}
     test_info['name'] = test_name
-    test_info['truth'] = true_nz
     all_tests[test_name] = test_info
 
     just_plot(test_name)

@@ -26,32 +26,32 @@ def check_prob_params(params):
         params['no_data'] = int(params['no_data'][0])
     return params
 
-def make_true_nz(test_name):
-    """
-    Function to create true redshift distribution to be shared among several
-    test cases
-
-    Parameters
-    ----------
-    test_name: string
-        name used to look up parameters for making true_nz
-
-    Returns
-    -------
-    true_nz: chippr.gmix object
-        gaussian mixture probability distribution
-
-    Notes
-    -----
-    test_name is currently ignored but will soon be used to load parameters for making true_nz instead of hardcoded values.
-    """
-    true_amps = np.array([0.20, 0.35, 0.55])
-    true_means = np.array([0.5, 0.2, 0.75])
-    true_sigmas = np.array([0.4, 0.2, 0.1])
-
-    true_nz = chippr.gmix(true_amps, true_means, true_sigmas, limits=(0., 1.))
-
-    return true_nz
+# def make_true_nz(test_name):
+#     """
+#     Function to create true redshift distribution to be shared among several
+#     test cases
+#
+#     Parameters
+#     ----------
+#     test_name: string
+#         name used to look up parameters for making true_nz
+#
+#     Returns
+#     -------
+#     true_nz: chippr.gmix object
+#         gaussian mixture probability distribution
+#
+#     Notes
+#     -----
+#     test_name is currently ignored but will soon be used to load parameters for making true_nz instead of hardcoded values.
+#     """
+#     true_amps = np.array([0.20, 0.35, 0.55])
+#     true_means = np.array([0.5, 0.2, 0.75])
+#     true_sigmas = np.array([0.4, 0.2, 0.1])
+#
+#     true_nz = chippr.gmix(true_amps, true_means, true_sigmas, limits=(0., 1.))
+#
+#     return true_nz
 
 def set_up_prior(data, params):
     """
@@ -110,7 +110,6 @@ def do_inference(given_key):
     """
     test_info = all_tests[given_key]
     test_name = test_info['name']
-    true_nz = test_info['truth']
 
     test_name = test_name[:-1]
     param_file_name = test_name + '.txt'
@@ -127,6 +126,10 @@ def do_inference(given_key):
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
     zs = data['bin_ends']
     z_difs = zs[1:]-zs[:-1]
+    with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
+        true_nz_params = pickle.load(true_file)
+    true_nz = chippr.gmix(true_nz_params['amps'], true_nz_params['means'], true_nz_params['sigmas'],
+            limits=(min(zs), max(zs)))
 
     (prior, cov) = set_up_prior(data, params)
 
@@ -153,15 +156,16 @@ def do_inference(given_key):
     initial_values = prior.sample(n_ivals)
     log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
     # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
-    #
-    # nz_stats = nz.compare()
-    #
-    # nz.plot_estimators()
+
+    nz_stats = nz.compare()
+
+    nz.plot_estimators()
     nz.write('nz.p')
 
 if __name__ == "__main__":
 
     import numpy as np
+    import pickle
     import os
     import multiprocessing as mp
 
@@ -174,10 +178,8 @@ if __name__ == "__main__":
     with open(name_file) as tests_to_run:
         all_tests = {}
         for test_name in tests_to_run:
-            true_nz = make_true_nz(test_name)
             test_info = {}
             test_info['name'] = test_name
-            test_info['truth'] = true_nz
             all_tests[test_name] = test_info
 
     nps = mp.cpu_count()-1
