@@ -15,16 +15,16 @@ from chippr import stat_utils as s
 
 # defining some shared variables
 
-lnz, nz = r'$\ln[n(z)]$', r'$n(z)$'
+lnz, nz = '', ''#r'$\ln[n(z)]$', r'$n(z)$'
 
-s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 2., 1., 'k', [(0, (1, 1))], 'True '
+s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 2., 1., 'k', [(0, (1, 1))], 'Truth '
 s_tbp, w_tbp, a_tbp, c_tbp, d_tbp, l_tbp = ':', 2., 0.75, 'k', [(0, (1, 1))], 'Binned True '
 s_int, w_int, a_int, c_int, d_int, l_int = '-', 2., 0.5, 'k', [(0, (1, 1))], 'Interim '
-s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 2.5, 0.75, 'g', [(0, (3, 3))], 'Stacked '
-s_map, w_map, a_map, c_map, d_map, l_map = '--', 2., 0.5, 'r', [(0, (4, 4))], 'MMAP '
-s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 2., 0.5, 'm', [(0, (5, 5))], 'MExp '
-s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 3., 1., 'c', [(0, (2, 2))], 'MMLE '
-s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 3.5, 1., 'b', [(0, (1, 1))], 'Mean of\n Samples '
+s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 2.5, 1., 'g', [(0, (2, 2))], 'Stacked '
+s_map, w_map, a_map, c_map, d_map, l_map = '--', 2., 1., 'r', [(0, (2, 1))], 'Modes '
+s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 2., 1., 'r', [(0, (1, 2))], 'Means '
+s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 3., 1., 'c', [(0, (2, 2))], 'HB Optimization '
+s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 3.5, 1., 'b', [(0, (1, 1))], 'HB Samples '
 s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '-', 2., 1., 'k', [(0, (1, 1))], 'Sampled '
 
 def plot_ivals(ivals, info, plot_dir):
@@ -277,9 +277,10 @@ def plot_estimators(info, plot_dir):
         sps_log = f.add_subplot(gs[:-1, :])
         sps_log.set_xticklabels([])
         mini_sps = f.add_subplot(gs[-1, :])
+        mini_sps.set_ylim(-50, 50)
         mini_sps.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
         mini_sps.set_xlabel(r'$z$')
-        mini_sps.set_ylabel(r'$\hat{n}(z) / n_{true}(z)$')
+        mini_sps.set_ylabel(r'$\left(\hat{n}(z) / n_{true}(z) - 1\right) \times 100\%$')
         # mini_sps.ticklabel_format(style='sci',axis='y')
         bin_log_true = info['log_tru_nz']
         bin_true = np.exp(bin_log_true)
@@ -291,9 +292,9 @@ def plot_estimators(info, plot_dir):
         # black_plots.append(tru)
         # black_labels.append(l_tru+lnz)
         #tbp, =
-        pu.plot_step(sps_log, info['bin_ends'], bin_log_true, w=w_tbp,
-                        s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp, l=l_tbp+lnz)
-        pu.plot_step(mini_sps, info['bin_ends'], bin_true / bin_true,
+        # pu.plot_step(sps_log, info['bin_ends'], bin_log_true, w=w_tbp,
+        #                 s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp, l=l_tbp+lnz)
+        pu.plot_step(mini_sps, info['bin_ends'], ((bin_true / bin_true) - 1.) * 100.,
                         w=w_tbp, s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp)
         # black_plots.append(tbp)
         # black_labels.append(l_tbp+lnz)
@@ -304,7 +305,7 @@ def plot_estimators(info, plot_dir):
 
     # sps_log.set_yscale("log")
     sps_log.ticklabel_format(style='sci',axis='y')
-    # print('this far')
+    sps_log.set_ylim(-4., 1.)
     sps_log.set_xlim(info['bin_ends'][0], info['bin_ends'][-1])
     sps_log.set_ylabel(r'$\ln[n(z)]$')
 
@@ -334,7 +335,7 @@ def plot_estimators(info, plot_dir):
         # color_labels.insert(0, l_stk+lnz)
         if info['truth'] is not None:
             pu.plot_step(mini_sps, info['bin_ends'],
-                            np.exp(info['estimators']['log_stacked_nz']) / bin_true,
+                            (np.exp(info['estimators']['log_stacked_nz']) / bin_true - 1.) * 100.,
                             w=w_stk, s=s_stk, a=a_stk, c=c_stk, d=d_stk)
 
     if 'log_mexp_nz' in info['estimators']:
@@ -346,7 +347,7 @@ def plot_estimators(info, plot_dir):
         # color_labels.insert(0, l_exp+lnz)
         if info['truth'] is not None:
             pu.plot_step(mini_sps, info['bin_ends'],
-                            np.exp(info['estimators']['log_mexp_nz']) / bin_true,
+                            (np.exp(info['estimators']['log_mexp_nz']) / bin_true - 1.) * 100.,
                             w=w_exp, s=s_exp, a=a_exp, c=c_exp, d=d_exp)
 
     if 'log_mmap_nz' in info['estimators']:
@@ -358,20 +359,8 @@ def plot_estimators(info, plot_dir):
         # color_labels.insert(0, l_map+lnz)
         if info['truth'] is not None:
             pu.plot_step(mini_sps, info['bin_ends'],
-                            np.exp(info['estimators']['log_mmap_nz']) / bin_true,
+                            (np.exp(info['estimators']['log_mmap_nz']) / bin_true - 1.) * 100.,
                             w=w_map, s=s_map, a=a_map, c=c_map, d=d_map)
-
-    if 'log_mmle_nz' in info['estimators']:
-        # mle, =
-        pu.plot_step(sps_log, info['bin_ends'],
-                        info['estimators']['log_mmle_nz'], w=w_mle,
-                        s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz)
-        # color_plots.insert(0, mle)
-        # color_labels.insert(0, l_mle+lnz)
-        if info['truth'] is not None:
-            pu.plot_step(mini_sps, info['bin_ends'],
-                            np.exp(info['estimators']['log_mmle_nz']) / bin_true,
-                            w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle)
 
     if 'log_mean_sampled_nz' in info['estimators']:
         plot_samples(info, plot_dir)
@@ -387,14 +376,14 @@ def plot_estimators(info, plot_dir):
             #             np.exp(locs[k] + scales[k]), np.exp(locs[k] - scales[k])]
             # y_errs_2 = [np.exp(locs[k] - 2 * scales[k]), np.exp(locs[k] + 2 * scales[k]),
             #             np.exp(locs[k] + 2 * scales[k]), np.exp(locs[k] - 2 * scales[k])]
-            sps_log.fill(x_errs, log_y_errs_1, color='k', alpha=0.5,
+            sps_log.fill(x_errs, log_y_errs_1, color=c_bfe, alpha=0.5,
                             linewidth=0.)
-            sps_log.fill(x_errs, log_y_errs_2, color='k', alpha=0.25,
+            sps_log.fill(x_errs, log_y_errs_2, color=c_bfe, alpha=0.25,
                             linewidth=0.)
         # bfe, =
-        pu.plot_step(sps_log, info['bin_ends'],
-                        info['estimators']['log_mean_sampled_nz'],
-                        w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
+        # pu.plot_step(sps_log, info['bin_ends'],
+        #                 info['estimators']['log_mean_sampled_nz'],
+        #                 w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
         # color_plots.insert(0, bfe)
         # color_labels.insert(0, l_bfe+lnz)
         if info['truth'] is not None:
@@ -405,16 +394,28 @@ def plot_estimators(info, plot_dir):
                         locs[k] + scales[k], locs[k] - scales[k]])) / bin_true[k]
                 y_errs_2 = np.exp(np.array([locs[k] - 2 * scales[k], locs[k] + 2 * scales[k],
                         locs[k] + 2 * scales[k], locs[k] - 2 * scales[k]])) / bin_true[k]
-                mini_sps.fill(x_errs, y_errs_1, color='k', alpha=0.5,
+                mini_sps.fill(x_errs, (y_errs_1 - 1.) * 100., color=c_bfe, alpha=0.5,
                             linewidth=0.)
-                mini_sps.fill(x_errs, y_errs_2, color='k', alpha=0.25,
+                mini_sps.fill(x_errs, (y_errs_2 - 1.) * 100., color=c_bfe, alpha=0.25,
                             linewidth=0.)
+            # pu.plot_step(mini_sps, info['bin_ends'],
+            #                 (1. - np.exp(info['estimators']['log_mean_sampled_nz']) / bin_true) * 100.,
+            #                 w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe)
+
+    elif 'log_mmle_nz' in info['estimators']:
+        # mle, =
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_mmle_nz'], w=w_mle,
+                        s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz)
+        # color_plots.insert(0, mle)
+        # color_labels.insert(0, l_mle+lnz)
+        if info['truth'] is not None:
             pu.plot_step(mini_sps, info['bin_ends'],
-                            np.exp(info['estimators']['log_mean_sampled_nz']) / bin_true,
-                            w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe)
+                            (np.exp(info['estimators']['log_mmle_nz']) / bin_true - 1.) * 100.,
+                            w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle)
 
     # sps_log.legend(handles=color_plots[:-1], fontsize='x-small', loc='lower center', frameon=False)
-    sps_log.legend(ncol=2, fontsize='x-small', loc='lower center', frameon=False)
+    sps_log.legend(fontsize='x-small', loc='lower center', frameon=False)
     f.subplots_adjust(hspace=0, wspace=0)
     f.savefig(os.path.join(plot_dir, 'estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
