@@ -185,7 +185,7 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    test_name = 'training_prior'
+    test_name = 'training_outliers'
     all_tests = {}
     test_info = {}
     test_info['name'] = test_name

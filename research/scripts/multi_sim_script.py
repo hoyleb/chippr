@@ -102,9 +102,9 @@ def make_interim_prior(given_key):
 
     if test_info['params']['interim_prior'] == 'template':
         bin_range = max(test_info['bin_ends']) - min(test_info['bin_ends'])
-        int_amps = np.array([0.3, 0.5, 0.1])
-        int_means = np.array([0.25, 0.5, 0.75]) * bin_range + min(test_info['bin_ends'])
-        int_sigmas = np.array([0.2, 0.1, 0.3]) * bin_range
+        int_amps = np.array([0.35, 0.5, 0.15])
+        int_means = np.array([0.1, 0.5, 0.9]) * bin_range + min(test_info['bin_ends'])
+        int_sigmas = np.array([0.1, 0.1, 0.1]) * bin_range
         interim_prior = chippr.gmix(int_amps, int_means, int_sigmas,
             limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
     elif test_info['params']['interim_prior'] == 'training':

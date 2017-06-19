@@ -155,7 +155,7 @@ def do_inference(given_key):
         n_ivals = 10 * n_bins
     initial_values = prior.sample(n_ivals)
     log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
-    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
 
@@ -182,6 +182,6 @@ if __name__ == "__main__":
             test_info['name'] = test_name
             all_tests[test_name] = test_info
 
-    nps = mp.cpu_count()-1
+    nps = mp.cpu_count()
     pool = mp.Pool(nps)
     pool.map(do_inference, all_tests.keys())

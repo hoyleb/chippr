@@ -38,9 +38,8 @@ def just_plot(given_key):
     """
     test_info = all_tests[given_key]
     test_name = test_info['name']
-    true_nz = test_info['truth']
 
-    test_name = test_name[:-1]
+    test_name = test_name
     param_file_name = test_name + '.txt'
 
     test_dir = os.path.join(result_dir, test_name)
@@ -50,8 +49,8 @@ def just_plot(given_key):
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
     with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
         true_nz_params = pickle.load(true_file)
-    chippr.gmix(true_nz_params['true_amps'], true_nz_params['true_means'], true_nz_params['true_sigmas'],
-        limits=(data.z_min, data.z_max))
+    true_nz = chippr.gmix(true_nz_params['amps'], true_nz_params['means'], true_nz_params['sigmas'],
+        limits=(simulated_posteriors.params['bin_min'], simulated_posteriors.params['bin_min']))
 
     prior = set_up_prior(data)
     n_bins = len(data['log_interim_prior'])
@@ -76,7 +75,7 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    test_name = 'null_test\n'
+    test_name = 'fiducial'
 
     all_tests = {}
     test_info = {}
