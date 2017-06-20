@@ -248,7 +248,7 @@ class log_z_dens(object):
         """
         if 'log_stacked_nz' not in self.info['estimators']:
             self.stk_nz = np.sum(self.pdfs, axis=0)
-            self.stk_nz /= self.n_pdfs
+            self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
             self.log_stk_nz = u.safe_log(self.stk_nz)
             self.info['estimators']['log_stacked_nz'] = self.log_stk_nz
         else:
