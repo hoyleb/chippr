@@ -69,7 +69,7 @@ def plot_obs_scatter(true_zs, pfs, z_grid, plot_loc='', plot_name='scatter.png')
     sorted_obs = obs_zs[np.argsort(obs_zs)]
     for r in range(d.plot_colors):
         pf = sorted_pfs[randos[r]]
-        plt.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c=pu.colors[r])
+        plt.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c='k')
         norm_pf = pf / max_pfs / (d.plot_colors + 1)
         plt.plot(z_grid, norm_pf + sorted_obs[randos[r]], c=pu.colors[r])
         plt.hlines(sorted_obs[randos[r]], min(z_grid), max(z_grid), color=pu.colors[r], alpha=0.5, linestyle='--')

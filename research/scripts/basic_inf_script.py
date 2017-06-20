@@ -126,7 +126,7 @@ def do_inference(given_key):
         n_ivals = 10 * n_bins
     initial_values = start.sample(n_ivals)
 
-    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
 
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    test_name = 'training_outliers'
+    test_name = 'template_prior'
     all_tests = {}
     test_info = {}
     test_info['name'] = test_name
