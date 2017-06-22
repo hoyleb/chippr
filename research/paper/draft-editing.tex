@@ -73,7 +73,7 @@ A photo-$z$ PDF is then an \textit{interim posterior} probability distribution o
 
 We present the two attributes of a probabilistic graphical model (PGM) for the redshift distribution $n(z)$: the directed acyclic graph (DAG) and its mathematical interpretation in terms of Bayesian hierarchical inference.  
 
-The fundamental assumption underlying the concept of photo-$z$ estimation is that each galaxy $i$ has some observed photometric data $\vec{d}_{i}$ (fluxes, magnitudes, or colors) that is drawn from a function of its redshift $z_{i}$, which is a parameter in this model.  The redshifts $\{z_{i}\}$ for all galaxies in a survey are random draws from the redshift distribution, whose parameters  $\vec{\phi}$ under a chosen functional form are called \textit{hyperparameters} because they are shared among all $N$ galaxies in the survey.  Fig. \ref{fig:pgm} illustrates these relationships.  PGMs of this structure are \textit{hierarchical} in that, though the data are only directly influenced by their redshift parameters, we can still use them to infer something about the global hyperparameters by way of a higher level in the graph.
+The fundamental assumption underlying the concept of photo-$z$ estimation is that each galaxy $i$ has some observed photometric data $\vec{d}_{i}$ (fluxes, magnitudes, or colors) that is drawn from a function of its redshift $z_{i}$, which is a parameter in this model.  This function constitutes a forward model for the observations.  The redshifts $\{z_{i}\}$ for all galaxies in a survey are random draws from the redshift distribution, whose parameters  $\vec{\phi}$ under a chosen functional form are called \textit{hyperparameters} because they are shared among all $N$ galaxies in the survey.  Fig. \ref{fig:pgm} illustrates these relationships.  PGMs of this structure are \textit{hierarchical} in that, though the data are only directly influenced by their redshift parameters, we can still use them to infer something about the global hyperparameters by way of a higher level in the graph.
 
 \begin{figure}
 	\begin{center}
@@ -87,17 +87,18 @@ The fundamental assumption underlying the concept of photo-$z$ estimation is tha
 
 % In addition to the data, the posterior probability distribution is conditioned on other information about how it was made, which is in general specific to the method that produced it.  This information only influences the posterior by its implicit distribution over redshifts, which we call the interim prior over redshift.  The interim prior, like the redshift distribution we wish to infer, has some functional form with some parameters, but since the redshift distribution and interim prior need not share the same parametrization, we will use $\vec{\alpha}$ to represent the parameters for the interim prior.  Thus, the posterior probability that is often oversimplified as "$p(z_{i})$" is really the interim posterior probability $p(z_{i} | \vec{d}_{i}, \vec{\alpha})$.  Note that we will assume that all galaxies whose photo-$z$ interim posteriors are derived by a single method share the same interim prior $p(z | \vec{\alpha})$; depending on the method, this may not always be true.
 
-The DAG of Fig. \ref{fig:pgm} translates directly into a mathematical expression for the posterior distribution $p(\vec{\phi} | \{\vec{d}_{i}\})$ of the hyperparameters given the entire dataset given the set of interim posteriors $\{p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})\}$ by way of the following derivation.  From this point forward, we will use log probabilities.
+The DAG of Fig. \ref{fig:pgm} translates directly into a mathematical expression for the posterior distribution $p(\vec{\phi} | \{\vec{d}_{i}\})$ of the hyperparameters given the entire set of interim posteriors $\{p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})\}$ by way of the following derivation.  From this point forward, we will use log probabilities.
 
 According to Bayes' rule, the posterior distribution of interest is
 \begin{align}
 \log p(\vec{\phi} | \{\vec{d}_{i}\}) &\propto \log p(\{\vec{d}_{i}\} | \vec{\phi}) + \log p(\vec{\phi}),
 \end{align}
-where $p(\vec{\phi})$ is the textit{hyperprior} probability distribution over possible values of the hyperparameters.  The hyperprior is a choice made by those performing the inference and is not to be confused with the interim prior parameters that influence the photo-$z$ PDF data product.
+where $p(\vec{\phi})$ is the \textit{hyperprior} probability distribution over possible values of the hyperparameters.  The hyperprior is a choice made by those performing the inference and is not to be confused with the interim prior parameters that influence the photo-$z$ PDF data product.
 
 Focusing on the likelihood term $p(\{\vec{d}_{i}\} | \vec{\phi})$, we employ the power of the hierarchical model through \textit{marginalization} of the unobserved redshift parameters by integrating over them to obtain 
 \begin{align}
-% \log p(\{\vec{d}_{i}\} | \vec{\phi}) &= \log\[\int\ \exp\[\log\[p(\{\vec{d}_{i}\} | \{z_{i}\})\] + \log\[p(\{z_{i}\} | \vec{\phi})\]\]\ d\{z_{i}\}\].
+\log[p(\{\vec{d}_{i}\} | \vec{\phi})] &= \log[\int\exp[\log[p(\{\vec{d}_{i}\} | \{z_{i}\})]\\
+& + \log[p(\{z_{i}\} | \vec{\phi})]]\ d\{z_{i}\}].
 \end{align}
 
 
@@ -270,9 +271,17 @@ We summarize the details of the \texttt{Buzzard} simulation here.
 \subsubsection{Cosmological Constraint Metric}
 \label{sec:cosmo}
 
-Because the mock data is associated with true values of the cosmological parameters, we may compare the quality of cosmological constraints.
+Because the realistic mock data of Sec. \ref{sec:buzzard} is associated with true values of the cosmological parameters, we may compare the quality of cosmological constraints under different estimators of $n(z)$, creating a figure like Fig. \ref{eq:scgsr}.  We perform this analysis using a forecasting code that takes $n(z)$ and produces projected error ellipses in the space of cosmological parameters.  
 
-\textbf{Check Dark Energy Task Force metrics on error ellipses, multi-dimensional KLD, centroid offset, etc.}
+\begin{figure}
+	\begin{center}
+		\includegraphics[width=0.5\textwidth]{cosmo_constraints.png}
+		\caption{[I'd like to be able to make a plot like this with the different $n(z)$ estimators produced by \texttt{chippr} from the same set of photo-$z$ PDFs.  Then I can calculate some metrics of the accuracy and precision of the error distributions relative to the true values of the cosmological parameters that produced the mock data.]}
+		\label{fig:scgsr}
+	\end{center}
+\end{figure}
+
+% \textbf{Check Dark Energy Task Force metrics on error ellipses, multi-dimensional KLD, centroid offset, etc.}
 
 \subsection{Results}
 \label{sec:results}
