@@ -221,13 +221,23 @@ error without using a fully probabilistic method.
 \label{sec:smooth}
 
 In this test, we choose a weakly featured true $n(z)$ of Fig. \ref{fig:smooth} 
-with a smooth, unimodal shape.
+with a smooth, unimodal shape, based on the interim prior used for the SDSS DR8 
+photo-$z$ PDFs.  [check and include citation!]
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of a weakly featured true $n(z)$, probably SDSS 
-interim prior]}
+		
+\includegraphics[width=0.5\textwidth]{fig/smooth_truth/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/smooth_truth/estimators.png}	
+		\caption{All estimators perform well when the true $n(z)$ is 
+well behaved, exhibiting significant deviation only when $n(z)$ is very small, 
+as the sample size of true redshifts in that range will be small.  Top panel: 
+The traditional MAP reduction of a photo-$z$ PDF against the true redshifts 
+with a few rescaled photo-$z$ interim posteriors are overplotted in solid 
+lines, with a dotted line indicating zero probability.  Bottom panel: Various 
+estimators of $\ln[n(z)]$, the interim prior, and the true $\ln[n(z)]$ as a 
+continuous function and under a binned parametrization.}
 		\label{fig:featured}
 	\end{center}
 \end{figure}
@@ -247,12 +257,12 @@ nontrivial structure.
 		\caption{[This plot doesn't really show what I want because the 
 intrinsic scatter is too low!  I used $\sigma=0.03$ because that's what has 
 been quoted as what LSST, etc. needs, but that's not what comes out of 
-photo-$z$ estimation methods before they impose aggressive cuts.]  Top panel: 
-The traditional MAP reduction of a photo-$z$ PDF against the true redshifts 
-with a few rescaled photo-$z$ interim posteriors are overplotted in solid 
-lines, with a dotted line indicating zero probability.  Bottom panel: Various 
-estimators of $\ln[n(z)]$, the interim prior, and the true $\ln[n(z)]$ as a 
-continuous function and under a binned parametrization.}
+photo-$z$ estimation methods before they impose aggressive cuts\dots]  Top 
+panel: The traditional MAP reduction of a photo-$z$ PDF against the true 
+redshifts with a few rescaled photo-$z$ interim posteriors are overplotted in 
+solid lines, with a dotted line indicating zero probability.  Bottom panel: 
+Various estimators of $\ln[n(z)]$, the interim prior, and the true $\ln[n(z)]$ 
+as a continuous function and under a binned parametrization.}
 		\label{fig:featured}
 	\end{center}
 \end{figure}
@@ -272,7 +282,10 @@ These tests vary Step \ref{itm:scatter} of Sec. \ref{sec:mockdata}.
 One major concern about photo-$z$s is the intrinsic scatter of point 
 estimators, including those derived from photo-$z$ PDFs, that is observed to 
 varying extents with every existing photo-$z$ algorithm and illustrated in Fig. 
-\ref{fig:intscat}.  
+\ref{fig:intscat}.  To emulate intrinsic scatter, we modify the fiducial case 
+to simply broaden the single Gaussian component of the likelihood.  To enforce 
+self-consistency, the mean is a random variable drawn from a Gaussian 
+distribution with the newly increased variance.
 
 \begin{figure}
 	\begin{center}
@@ -280,23 +293,24 @@ varying extents with every existing photo-$z$ algorithm and illustrated in Fig.
 \includegraphics[width=0.5\textwidth]{fig/high_scatter/scatter.png}\\
 		
 \includegraphics[width=0.5\textwidth]{fig/high_scatter/estimators.png}		
-		\caption{[This would be a lot more compelling with more 
-galaxies.  Also, the weird edge effects in the top panel are real, because the 
-point estimator is the MAP, not the center of the Gaussian likelihood, and 
-there's no requirement that the mean of the likelihood be within the true 
-redshift range.]  Top panel: The traditional MAP reduction of a photo-$z$ PDF 
-against the true redshifts with a few rescaled photo-$z$ interim posteriors are 
-overplotted in solid lines, with a dotted line indicating zero probability.  
-Bottom panel: Various estimators of $\ln[n(z)]$, the interim prior, and the 
-true $\ln[n(z)]$ as a continuous function and under a binned parametrization.}
+		\caption{As the intrinsic scatter increases, the discrepancy 
+between estimators increases.  In particular, the stacked estimator and 
+marginalized point estimators predict $\ln[n(z)]$ to be smoother than the 
+truth, while the  [This would be a lot more compelling with more galaxies.  
+Also, the weird edge effects in the top panel are real, because the point 
+estimator is the MAP, not the center of the Gaussian likelihood, and there's no 
+requirement that the mean of the likelihood be within the true redshift range.] 
+ Top panel: The traditional MAP reduction of a photo-$z$ PDF against the true 
+redshifts with a few rescaled photo-$z$ interim posteriors are overplotted in 
+solid lines, with a dotted line indicating zero probability.  Bottom panel: 
+Various estimators of $\ln[n(z)]$, the interim prior, and the true $\ln[n(z)]$ 
+as a continuous function and under a binned parametrization.}
 		\label{fig:intscat}
 	\end{center}
 \end{figure}
 
-To emulate intrinsic scatter, we modify the fiducial case to simply broaden the 
-single Gaussian component of the likelihood.  To enforce self-consistency, the 
-mean is a random variable drawn from a Gaussian distribution with the newly 
-increased variance.
+As the intrinsic scatter increases, the discrepancy between estimators 
+increases.  
 
 \subsubsection{Template-like Catastrophic Outliers}
 \label{sec:tempcatout}
@@ -317,7 +331,7 @@ galaxies of that SED type at many $z_{spec}$ to have similar colors.
 		
 \includegraphics[width=0.5\textwidth]{fig/template_outliers/estimators.png}	
 	
-		\caption{[]  Top panel: The traditional MAP reduction of a 
+		\caption{Top panel: The traditional MAP reduction of a 
 photo-$z$ PDF against the true redshifts with a few rescaled photo-$z$ interim 
 posteriors are overplotted in solid lines, with a dotted line indicating zero 
 probability.  Bottom panel: Various estimators of $\ln[n(z)]$, the interim 
@@ -341,9 +355,13 @@ filters.
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of $z_{phot}$ vs. $z_{spec}$ with training-like 
-catastrophic outliers]}
+		
+\includegraphics[width=0.5\textwidth]{fig/training_outliers/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/training_outliers/estimators.png}	
+		\caption{[This has proven to be the most challenging test case 
+to implement, and there's clearly still a bug in the function that makes the 
+likelihoods.]}
 		\label{fig:traincatout}
 	\end{center}
 \end{figure}
@@ -383,8 +401,12 @@ emulation of an interim prior corresponding to a template library of this type.
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of template-like (multimodal) interim prior]}
+		
+\includegraphics[width=0.5\textwidth]{fig/template_prior/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/template_prior/estimators.png}	
+		\caption{[The case of a multimodal interim prior was a very 
+compelling test in the previous version but somehow isn't anymore.]}
 		\label{fig:tempintpr}
 	\end{center}
 \end{figure}
@@ -395,13 +417,17 @@ emulation of an interim prior corresponding to a template library of this type.
 An interim prior based on a training set may be biased toward low redshifts due 
 to the dearth of distant galaxies with spectroscopic redshifts.  The interim 
 prior shown in Fig. \ref{fig:trainintpr} is an emulation of an interim prior 
-corresponding to a training set biased in this way.
+corresponding to a training set biased in this way.  We chose an interpolation 
+of the interim prior used for the SDSS DR8 photo-$z$ PDFs.  
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of training-like (low-$z$ favoring) interim 
-prior]}
+		
+\includegraphics[width=0.5\textwidth]{fig/training_prior/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/training_prior/estimators.png}	
+		\caption{[The case of a low-$z$ favoring interim prior was a 
+very compelling test in the previous version but somehow isn't anymore.]}
 		\label{fig:trainintpr}
 	\end{center}
 \end{figure}
@@ -444,7 +470,7 @@ multi-dimensional KLD, centroid offset, etc.}
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
+		%\includegraphics[width=0.5\textwidth]{money.png}
 		\caption{[moneyplot of error ellipses resulting from different 
 $n(z)$ estimators]}
 		\label{fig:money}
