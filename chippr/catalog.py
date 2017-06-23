@@ -62,19 +62,19 @@ class catalog(object):
             True to print progress messages to stdout, False to suppress
         """
         self.n_coarse = self.params['n_bins']
-        z_min = self.params['bin_min']
-        z_max = self.params['bin_max']
+        self.z_min = self.params['bin_min']
+        self.z_max = self.params['bin_max']
         self.n_fine = self.n_coarse
         self.n_tot = self.n_coarse * self.n_fine
-        z_range = z_max - z_min
+        z_range = self.z_max - self.z_min
 
         self.dz_coarse = z_range / self.n_coarse
         self.dz_fine = z_range / self.n_tot
 
-        self.z_coarse = np.arange(z_min + 0.5 * self.dz_coarse, z_max, self.dz_coarse)
-        self.z_fine = np.arange(z_min + 0.5 * self.dz_fine, z_max, self.dz_fine)
+        self.z_coarse = np.arange(self.z_min + 0.5 * self.dz_coarse, self.z_max, self.dz_coarse)
+        self.z_fine = np.arange(self.z_min + 0.5 * self.dz_fine, self.z_max, self.dz_fine)
 
-        self.bin_ends = np.arange(z_min, z_max + self.dz_coarse, self.dz_coarse)
+        self.bin_ends = np.arange(self.z_min, self.z_max + self.dz_coarse, self.dz_coarse)
 
         return
 
@@ -94,7 +94,7 @@ class catalog(object):
         """
         coarse = fine / (np.sum(fine) * self.dz_fine)
         coarse = np.array([np.sum(coarse[k * self.n_fine : (k+1) * self.n_fine]) * self.dz_fine for k in range(self.n_coarse)])
-        coarse /= self.dz_coarse
+        coarse /= np.sum(coarse * self.dz_coarse)
 
         return coarse
 
@@ -124,27 +124,36 @@ class catalog(object):
         self.n_items = len(self.true_samps)
         self.samp_range = range(self.n_items)
 
+        self.proc_bins()
         self.obs_samps = self.sample_obs()
-        if vb:
-            plots.plot_obs_scatter(self.true_samps, self.obs_samps, plot_loc=self.plot_dir)
 
         self.int_pr = int_pr
-        self.proc_bins()
 
         self.obs_lfs = self.evaluate_lfs()
+        for n in self.samp_range:
+            self.obs_lfs[n] /= np.sum(self.obs_lfs[n]) * self.dz_fine
 
-        int_pr_fine = int_pr.evaluate(self.z_fine)
+        int_pr_fine = self.int_pr.evaluate(self.z_fine)
         int_pr_coarse = self.coarsify(int_pr_fine)
 
-        pfs = np.zeros((self.n_items, self.n_coarse))
+        # rewrite to take advantage of numpy array manipulation
+        pfs_fine = np.zeros((self.n_items, self.n_tot))
         for n in self.samp_range:
-            pf = int_pr_fine * self.obs_lfs[n]
-            pf = self.coarsify(pf)
-            pfs[n] += pf
+            pfs_fine[n] += int_pr_fine * self.obs_lfs[n]
+            pfs_fine[n] /= np.sum(pfs_fine[n]) * self.dz_fine
+
+        if vb:
+            plots.plot_obs_scatter(self.true_samps, pfs_fine, self.z_fine, plot_loc=self.plot_dir)
+
+        # rewrite to take advantage of numpy array manipulation
+        pfs_coarse = np.zeros((self.n_items, self.n_coarse))
+        for n in self.samp_range:
+            pfs_coarse[n] += self.coarsify(pfs_fine[n])
+            pfs_coarse[n] /= np.sum(pfs_coarse[n]) * self.dz_coarse
 
         self.cat['bin_ends'] = self.bin_ends
         self.cat['log_interim_prior'] = u.safe_log(int_pr_coarse)
-        self.cat['log_interim_posteriors'] = u.safe_log(pfs)
+        self.cat['log_interim_posteriors'] = u.safe_log(pfs_coarse)
 
         return self.cat
 
@@ -158,15 +167,36 @@ class catalog(object):
             "observed" values
         """
         if not self.params['variable_sigmas']:
-            true_lfs = [gauss(self.true_samps[n], self.params['constant_sigma']**2) for n in self.samp_range]
-        if self.params['outlier_fraction'] > 0.:
+            self.true_lfs = [gauss(self.true_samps[n], self.params['constant_sigma']**2) for n in self.samp_range]
+        if self.params['catastrophic_outliers'] != 0:
+            # will add in functionality for multiple outlier populations soon!
             outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
-        obs_samps = np.zeros(self.n_items)
-        for n in self.samp_range:
-            if np.random.uniform() < self.params['outlier_fraction']:
-                obs_samps[n] = outlier_lf.sample_one()
-            else:
-                obs_samps[n] = true_lfs[n].sample_one()
+
+        # fix these conditional checks for efficiency!
+        obs_samps = np.zeros(self.n_items) - 1.
+        flagged = np.zeros(self.n_items)
+        if self.params['catastrophic_outliers'] == 'template':
+            for n in self.samp_range:
+                if np.random.uniform() < self.params['outlier_fraction']:
+                    obs_samps[n] = outlier_lf.sample_one()
+                else:
+                    obs_samps[n] = self.true_lfs[n].sample_one()
+        # elif self.params['catastrophic_outliers'] == 'training':
+        #     for n in self.samp_range:
+        #         obs_samps[n] = true_lfs[n].sample_one()# p.random.uniform(self.z_min, self.z_max)
+        #         if np.random.uniform() < outlier_lf.evaluate(self.true_samps[n]):# true_lfs[n].evaluate(obs_samps[n]) < outlier_lf.evaluate(obs_samps[n]):
+        #             flagged[n] += 1
+        #             # obs_samps[n] = np.random.uniform(self.z_min, self.z_max)
+        #         # else:
+        #         # obs_samps[n] = true_lfs[n].sample_one()
+        #     #     obs_samps[n] = [true_lfs[n].sample_one(), [outlier_lf.sample_one(), ]
+        #     # else:
+        #     #     print(self.params['catastrophic_outliers'] + ' is not supported.')
+        #     self.flagged = flagged
+        else:
+            for n in self.samp_range:
+                obs_samps[n] = self.true_lfs[n].sample_one()
+
         return obs_samps
 
     def evaluate_lfs(self):
@@ -179,12 +209,32 @@ class catalog(object):
             array of likelihood values for each item as a function of fine
             binning
         """
-        if not self.params['variable_sigmas']:
-            lfs_fine = [gauss(self.z_fine[kk], self.params['constant_sigma']**2) for kk in range(self.n_tot)]
-            obs_lfs = (1.-self.params['outlier_fraction']) * np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)])
-        if self.params['outlier_fraction'] > 0.:
+        # taking out functionality for variable sigmas for now
+        # if not self.params['variable_sigmas']:
+        lfs_fine = [gauss(self.z_fine[kk], self.params['constant_sigma']**2) for kk in range(self.n_tot)]
+        obs_lfs = np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)])
+        if type(self.params['catastrophic_outliers']) == str:
             outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
-            obs_lfs += self.params['outlier_fraction'] * outlier_lf.evaluate(self.obs_samps)
+            if self.params['catastrophic_outliers'] == 'template':
+                obs_lfs = (1.-self.params['outlier_fraction']) * obs_lfs
+                obs_lfs += self.params['outlier_fraction'] * outlier_lf.evaluate(self.obs_samps)
+            elif self.params['catastrophic_outliers'] == 'training':
+                # out_frac = np.sum(self.flagged) / len(self.flagged)
+                # component = outlier_lf.evaluate(self.z_fine)
+                # obs_lfs *= * np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)])
+                obs_lfs = obs_lfs.T
+                for n in self.samp_range:
+                    if np.random.uniform() < self.params['outlier_fraction']:
+                        ratio = outlier_lf.evaluate(self.true_samps[n])#np.random.uniform()
+                        # lf = gauss(self.obs_samps[n], self.params['constant_sigma']**2)
+                        obs_lfs[n] *= (1.-ratio)#lf.evaluate(self.true_samps[n])
+                        out_val = np.random.uniform(self.z_min, self.z_max)
+                        obs_lfs[n] += ratio * np.array([lfs_fine[kk].evaluate(out_val) for kk in range(self.n_tot)])
+                obs_lfs = obs_lfs.T
+                    # else:
+                    #     obs_lfs = np.array([lfs_fine[kk].evaluate(self.obs_samps[n]) for kk in range(self.n_tot)])
+        # else:
+        #     obs_lfs = np.array([lfs_fine[kk].evaluate(self.obs_samps) for kk in range(self.n_tot)])
         return obs_lfs.T
 
     def write(self, loc='data', style='.txt'):

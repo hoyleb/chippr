@@ -97,9 +97,18 @@ interpretation of which will be presented below.
 
 \begin{figure}
 	\begin{center}
-		\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{\textbf{Replace \texttt{daft} version with more 
-polished \texttt{tikz} version.}}
+ 		\includegraphics[width=0.5\textwidth]{fig/pgm.png}
+		\caption{This directed acyclic graph corresponds to a PGM for a 
+hierarchical inference of $p(\vec{\theta}|\{\vec{d}_{i}\})$.  In this graph, 
+all random variables are shown in circles, with observed random variables shown 
+in shaded circles.  Relationships between variables are indicated by arrows 
+from parameters to the variables distributed according to functions of them.  
+The box indicates that there are a number of copies of the relationships 
+between boxed parameters, each independent of all others.  The hyperparameters 
+$\vec{\theta}$ representing $n(z)$ are at the top.  Independently drawn from a 
+function of the hyperparameters $\vec{\theta}$ are galaxy redshifts $\{z_{i}\}$ 
+below.  The observed galaxy photometry $\{\vec{d}_{i}\}$, shown in shaded 
+circles, is determined by the redshifts above.}
 	\label{fig:pgm}
 	\end{center}
 \end{figure}
@@ -163,10 +172,29 @@ posteriors are derived from photometric data.
 \subsubsection{Mock Data}
 \label{sec:mockdata}
 
-The mock data used here are produced by the following steps.  
+The mock data used here are produced by the following steps.
 
-This method for deriving mock data is referred to as the fiducial case, and 
-variations on it will refer directly to the steps that are altered.
+\begin{enumerate}
+	\item \label{itm:true} Choose a true $n(z)$ that is a continuous 
+function with known parameters $\vec{\theta}$.
+	\item \label{itm:sample} Sample the true $n(z)$ to create a catalog of 
+$N$ true redshifts $z_{i}$.
+	\item \label{itm:scatter} Choose a true intrinsic scatter $\sigma$, and 
+sample Gaussians $p(z'_{i} | z_{i}, \sigma) = \mathcal{N}(z_{i}, \sigma)$ to 
+get "observed" redshifts $z'_{i}$ defining Gaussian likelihoods $p(\vec{d}_{i} 
+| z'_{i}, \sigma) = \mathcal{N}(z'_{i}, \sigma)$.
+	\item \label{itm:interim} Choose a parametrization and the parameters 
+$\vec{\phi}^{*}$ of the interim prior.
+	\item \label{itm:posterior} Create interim posteriors $p(z_{i} | 
+\vec{d}_{i}, \vec{\phi}^{*}) = p(\vec{d}_{i} | z_{i})\ p(z_{i} | 
+\vec{\phi}^{*})$ in this parametrization.
+\end{enumerate}
+
+In all of the following validation tests, we use $10$ bins and $N = 10,000$ 
+galaxies.  In Secs. \ref{sec:truth} and \ref{sec:likelihoods}, we use a flat 
+interim prior.  This method for deriving mock data is referred to as the 
+fiducial case, and variations on it will refer directly to the steps that are 
+altered.
 
 \subsubsection{$n(z)$ Accuracy Metric}
 \label{sec:accuracy}
@@ -177,11 +205,76 @@ estimators of $n(z)$ in cases of mock data with known true redshifts.
 \textbf{Review precision and bias from \texttt{kld.ipynb} and interpret in 
 terms of a \% difference.}
 
+\subsection{Underlying $n(z)$ Effects}
+\label{sec:truth}
+
+Existing $n(z)$ estimators are systematically smoother than the true $n(z)$.  
+Here we show that the traditional estimators perform better when the true 
+$n(z)$ is weakly featured than when the true $n(z)$ is strongly featured by 
+experimenting with Step \ref{itm:true} of Sec. \ref{sec:mockdata}.  The 
+implication of this issue is quite serious; the consistently smooth, unimodal 
+$n(z)$ estimates appearing in the literature could result from much more 
+featured true redshift distributions, and there would be no way to catch this 
+error without using a fully probabilistic method.
+
+\subsubsection{Featureless $n(z)$}
+\label{sec:smooth}
+
+In this test, we choose a weakly featured true $n(z)$ of Fig. \ref{fig:smooth} 
+with a smooth, unimodal shape, based on the interim prior used for the SDSS DR8 
+photo-$z$ PDFs.  [check and include citation!]
+
+\begin{figure}
+	\begin{center}
+		
+\includegraphics[width=0.5\textwidth]{fig/smooth_truth/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/smooth_truth/estimators.png}	
+		\caption{All estimators perform well when the true $n(z)$ is 
+well behaved, exhibiting significant deviation only when $n(z)$ is very small, 
+as the sample size of true redshifts in that range will be small.  Top panel: 
+The traditional MAP reduction of a photo-$z$ PDF against the true redshifts 
+with a few rescaled photo-$z$ interim posteriors are overplotted in solid 
+lines, with a dotted line indicating zero probability.  Bottom panel: Various 
+estimators of $\ln[n(z)]$, the interim prior, and the true $\ln[n(z)]$ as a 
+continuous function and under a binned parametrization.}
+		\label{fig:featured}
+	\end{center}
+\end{figure}
+
+\subsubsection{Featured $n(z)$}
+\label{sec:featured}
+
+In this test, we choose the true $n(z)$ of Fig. \ref{fig:featured} with 
+nontrivial structure.
+
+\begin{figure}
+	\begin{center}
+		
+\includegraphics[width=0.5\textwidth]{fig/fiducial/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/fiducial/estimators.png}		
+		\caption{[This plot doesn't really show what I want because the 
+intrinsic scatter is too low!  I used $\sigma=0.03$ because that's what has 
+been quoted as what LSST, etc. needs, but that's not what comes out of 
+photo-$z$ estimation methods before they impose aggressive cuts\dots]  Top 
+panel: The traditional MAP reduction of a photo-$z$ PDF against the true 
+redshifts with a few rescaled photo-$z$ interim posteriors are overplotted in 
+solid lines, with a dotted line indicating zero probability.  Bottom panel: 
+Various estimators of $\ln[n(z)]$, the interim prior, and the true $\ln[n(z)]$ 
+as a continuous function and under a binned parametrization.}
+		\label{fig:featured}
+	\end{center}
+\end{figure}
+
+This featured true $n(z)$ will henceforth be referred to as the fiducial $n(z)$
+
 \subsection{Emulated Data Quality Effects}
 \label{sec:likelihoods}
 
 In the following test cases, we vary the properties of the mock photo-$z$ 
-likelihoods in an effort to emulate known systematics in photo-$z$ estimation.
+likelihoods in an effort to emulate known systematics in photo-$z$ estimation.  
+These tests vary Step \ref{itm:scatter} of Sec. \ref{sec:mockdata}.
 
 \subsubsection{Intrinsic Scatter}
 \label{sec:intscat}
@@ -189,21 +282,35 @@ likelihoods in an effort to emulate known systematics in photo-$z$ estimation.
 One major concern about photo-$z$s is the intrinsic scatter of point 
 estimators, including those derived from photo-$z$ PDFs, that is observed to 
 varying extents with every existing photo-$z$ algorithm and illustrated in Fig. 
-\ref{fig:intscat}.  
+\ref{fig:intscat}.  To emulate intrinsic scatter, we modify the fiducial case 
+to simply broaden the single Gaussian component of the likelihood.  To enforce 
+self-consistency, the mean is a random variable drawn from a Gaussian 
+distribution with the newly increased variance.
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of $z_{phot}$ vs. $z_{spec}$ with varying 
-intrinsic scatter]}
+		
+\includegraphics[width=0.5\textwidth]{fig/high_scatter/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/high_scatter/estimators.png}		
+		\caption{As the intrinsic scatter increases, the discrepancy 
+between estimators increases.  In particular, the stacked estimator and 
+marginalized point estimators predict $\ln[n(z)]$ to be smoother than the 
+truth, while the  [This would be a lot more compelling with more galaxies.  
+Also, the weird edge effects in the top panel are real, because the point 
+estimator is the MAP, not the center of the Gaussian likelihood, and there's no 
+requirement that the mean of the likelihood be within the true redshift range.] 
+ Top panel: The traditional MAP reduction of a photo-$z$ PDF against the true 
+redshifts with a few rescaled photo-$z$ interim posteriors are overplotted in 
+solid lines, with a dotted line indicating zero probability.  Bottom panel: 
+Various estimators of $\ln[n(z)]$, the interim prior, and the true $\ln[n(z)]$ 
+as a continuous function and under a binned parametrization.}
 		\label{fig:intscat}
 	\end{center}
 \end{figure}
 
-To emulate intrinsic scatter, we modify the fiducial case to simply broaden the 
-single Gaussian component of the likelihood.  To enforce self-consistency, the 
-mean is a random variable drawn from a Gaussian distribution with the newly 
-increased variance.
+As the intrinsic scatter increases, the discrepancy between estimators 
+increases.  
 
 \subsubsection{Template-like Catastrophic Outliers}
 \label{sec:tempcatout}
@@ -219,9 +326,17 @@ galaxies of that SED type at many $z_{spec}$ to have similar colors.
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of $z_{phot}$ vs. $z_{spec}$ with template-like 
-catastrophic outliers]}
+		
+\includegraphics[width=0.5\textwidth]{fig/template_outliers/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/template_outliers/estimators.png}	
+	
+		\caption{Top panel: The traditional MAP reduction of a 
+photo-$z$ PDF against the true redshifts with a few rescaled photo-$z$ interim 
+posteriors are overplotted in solid lines, with a dotted line indicating zero 
+probability.  Bottom panel: Various estimators of $\ln[n(z)]$, the interim 
+prior, and the true $\ln[n(z)]$ as a continuous function and under a binned 
+parametrization.}
 		\label{fig:tempcatout}
 	\end{center}
 \end{figure}
@@ -240,9 +355,13 @@ filters.
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of $z_{phot}$ vs. $z_{spec}$ with training-like 
-catastrophic outliers]}
+		
+\includegraphics[width=0.5\textwidth]{fig/training_outliers/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/training_outliers/estimators.png}	
+		\caption{[This has proven to be the most challenging test case 
+to implement, and there's clearly still a bug in the function that makes the 
+likelihoods.]}
 		\label{fig:traincatout}
 	\end{center}
 \end{figure}
@@ -268,7 +387,8 @@ Existing $n(z)$ estimation routines will always produce a biased estimator when
 the interim prior is not equal to the true $n(z)$.  We demonstrate here that 
 regardless of the appropriateness of the interim prior as an approximation to 
 the true $n(z)$, \chippr is not affected by the choice of the interim prior so 
-long as it has nontrivial coverage in the space of redshift.
+long as it has nontrivial coverage in the space of redshift.  These tests 
+modify Step \ref{itm:interim} of Sec. \ref{sec:mockdata}.
 
 \subsubsection{Template-like Interim Prior}
 \label{sec:tempintpr}
@@ -281,8 +401,12 @@ emulation of an interim prior corresponding to a template library of this type.
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of template-like (multimodal) interim prior]}
+		
+\includegraphics[width=0.5\textwidth]{fig/template_prior/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/template_prior/estimators.png}	
+		\caption{[The case of a multimodal interim prior was a very 
+compelling test in the previous version but somehow isn't anymore.]}
 		\label{fig:tempintpr}
 	\end{center}
 \end{figure}
@@ -293,39 +417,18 @@ emulation of an interim prior corresponding to a template library of this type.
 An interim prior based on a training set may be biased toward low redshifts due 
 to the dearth of distant galaxies with spectroscopic redshifts.  The interim 
 prior shown in Fig. \ref{fig:trainintpr} is an emulation of an interim prior 
-corresponding to a training set biased in this way.
+corresponding to a training set biased in this way.  We chose an interpolation 
+of the interim prior used for the SDSS DR8 photo-$z$ PDFs.  
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of training-like (low-$z$ favoring) interim 
-prior]}
+		
+\includegraphics[width=0.5\textwidth]{fig/training_prior/scatter.png}\\
+		
+\includegraphics[width=0.5\textwidth]{fig/training_prior/estimators.png}	
+		\caption{[The case of a low-$z$ favoring interim prior was a 
+very compelling test in the previous version but somehow isn't anymore.]}
 		\label{fig:trainintpr}
-	\end{center}
-\end{figure}
-
-\subsection{Underlying $n(z)$ Effects}
-\label{sec:truth}
-
-Existing $n(z)$ estimators are systematically smoother than the true $n(z)$.  
-Here we show that the traditional estimators of $n(z)$ cannot recover a highly 
-featured $n(z)$.  The implication of this failure is quite serious; the 
-consistently smooth, unimodal $n(z)$ estimates appearing in the literature 
-could result from much more featured true redshift distributions, and there 
-would be no way to catch this error without using a fully probabilistic method.
-
-\subsubsection{Featured $n(z)$}
-\label{sec:featured}
-
-In this test, we choose the true $n(z)$ of Fig. \ref{fig:featured}, which has 
-nontrivial structure.
-
-\begin{figure}
-	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
-		\caption{[plot of a highly featured (delta function or 
-multimodal?) true $n(z)$]}
-		\label{fig:featured}
 	\end{center}
 \end{figure}
 
@@ -367,7 +470,7 @@ multi-dimensional KLD, centroid offset, etc.}
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{pgm.png}
+		%\includegraphics[width=0.5\textwidth]{money.png}
 		\caption{[moneyplot of error ellipses resulting from different 
 $n(z)$ estimators]}
 		\label{fig:money}

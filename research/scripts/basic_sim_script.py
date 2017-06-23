@@ -63,8 +63,8 @@ def make_true(given_key):
         f = spi.interp1d(true_grid_mids, true_amps)
         bin_mids = (test_info['bin_ends'][1:] + test_info['bin_ends'][:-1]) / 2.
         bin_difs = test_info['bin_ends'][1:] - test_info['bin_ends'][:-1]
-        true_amps = f(bin_mids)
         true_means = bin_mids
+        true_amps = f(bin_mids)
         true_sigmas = bin_difs
     else:
         bin_range = max(test_info['bin_ends']) - min(test_info['bin_ends'])
@@ -121,7 +121,7 @@ def make_interim_prior(given_key):
         bin_mids = (test_info['bin_ends'][1:] + test_info['bin_ends'][:-1]) / 2.
         bin_difs = test_info['bin_ends'][1:] - test_info['bin_ends'][:-1]
         int_amps = f(bin_mids)
-        int_means =bin_mids
+        int_means = bin_mids
         int_sigmas = bin_difs
         interim_prior = chippr.gmix(int_amps, int_means, int_sigmas,
                 limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
@@ -177,24 +177,18 @@ if __name__ == "__main__":
 
     import numpy as np
     import pickle
-    import os
     import shutil
-    import multiprocessing as mp
+    import os
     import scipy.interpolate as spi
 
     import chippr
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    name_file = 'which_sim_tests.txt'
+    test_name = 'template_prior'
+    all_tests = {}
+    test_info = {}
+    test_info['name'] = test_name
+    all_tests[test_name] = test_info
 
-    with open(name_file) as tests_to_run:
-        all_tests = {}
-        for test_name in tests_to_run:
-            test_info = {}
-            test_info['name'] = test_name[:-1]
-            all_tests[test_name] = test_info
-
-    nps = mp.cpu_count()-1
-    pool = mp.Pool(nps)
-    pool.map(make_catalog, all_tests.keys())
+    make_catalog(test_name)
