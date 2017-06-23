@@ -9,16 +9,16 @@ min_x = 0.
 max_x = 1.
 
 n_bins = 10
-# n_items = 4
 
-constant_sigma = 0.05
+constant_sigma = 0.03
 
 gr_threshold = 1.2
 
 n_accepted = 3
 n_burned = 2
 
-plot_colors = 10
+plot_colors = 5
+dpi = 250
 
 def check_sim_params(params={}):
     """
@@ -112,6 +112,10 @@ def check_catastrophic_outliers(params):
     params: dict
         dictionary containing key/value pairs for simulation
     """
+    if 'catastrophic_outliers' not in params:
+        params['catastrophic_outliers'] = 0
+    else:
+        params['catastrophic_outliers'] = str(params['catastrophic_outliers'][0])
     if 'outlier_fraction' not in params:
         params['outlier_fraction'] = 0.
     else:
@@ -132,7 +136,7 @@ def check_inf_params(params={}):
     ----------
     params: dict, optional
         dictionary containing initial key/value pairs for inference
-        
+
     Returns
     -------
     params: dict
@@ -144,10 +148,12 @@ def check_inf_params(params={}):
 def check_sampler_params(params):
     """
     Sets parameter values pertaining to basic constants of inference
+
     Parameters
     ----------
     params: dict
         dictionary containing key/value pairs for inference
+
     Returns
     -------
     params: dict

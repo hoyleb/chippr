@@ -1,6 +1,15 @@
+import numpy as np
+
 import matplotlib as mpl
 mpl.use('PS')
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+import chippr
+from chippr import defaults as d
+
+cmap = np.linspace(0., 1., d.plot_colors)
+colors = [cm.viridis(i) for i in cmap]
 
 def set_up_plot():
     """

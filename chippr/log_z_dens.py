@@ -77,6 +77,7 @@ class log_z_dens(object):
                 self.fine_nz.extend(fine_n)
                 coarse_nz = np.sum(fine_n) * fine_dz
                 self.tru_nz[b] += coarse_nz
+            self.tru_nz /= np.dot(self.tru_nz, self.bin_difs)
             self.log_tru_nz = u.safe_log(self.tru_nz)
             self.info['log_tru_nz'] = self.log_tru_nz
             self.info['truth']['z_grid'] = np.array(self.fine_zs)
@@ -188,12 +189,12 @@ class log_z_dens(object):
                 return -2. * self.evaluate_log_hyper_posterior(log_nz)
 
         if vb:
-            print("starting at", start, _objective(start))
+            print(self.dir + ' starting at ', start, _objective(start))
 
         res = op.minimize(_objective, start, method="Nelder-Mead", options={"maxfev": 1e5, "maxiter":1e5})
 
         if vb:
-            print(res)
+            print(self.dir + ': ' + str(res))
         return res.x
 
     def calculate_mmle(self, start, vb=True, no_data=0, no_prior=0):
@@ -247,7 +248,7 @@ class log_z_dens(object):
         """
         if 'log_stacked_nz' not in self.info['estimators']:
             self.stk_nz = np.sum(self.pdfs, axis=0)
-            self.stk_nz /= self.n_pdfs
+            self.stk_nz /= np.dot(self.stk_nz, self.bin_difs)
             self.log_stk_nz = u.safe_log(self.stk_nz)
             self.info['estimators']['log_stacked_nz'] = self.log_stk_nz
         else:
@@ -349,7 +350,7 @@ class log_z_dens(object):
         mcmc_outputs['acors'] = acors
         return mcmc_outputs
 
-    def calculate_samples(self, ivals, n_accepted=10**d.n_accepted, n_burned=10**d.n_burned, vb=True, n_procs=1, no_data=0, no_prior=0):
+    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burned=d.n_burned, vb=True, n_procs=1, no_data=0, no_prior=0):
         """
         Calculates samples estimating the redshift density function
 
@@ -401,7 +402,7 @@ class log_z_dens(object):
             while self.burning_in:
                 if vb:
                     print('beginning sampling '+str(self.burn_ins))
-                burn_in_mcmc_outputs = self.sample(vals, n_burned)
+                burn_in_mcmc_outputs = self.sample(vals, 10**n_burned)
                 chain = burn_in_mcmc_outputs['chains']
                 burn_in_mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
                 with open(os.path.join(self.res_dir, 'mcmc'+str(self.burn_ins)+'.p'), 'wb') as file_location:
@@ -413,7 +414,7 @@ class log_z_dens(object):
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
                 self.burn_ins += 1
 
-            mcmc_outputs = self.sample(vals, n_accepted)
+            mcmc_outputs = self.sample(vals, 10**n_accepted)
             chain = mcmc_outputs['chains']
             mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
             full_chain = np.concatenate((full_chain, mcmc_outputs['chains']), axis=1)
@@ -498,6 +499,8 @@ class log_z_dens(object):
             print('The following quantities were read from '+read_loc+' in the '+style+' format:')
             for key in self.info:
                 print(key)
+            if 'estimators' in self.info:
+                print(self.info['estimators'].keys())
         return self.info
 
     def write(self, write_loc, style='pickle', vb=True):
