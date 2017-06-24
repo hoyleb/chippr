@@ -298,6 +298,11 @@ def plot_estimators(info, plot_dir):
                         w=w_tbp, s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp)
         # black_plots.append(tbp)
         # black_labels.append(l_tbp+lnz)
+        if 'log_mmle_stds' in info and 'log_mean_sampled_stds' in info:
+            bin_mids = (info['bin_ends'][:-1] + info['bin_ends'][1:]) / 2.
+            ratios = info['log_mmle_stds'] / info['log_mean_sampled_stds']
+            for k in range(len(info['bin_ends'])-1):
+                mini_sps.text(bin_mids[k], -50., str(round(ratios[k], 1)))
     else:
         f = plt.figure(figsize=(5, 5))
         sps_log = f.add_subplot(1, 1, 1)
@@ -363,8 +368,11 @@ def plot_estimators(info, plot_dir):
                             w=w_map, s=s_map, a=a_map, c=c_map, d=d_map)
 
     if 'log_mean_sampled_nz' in info['estimators']:
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_mean_sampled_nz'],
+                        w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
         plot_samples(info, plot_dir)
-        (locs, scales) = s.norm_fit(info['log_sampled_nz_meta_data']['chains'])
+        (locs, scales) = (info['estimators']['log_mean_sampled_nz'], info['log_mean_sampled_stds'])
         for k in range(len(info['bin_ends'])-1):
             x_errs = [info['bin_ends'][k], info['bin_ends'][k],
                         info['bin_ends'][k+1], info['bin_ends'][k+1]]
@@ -381,9 +389,6 @@ def plot_estimators(info, plot_dir):
             sps_log.fill(x_errs, log_y_errs_2, color=c_bfe, alpha=0.25,
                             linewidth=0.)
         # bfe, =
-        # pu.plot_step(sps_log, info['bin_ends'],
-        #                 info['estimators']['log_mean_sampled_nz'],
-        #                 w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
         # color_plots.insert(0, bfe)
         # color_labels.insert(0, l_bfe+lnz)
         if info['truth'] is not None:
@@ -402,20 +407,48 @@ def plot_estimators(info, plot_dir):
             #                 (1. - np.exp(info['estimators']['log_mean_sampled_nz']) / bin_true) * 100.,
             #                 w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe)
 
-    elif 'log_mmle_nz' in info['estimators']:
+    if 'log_mmle_nz' in info['estimators']:
         # mle, =
         pu.plot_step(sps_log, info['bin_ends'],
                         info['estimators']['log_mmle_nz'], w=w_mle,
                         s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz)
+        (locs, scales) = (info['estimators']['log_mmle_nz'], info['log_mmle_stds'])
+        for k in range(len(info['bin_ends'])-1):
+            x_errs = [info['bin_ends'][k], info['bin_ends'][k],
+                        info['bin_ends'][k+1], info['bin_ends'][k+1]]
+            log_y_errs_1 = np.array([locs[k] - scales[k], locs[k] + scales[k],
+                                locs[k] + scales[k], locs[k] - scales[k]])
+            log_y_errs_2 = np.array([locs[k] - 2 * scales[k], locs[k] + 2 * scales[k],
+                                locs[k] + 2 * scales[k], locs[k] - 2 * scales[k]])
+            # y_errs_1 = [np.exp(locs[k] - scales[k]), np.exp(locs[k] + scales[k]),
+            #             np.exp(locs[k] + scales[k]), np.exp(locs[k] - scales[k])]
+            # y_errs_2 = [np.exp(locs[k] - 2 * scales[k]), np.exp(locs[k] + 2 * scales[k]),
+            #             np.exp(locs[k] + 2 * scales[k]), np.exp(locs[k] - 2 * scales[k])]
+            sps_log.fill(x_errs, log_y_errs_1, color=c_mle, alpha=0.2,
+                            linewidth=0.)
+            sps_log.fill(x_errs, log_y_errs_2, color=c_mle, alpha=0.1,
+                            linewidth=0.)
         # color_plots.insert(0, mle)
         # color_labels.insert(0, l_mle+lnz)
         if info['truth'] is not None:
             pu.plot_step(mini_sps, info['bin_ends'],
                             (np.exp(info['estimators']['log_mmle_nz']) / bin_true - 1.) * 100.,
                             w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle)
+            for k in range(len(info['bin_ends'])-1):
+                x_errs = [info['bin_ends'][k], info['bin_ends'][k],
+                            info['bin_ends'][k+1], info['bin_ends'][k+1]]
+                y_errs_1 = np.exp(np.array([locs[k] - scales[k], locs[k] + scales[k],
+                        locs[k] + scales[k], locs[k] - scales[k]])) / bin_true[k]
+                y_errs_2 = np.exp(np.array([locs[k] - 2 * scales[k], locs[k] + 2 * scales[k],
+                        locs[k] + 2 * scales[k], locs[k] - 2 * scales[k]])) / bin_true[k]
+                mini_sps.fill(x_errs, (y_errs_1 - 1.) * 100., color=c_mle, alpha=0.2,
+                            linewidth=0.)
+                mini_sps.fill(x_errs, (y_errs_2 - 1.) * 100., color=c_mle, alpha=0.1,
+                            linewidth=0.)
 
     # sps_log.legend(handles=color_plots[:-1], fontsize='x-small', loc='lower center', frameon=False)
     sps_log.legend(fontsize='x-small', loc='lower center', frameon=False)
+    f.set_title(plot_dir)
     f.subplots_adjust(hspace=0, wspace=0)
     f.savefig(os.path.join(plot_dir, 'estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 

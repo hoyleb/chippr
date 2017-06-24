@@ -4,6 +4,7 @@ import os
 import scipy.optimize as op
 import cPickle as cpkl
 import emcee
+import sys
 
 import matplotlib as mpl
 mpl.use('PS')
@@ -174,9 +175,8 @@ class log_z_dens(object):
 
         Returns
         -------
-        res.x: numpy.ndarray, float
-            array of logged redshift density function bin values maximizing
-            hyperposterior
+        res: scipy.optimize.OptimizeResult object
+            structure containing solution, hessian, etc.
         """
         if no_data:
             def _objective(log_nz):
@@ -191,11 +191,11 @@ class log_z_dens(object):
         if vb:
             print(self.dir + ' starting at ', start, _objective(start))
 
-        res = op.minimize(_objective, start, method="Nelder-Mead", options={"maxfev": 1e5, "maxiter":1e5})
+        res = op.minimize(_objective, start, method="BFGS", tol=sys.float_info.epsilon)#, options={'maxiter'=1e6, 'disp'=True})
 
         if vb:
             print(self.dir + ': ' + str(res))
-        return res.x
+        return res
 
     def calculate_mmle(self, start, vb=True, no_data=0, no_prior=0):
         """
@@ -221,13 +221,18 @@ class log_z_dens(object):
             hyperposterior
         """
         if 'log_mmle_nz' not in self.info['estimators']:
-            log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior)
+            mle_info = self.optimize(start, no_data=no_data, no_prior=no_prior)
+            log_mle = mle_info['x']
+            log_mle_cov = mle_info['hess_inv']
             mle_nz = np.exp(log_mle)
             self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
             self.log_mle_nz = u.safe_log(self.mle_nz)
+            self.log_mle_stds = np.sqrt(np.diagonal(log_mle_cov))
             self.info['estimators']['log_mmle_nz'] = self.log_mle_nz
+            self.info['log_mmle_stds'] = self.log_mle_stds
         else:
             self.log_mle_nz = self.info['estimators']['log_mmle_nz']
+            self.log_mle_stds = self.info['log_mmle_stds']
             self.mle_nz = np.exp(self.log_mle_nz)
 
         return self.log_mle_nz
@@ -401,7 +406,7 @@ class log_z_dens(object):
             full_chain = np.array([[vals[w]] for w in range(self.n_walkers)])
             while self.burning_in:
                 if vb:
-                    print('beginning sampling '+str(self.burn_ins))
+                    print(self.plot_dir + ' beginning sampling '+str(self.burn_ins))
                 burn_in_mcmc_outputs = self.sample(vals, 10**n_burned)
                 chain = burn_in_mcmc_outputs['chains']
                 burn_in_mcmc_outputs['chains'] -= u.safe_log(np.sum(np.exp(chain) * self.bin_difs[np.newaxis, np.newaxis, :], axis=2))[:, :, np.newaxis]
@@ -420,21 +425,27 @@ class log_z_dens(object):
             full_chain = np.concatenate((full_chain, mcmc_outputs['chains']), axis=1)
             with open(os.path.join(self.res_dir, 'full_chain.p'), 'wb') as file_location:
                 cpkl.dump(full_chain, file_location)
+            if vb:
+                print('finished sampling ' + self.dir)
 
             self.log_smp_nz = mcmc_outputs['chains']
             self.smp_nz = np.exp(self.log_smp_nz)
             self.info['log_sampled_nz_meta_data'] = mcmc_outputs
-            self.log_bfe_nz = s.norm_fit(self.log_smp_nz)[0]
+            log_bfe_info = s.norm_fit(self.log_smp_nz)
+            self.log_bfe_nz = log_bfe_info[0]
+            self.log_bfe_stds = log_bfe_info[1]
             self.bfe_nz = np.exp(self.log_bfe_nz)
             self.info['estimators']['log_mean_sampled_nz'] = self.log_bfe_nz
+            self.info['log_mean_sampled_stds'] = self.log_bfe_stds
         else:
             self.log_smp_nz = self.info['log_sampled_nz_meta_data']
             self.smp_nz = np.exp(self.log_smp_nz)
             self.log_bfe_nz = self.info['estimators']['log_mean_sampled_nz']
             self.bfe_nz = np.exp(self.log_smp_nz)
+            self.log_bfe_stds = self.info['log_mean_sampled_stds']
 
         if vb:
-            plots.plot_samples(self.info, self.plot_dir)
+            plots.plot_samples(self.info, self.dir)
 
         return self.log_smp_nz
 
@@ -455,6 +466,7 @@ class log_z_dens(object):
         self.info['stats']['kld'] = {}
         if self.truth is not None:
             for key in self.info['estimators']:
+                # assert(np.shape(self.info['estimators'][key]) == np.shape(self.tru_nz))
                 self.info['stats']['kld'][key] = s.calculate_kld(self.tru_nz, self.info['estimators'][key])
 
         self.info['stats']['rms'], self.info['stats']['log_rms'] = {}, {}
@@ -496,7 +508,7 @@ class log_z_dens(object):
         with open(os.path.join(self.res_dir, read_loc), 'rb') as file_location:
             self.info = cpkl.load(file_location)
         if vb:
-            print('The following quantities were read from '+read_loc+' in the '+style+' format:')
+            print('The following quantities were read from '+self.dir+' in the '+style+' format:')
             for key in self.info:
                 print(key)
             if 'estimators' in self.info:
@@ -519,7 +531,7 @@ class log_z_dens(object):
         with open(os.path.join(self.res_dir, write_loc), 'wb') as file_location:
             cpkl.dump(self.info, file_location)
         if vb:
-            print('The following quantities were written to '+write_loc+' in the '+style+' format:')
+            print('The following quantities were written to '+self.dir+' in the '+style+' format:')
             for key in self.info:
                 print(key)
         return
