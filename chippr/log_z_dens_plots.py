@@ -448,7 +448,7 @@ def plot_estimators(info, plot_dir):
 
     # sps_log.legend(handles=color_plots[:-1], fontsize='x-small', loc='lower center', frameon=False)
     sps_log.legend(fontsize='x-small', loc='lower center', frameon=False)
-    f.set_title(plot_dir)
+    f.suptitle(plot_dir)
     f.subplots_adjust(hspace=0, wspace=0)
     f.savefig(os.path.join(plot_dir, 'estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
