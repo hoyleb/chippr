@@ -98,9 +98,9 @@ itself a probability distribution, it may be written as $p(z | \vec{\phi})$.
 
 Before jumping into the details of the model, it is crucial to settle on an 
 interpretation of what a photo-$z$ PDF actually is.  When a photo-$z$ PDF is 
-reported, it is an object containing information about galaxy $i$'s redshift 
-$z_{i}$ based on its photometric data $\vec{d}_{i}$, making a photo-$z$ PDF a 
-\textit{posterior} probability distribution.  The data $\vec{d}_{i}$ may be 
+reported, it is an object containing information about the redshift $z_{i}$ of 
+galaxy $i$ based on its photometric data $\vec{d}_{i}$, making a photo-$z$ PDF 
+a \textit{posterior} probability distribution.  The data $\vec{d}_{i}$ may be 
 fluxes, magnitudes, colors, or any combination thereof.  We assume that the 
 redshifts of the galaxies are not related to the redshifts or photometry of 
 other galaxies in the survey, i.e. they are \textit{independent}.
@@ -169,8 +169,6 @@ determined by the redshifts above.}
 	\end{center}
 \end{figure}
 
-
-
 The DAG of Fig. \ref{fig:pgm} translates directly into a mathematical 
 expression for the posterior distribution $p(\vec{\phi} | \{\vec{d}_{i}\})$ of 
 the hyperparameters given the entire set of interim posteriors $\{p(z_{i} | 
@@ -179,8 +177,9 @@ point forward, we will use log probabilities.
 
 According to Bayes' rule, the posterior distribution of interest is
 \begin{align}
-\log p(\vec{\phi} | \{\vec{d}_{i}\}) &\propto \log p(\{\vec{d}_{i}\} | 
-\vec{\phi}) + \log p(\vec{\phi}),
+\label{eq:hyper_bayes}
+\log[p(\vec{\phi} | \{\vec{d}_{i}\})] &\propto \log[p(\{\vec{d}_{i}\} | 
+\vec{\phi})] + \log[p(\vec{\phi})] ,
 \end{align}
 where $p(\vec{\phi})$ is the \textit{hyperprior} probability distribution over 
 possible values of the hyperparameters.  The hyperprior is a choice made by 
@@ -191,28 +190,99 @@ Focusing on the likelihood term $p(\{\vec{d}_{i}\} | \vec{\phi})$, we employ
 the power of the hierarchical model through \textit{marginalization} of the 
 unobserved redshift parameters by integrating over them to obtain 
 \begin{align}
-\log[p(\{\vec{d}_{i}\} | \vec{\phi})] &= \log[\int\exp[\log[p(\{\vec{d}_{i}\} | 
-\{z_{i}\})]\\
-& + \log[p(\{z_{i}\} | \vec{\phi})]]\ d\{z_{i}\}].
+\label{eq:marginalize}
+\begin{split}
+\log[p(\{\vec{d}_{i}\} | \vec{\phi})] = & 
+\log\left[\int\exp\left[\log[p(\{\vec{d}_{i}\} | \{z_{i}\})]\right.\right. \\
+& \left.\left.+ \log[p(\{z_{i}\} | \vec{\phi})]\right]\ d\{z_{i}\}\right] .
+\end{split}
+\end{align}
+The redshifts $\{z_{i}\}$ are statistically independent of each other, and each 
+galaxy's photometry depends solely on its own redshift, so we may invoke 
+statistical independence to get
+\begin{align}
+\label{eq:independence_hyper}
+\log[p(\{z_{i}\} | \vec{\phi})] &= \sum_{i}^{N} \log[p(z_{i} | \vec{\phi})]
+\end{align}
+and
+\begin{align}
+\label{eq:independence}
+\log[p(\{\vec{d}_{i}\} | \{z_{i}\})] &= \sum_{i}^{N} \log[p(\vec{d}_{i} | 
+z_{i})] .
+\end{align}
+Having chosen the functional form mapping $\vec{\phi}$ to $n(z)$, the terms on 
+the righthand side of Eq. \ref{eq:independence_hyper} are known.  However, the 
+terms on the righthand side of Eq. \ref{eq:independence} are likelihoods, and 
+the photo-$z$ PDFs we have are interim posteriors.
+
+To transform the interim posteriors we have into the likelihoods we need, we 
+start with the vacuously true statement
+\begin{align}
+\begin{split}
+\label{eq:unity}
+\log[p(\vec{d}_{i} | z_{i})] =& \log[p(\vec{d}_{i} | z_{i})] + \log[p(z_{i} | 
+\vec{d}_{i}, \vec{\phi}^{*})]\\
+& - \log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})].
+\end{split}
+\end{align}
+We expand the last term using Bayes' Rule to get
+\begin{align}
+\begin{split}
+\label{eq:bayes}
+\log[p(\vec{d}_{i} | z_{i})] =& \log[p(\vec{d}_{i} | z_{i})] + \log[p(z_{i} | 
+\vec{d}_{i}, \vec{\phi}^{*})]\\
+& - \log[p(z_{i} | \vec{\phi}^{*})] - \log[p(\vec{d}_{i} | z_{i}, 
+\vec{\phi}^{*})] + \log[p(\vec{d}_{i} | \vec{\phi}^{*})].
+\end{split}
+\end{align}
+Fig. \ref{fig:pgm} has no direct connection between $\vec{d}_{i}$ and 
+$\vec{\phi}$, so we can break up $\log[p(\vec{d}_{i} | z_{i}, \vec{\phi}^{*})]$ 
+as follows:
+\begin{align}
+\begin{split}
+\label{eq:split}
+\log[p(\vec{d}_{i} | z_{i})] =& \log[p(\vec{d}_{i} | z_{i})] + \log[p(z_{i} | 
+\vec{d}_{i}, \vec{\phi}^{*})]\\
+& - \log[p(z_{i} | \vec{\phi}^{*})] - \log[p(\vec{d}_{i} | z_{i})] - 
+\log[p(\vec{d}_{i} | \vec{\phi}^{*})]\\
+& + \log[p(\vec{d}_{i} | \vec{\phi}^{*})].
+\end{split}
+\end{align}
+Canceling terms, we find
+\begin{align}
+\label{eq:cancel}
+\log[p(\vec{d}_{i} | z_{i})] =& \log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})] - 
+\log[p(z_{i} | \vec{\phi}^{*})].
 \end{align}
 
-
-Given a catalog of photo-$z$ interim posteriors $\{p(z_{i} | \vec{d}_{i}, 
-\vec{\alpha})\}$
-
-To make use of the photo-$z$ interim priors, it is absolutely essential that 
-$\vec{\alpha}$ be known.  
+Now we combine Eqs. \ref{eq:hyper_bayes}, \ref{eq:marginalize}, 
+\ref{eq:independence_hyper}, \ref{eq:independence}, and \ref{eq:cancel} to 
+arrive at 
+\begin{align}
+\begin{split}
+\label{eq:final}
+\log[p(\vec{\phi} | \{\vec{d}_{i}\})] \propto& \log[p(\vec{\phi})] + 
+\log\left[\int \exp\left[\sum_{i}^{N} \left(\right.\right.\right.\\
+& \left.\left.\left. + \log[p(z_{i} | \vec{\phi})] - \log[p(z_{i} | 
+\vec{\phi}^{*})]\right.\right.\right.\\
+& \left.\left.\left. + \log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})]
+\right)\right] d\{z_{i}\}\right].
+\end{split}
+\end{align}
+Thus, if we have a catalog of photo-$z$ interim posteriors $\{p(z_{i} | 
+\vec{d}_{i}, \vec{\phi}^{*})\}$, the interim prior parameters $\vec{\phi}^{*}$, 
+and a prior distribution $p(\vec{\phi})$, we may find the posterior 
+$\log[p(\vec{\phi} | \{\vec{d}_{i}\})]$ on the redshift distribution $n(z)$.
 
 This framework entails a number of choices and assumptions that must be 
-addressed explicitly.
-
+addressed explicitly:
 \begin{enumerate}
-	\item The chosen functional form with parameters $\vec{\phi}$ must 
-actually be able to describe the true redshift distribution.
+	\item The chosen functional form with parameters $\vec{\phi}$ must be 
+capable of describing the true redshift distribution.
 	\item The photometric data and redshift for each galaxy is independent 
 of the photometric data and redshifts of all other galaxies.
-	\item There is one interim prior with parameters $\vec{\phi}^{*}$ 
-shared among all galaxies in the survey.
+	\item There is one interim prior shared among all galaxies in the 
+survey, and its parameters with known parameters $\vec{\phi}^{*}$ are known.
 	\item We must choose a hyperprior probability distribution 
 $p(\vec{\phi})$ over the hyperparameters.
 	\item While we advocate for the approach of hierarchical inference, the 
@@ -560,7 +630,7 @@ We summarize the details of the \texttt{Buzzard} simulation here.
 Because the realistic mock data of Sec. \ref{sec:buzzard} is associated with 
 true values of the cosmological parameters, we may compare the quality of 
 cosmological constraints under different estimators of $n(z)$, creating a 
-figure like Fig. \ref{eq:scgsr}.  We perform this analysis using a forecasting 
+figure like Fig. \ref{fig:scgsr}.  We perform this analysis using a forecasting 
 code that takes $n(z)$ and produces projected error ellipses in the space of 
 cosmological parameters.  
 
