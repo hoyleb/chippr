@@ -231,8 +231,8 @@ We expand the last term using Bayes' Rule to get
 \label{eq:bayes}
 \log[p(\vec{d}_{i} | z_{i})] =& \log[p(\vec{d}_{i} | z_{i})] + \log[p(z_{i} | 
 \vec{d}_{i}, \vec{\phi}^{*})]\\
-& - \log[p(z_{i} | \vec{\phi}^{*})] - \log[p(\vec{d}_{i} | z_{i}, 
-\vec{\phi}^{*})] + \log[p(\vec{d}_{i} | \vec{\phi}^{*})].
+& - \log[p(\vec{d}_{i} | z_{i}, \vec{\phi}^{*})]\\
+& + \log[p(\vec{d}_{i} | \vec{\phi}^{*})] - \log[p(z_{i} | \vec{\phi}^{*})].
 \end{split}
 \end{align}
 Fig. \ref{fig:pgm} has no direct connection between $\vec{d}_{i}$ and 
@@ -243,9 +243,8 @@ as follows:
 \label{eq:split}
 \log[p(\vec{d}_{i} | z_{i})] =& \log[p(\vec{d}_{i} | z_{i})] + \log[p(z_{i} | 
 \vec{d}_{i}, \vec{\phi}^{*})]\\
-& - \log[p(z_{i} | \vec{\phi}^{*})] - \log[p(\vec{d}_{i} | z_{i})] - 
-\log[p(\vec{d}_{i} | \vec{\phi}^{*})]\\
-& + \log[p(\vec{d}_{i} | \vec{\phi}^{*})].
+& - \log[p(\vec{d}_{i} | z_{i})] - \log[p(\vec{d}_{i} | \vec{\phi}^{*})]\\
+& + \log[p(\vec{d}_{i} | \vec{\phi}^{*})] - \log[p(z_{i} | \vec{\phi}^{*})].
 \end{split}
 \end{align}
 Canceling terms, we find
@@ -277,10 +276,10 @@ $\log[p(\vec{\phi} | \{\vec{d}_{i}\})]$ on the redshift distribution $n(z)$.
 This framework entails a number of choices and assumptions that must be 
 addressed explicitly:
 \begin{enumerate}
-	\item The chosen functional form with parameters $\vec{\phi}$ must be 
-capable of describing the true redshift distribution.
-	\item The photometric data and redshift for each galaxy is independent 
-of the photometric data and redshifts of all other galaxies.
+	\item The chosen functional form of $n(z)$ with parameters $\vec{\phi}$ 
+must be capable of describing the true redshift distribution.
+	\item The photometric data and redshift for each galaxy must be 
+independent of the photometric data and redshifts of all other galaxies.
 	\item There is one interim prior shared among all galaxies in the 
 survey, and its parameters with known parameters $\vec{\phi}^{*}$ are known.
 	\item We must choose a hyperprior probability distribution 
@@ -294,7 +293,33 @@ proposed.
 \label{sec:others}
 
 It is useful to translate some popular existing methods for deriving $n(z)$ 
-from photo-$z$ PDFs into the mathematical framework of Sec. \ref{sec:model}.
+from photo-$z$ PDFs into the mathematical framework of Sec. \ref{sec:model}.  
+We do not advocate for these methods for reasons addressed in the Appendix.
+
+\subsubsection{Stacking}
+\label{sec:stacking}
+
+The most common way to combine photo-$z$ PDFs into an estimator 
+$\hat{n}_{stack}(z)$ for $n(z)$ is to stack them, which corresponds to
+\begin{align}
+\label{eq:stack}
+\hat{n}^{stack}(z) &= \frac{1}{N}\ \sum_{i}^{N} p(z_{i} | \vec{d}_{i}, 
+\vec{\phi}^{*}).
+\end{align}
+
+\subsubsection{Point Estimation}
+\label{sec:point_estimation}
+
+In some cases, estimators $\hat{n}(z)$ are obtained by assuming the photo-$z$ 
+PDFs are effectively delta functions by reducing them to point estimates 
+according to
+\begin{align}
+\label{eq:delta}
+p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*}) &\approx \delta(z, \hat{z}_{i}^{point})
+\end{align}
+before applying Eq. \ref{eq:stack}.  The most common redshift point estimators 
+are the mean $\hat{z}^{mean}_{i}$, median $\hat{z}^{median}_{i}$, and mode 
+$\hat{z}^{mode}_{i}$ of the original photo-$z$ interim posterior.  
 
 \subsection{Implementation}
 \label{sec:implementation}
@@ -307,6 +332,8 @@ graphical model, the implementation of \chippr makes choices and assumptions of
 its own.
 
 \begin{enumerate}
+	\item \chippr is only applicable if the redshift interim posteriors and 
+interim prior are accurate.
 	\item \chippr currently only accepts photo-$z$ PDFs and produces $n(z)$ 
 samples of a single format, that of the piecewise constant parametrization, 
 also referred to as a binned histogram parametrization and a sum of top hat 
@@ -342,25 +369,26 @@ The mock data used here are produced by the following steps.
 
 \begin{enumerate}
 	\item \label{itm:true} Choose a true $n(z)$ that is a continuous 
-function with known parameters $\vec{\theta}$.
+function with known parameters $\vec{\phi}'$.
 	\item \label{itm:sample} Sample the true $n(z)$ to create a catalog of 
-$N$ true redshifts $z_{i}$.
-	\item \label{itm:scatter} Choose a true intrinsic scatter $\sigma$, and 
-sample Gaussians $p(z'_{i} | z_{i}, \sigma) = \mathcal{N}(z_{i}, \sigma)$ to 
-get "observed" redshifts $z'_{i}$ defining Gaussian likelihoods $p(\vec{d}_{i} 
-| z'_{i}, \sigma) = \mathcal{N}(z'_{i}, \sigma)$.
+$N$ true redshifts $z'_{i}$.
+	\item \label{itm:scatter} Choose a true intrinsic scatter parameter 
+$\sigma$, and sample Gaussians $p(z''_{i} | z'_{i}, \sigma) = 
+\mathcal{N}(z'_{i}, \sigma)$ to get "observed" redshifts $z'_{i}$ defining 
+Gaussian likelihoods $p(\vec{d}_{i} | z''_{i}, \sigma) = \mathcal{N}(z''_{i}, 
+\sigma)$.
 	\item \label{itm:interim} Choose a parametrization and the parameters 
-$\vec{\phi}^{*}$ of the interim prior.
-	\item \label{itm:posterior} Create interim posteriors $p(z_{i} | 
-\vec{d}_{i}, \vec{\phi}^{*}) = p(\vec{d}_{i} | z_{i})\ p(z_{i} | 
-\vec{\phi}^{*})$ in this parametrization.
+$\vec{\phi}^{*}$ of the interim prior $p(z_{i} | \vec{\phi}^{*})$.
+	\item \label{itm:posterior} Create interim posteriors $\log[p(z_{i} | 
+\vec{d}_{i}, \vec{\phi}^{*})] = \log[p(\vec{d}_{i} | z'_{i})]\ \log[p(z_{i} | 
+\vec{\phi}^{*})]$ in this parametrization.
 \end{enumerate}
 
-In all of the following validation tests, we use $10$ bins and $N = 10,000$ 
-galaxies.  In Secs. \ref{sec:truth} and \ref{sec:likelihoods}, we use a flat 
-interim prior.  This method for deriving mock data is referred to as the 
-fiducial case, and variations on it will refer directly to the steps that are 
-altered.
+In all of the following validation tests, we use a piecewise constant 
+parametrization in log-space with $10$ bins.  $N = 10,000$ galaxies.  In Secs. 
+\ref{sec:truth} and \ref{sec:likelihoods}, we use a flat interim prior.  This 
+method for deriving mock data is referred to as the fiducial case, and 
+variations on it will refer directly to the steps that are altered.
 
 \subsubsection{$n(z)$ Accuracy Metric}
 \label{sec:accuracy}
@@ -694,6 +722,7 @@ obtaining estimators of $n(z)$.  \chippr is freely available to the community
 for incorporation into evolving data analysis pipelines.  
 
 
+\appendix{}
 
 \begin{acknowledgements}
 AIM thanks Mohammadjavad Vakili for insightful input on statistics, Geoffrey 
