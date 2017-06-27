@@ -255,6 +255,10 @@ class catalog(object):
                 out.writerow(self.cat['log_interim_prior'])
                 for line in self.cat['log_interim_posteriors']:
                     out.writerow(line)
+            with open(os.path.join(self.data_dir, 'true_zs' + style), 'wb') as csvfile:
+                out = csv.writer(csvfile, delimiter=' ')
+                for item in self.true_samps:
+                    out.writerow(item)
         return
 
     def read(self, loc='data', style='.txt'):

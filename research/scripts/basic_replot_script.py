@@ -47,6 +47,13 @@ def just_plot(given_key):
     saved_location = 'data'
     saved_type = '.txt'
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
+
+    with open(os.path.join(test_dir, 'true_zs.txt'), 'rb') as csvfile:
+        tuples = (line.split(None) for line in csvfile)
+        true_zs = np.array([float(item) for item in tuples])
+    bin_mids = (data['bin_ends'][1:] + data['bin_ends'][:-1]) / 2.
+    catalog_plots.plot_obs_scatter(true_zs, data['log_interim_posteriors'], bin_mids)
+
     with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
         true_nz_params = pickle.load(true_file)
     true_nz = chippr.gmix(true_nz_params['amps'], true_nz_params['means'], true_nz_params['sigmas'],
