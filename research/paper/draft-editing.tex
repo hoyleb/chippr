@@ -58,33 +58,136 @@ After a brief literature review addressing how photo-$z$ PDFs are currently used
 \section{Method}
 \label{sec:method}
 
-This paper presents a mathematically consistent method for obtaining the posterior distribution over the redshift density function $n(z)$ using a catalog of photo-$z$ PDFs.
+This paper presents a mathematically consistent method for obtaining the posterior probability distribution over the redshift distribution $n(z)$ using a catalog of photo-$z$ PDFs.  We start by introducing some nomenclature, definitions, and symbols that will be used throughout Secs. \ref{sec:model}, \ref{sec:others}, and \ref{sec:implementation}.
+
+We shall say the parameters comprising $\vec{\phi}$ define the redshift distribution under some functional form about which this method is agnostic, so long as the functional form evaluated with some true values of the parameters accurately describes the true $n(z)$.  Since the redshift distribution is itself a probability distribution, it may be written as $p(z | \vec{\phi})$.
+
+Before jumping into the details of the model, it is crucial to settle on an interpretation of what a photo-$z$ PDF actually is.  When a photo-$z$ PDF is reported, it is an object containing information about the redshift $z_{i}$ of galaxy $i$ based on its photometric data $\vec{d}_{i}$, making a photo-$z$ PDF a \textit{posterior} probability distribution.  The data $\vec{d}_{i}$ may be fluxes, magnitudes, colors, or any combination thereof.  We assume that the redshifts of the galaxies are not related to the redshifts or photometry of other galaxies in the survey, i.e. they are \textit{independent}.
+
+In addition to the data $\vec{d}_{i}$, the photo-$z$ PDF also contains information imparted by assumptions that went into the process by which the photo-$z$ was made.  Those assumptions are only relevant insomuch as they impose a preference on the redshift distribution. Thus, they can be reduced to a sort of prior on the distribution of redshifts, which can be parametrized under the chosen functional form by parameters $\vec{\phi}^{*}$.  The redshift distribution $p(z | \vec{\phi}^{*})$ associated with the parameters in $\vec{\phi}^{*}$ shall be called the interim prior because in many cases it was our best guess as to the true redshift distribution before observing any data.  For example, in template-based photo-$z$ PDF methods, the interim prior is a linear combination of the redshift distributions of the classes of templates based on previous observations.  (In training-based photo-$z$ PDF methods, the interim prior is related to the redshift distribution of the training set and thus may not be shared among all galaxies for which photo-$z$ PDFs are produced; however, in this work, we will assume that it is shared among all galaxies in a survey.)  Because the choice of parameters $\vec{\phi}^{*}$ is not causally connected to the data or the true redshift distribution but nonetheless contributes to the photo-$z$ PDF, we call it an \textit{interim prior}.  
+
+A photo-$z$ PDF is then an \textit{interim posterior} probability distribution of the redshift of a galaxy given its observed photometric data and the interim prior: $p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})$.  We would like to learn about $p(z | \vec{\phi})$ from a catalog of photo-$z$ interim posteriors.
 
 \subsection{Model}
 \label{sec:model}
 
-The directed acyclic graph of Fig. \ref{fig:pgm} represents a probabilistic graphical model for hierarchical inference of $n(z)$, the mathematical interpretation of which will be presented below.
+We present the two attributes of a probabilistic graphical model (PGM) for the redshift distribution $n(z)$: the directed acyclic graph (DAG) and its mathematical interpretation in terms of Bayesian hierarchical inference.  
+
+The fundamental assumption underlying the concept of photo-$z$ estimation is that each galaxy $i$ has some observed photometric data $\vec{d}_{i}$ (fluxes, magnitudes, or colors) that is drawn from a function of its redshift $z_{i}$, which is a parameter in this model.  This function constitutes a forward model for the observations.  The redshifts $\{z_{i}\}$ for all galaxies in a survey are random draws from the redshift distribution, whose parameters  $\vec{\phi}$ under a chosen functional form are called \textit{hyperparameters} because they are shared among all $N$ galaxies in the survey.  Fig. \ref{fig:pgm} illustrates these relationships.  PGMs of this structure are \textit{hierarchical} in that, though the data are only directly influenced by their redshift parameters, we can still use them to infer something about the global hyperparameters by way of a higher level in the graph.
 
 \begin{figure}
 	\begin{center}
- 		\includegraphics[width=0.5\textwidth]{fig/pgm.png}
-		\caption{This directed acyclic graph corresponds to a PGM for a hierarchical inference of $p(\vec{\theta}|\{\vec{d}_{i}\})$.  In this graph, all random variables are shown in circles, with observed random variables shown in shaded circles.  Relationships between variables are indicated by arrows from parameters to the variables distributed according to functions of them.  The box indicates that there are a number of copies of the relationships between boxed parameters, each independent of all others.  The hyperparameters $\vec{\theta}$ representing $n(z)$ are at the top.  Independently drawn from a function of the hyperparameters $\vec{\theta}$ are galaxy redshifts $\{z_{i}\}$ below.  The observed galaxy photometry $\{\vec{d}_{i}\}$, shown in shaded circles, is determined by the redshifts above.}
+		\includegraphics[width=0.5\textwidth]{pgm.png}
+		\caption{This directed acyclic graph corresponds to a probabilistic graphical model for a Bayesian hierarchical inference of $p(\vec{\phi}|\{\vec{d}_{i}\})$.  In this graph, all random variables are shown in circles, with observed random variables shown in shaded circles.  Relationships between variables are indicated by arrows from parameters to the variables distributed according to functions of them.  The box indicates that there are a number of copies of the relationships between boxed parameters, each independent of all others.  The hyperparameters comprising $\vec{\phi}$, which define $n(z)$, are at the top.  Independently drawn from a function of the hyperparameters $\vec{\phi}$ are galaxy redshifts $\{z_{i}\}$ below.  The observed galaxy photometry $\{\vec{d}_{i}\}$, shown in shaded circles, is determined by the redshifts above.}
 	\label{fig:pgm}
 	\end{center}
 \end{figure}
 
-\textbf{Math from \texttt{prob-z} version will go here.}
+The DAG of Fig. \ref{fig:pgm} translates directly into a mathematical expression for the posterior distribution $p(\vec{\phi} | \{\vec{d}_{i}\})$ of the hyperparameters given the entire set of interim posteriors $\{p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})\}$ by way of the following derivation.  From this point forward, we will use log probabilities.
 
-This framework entails a number of choices and assumptions that must be addressed explicitly.
+According to Bayes' rule, the posterior distribution of interest is
+\begin{align}
+\label{eq:hyper_bayes}
+\log[p(\vec{\phi} | \{\vec{d}_{i}\})] &\propto \log[p(\{\vec{d}_{i}\} | \vec{\phi})] + \log[p(\vec{\phi})] ,
+\end{align}
+where $p(\vec{\phi})$ is the \textit{hyperprior} probability distribution over possible values of the hyperparameters.  The hyperprior is a choice made by those performing the inference and is not to be confused with the interim prior parameters that influence the photo-$z$ PDF data product.
 
+Focusing on the likelihood term $p(\{\vec{d}_{i}\} | \vec{\phi})$, we employ the power of the hierarchical model through \textit{marginalization} of the unobserved redshift parameters by integrating over them to obtain 
+\begin{align}
+\label{eq:marginalize}
+\begin{split}
+\log[p(\{\vec{d}_{i}\} | \vec{\phi})] = & \log\left[\int\exp\left[\log[p(\{\vec{d}_{i}\} | \{z_{i}\})]\right.\right. \\
+& \left.\left.+ \log[p(\{z_{i}\} | \vec{\phi})]\right]\ d\{z_{i}\}\right] .
+\end{split}
+\end{align}
+The redshifts $\{z_{i}\}$ are statistically independent of each other, and each galaxy's photometry depends solely on its own redshift, so we may invoke statistical independence to get
+\begin{align}
+\label{eq:independence_hyper}
+\log[p(\{z_{i}\} | \vec{\phi})] &= \sum_{i}^{N} \log[p(z_{i} | \vec{\phi})]
+\end{align}
+and
+\begin{align}
+\label{eq:independence}
+\log[p(\{\vec{d}_{i}\} | \{z_{i}\})] &= \sum_{i}^{N} \log[p(\vec{d}_{i} | z_{i})] .
+\end{align}
+Having chosen the functional form mapping $\vec{\phi}$ to $n(z)$, the terms on the righthand side of Eq. \ref{eq:independence_hyper} are known.  However, the terms on the righthand side of Eq. \ref{eq:independence} are likelihoods, and the photo-$z$ PDFs we have are interim posteriors.
+
+To transform the interim posteriors we have into the likelihoods we need, we start with the vacuously true statement
+\begin{align}
+\begin{split}
+\label{eq:unity}
+\log[p(\vec{d}_{i} | z_{i})] =& \log[p(\vec{d}_{i} | z_{i})] + \log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})]\\
+& - \log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})].
+\end{split}
+\end{align}
+We expand the last term using Bayes' Rule to get
+\begin{align}
+\begin{split}
+\label{eq:bayes}
+\log[p(\vec{d}_{i} | z_{i})] =& \log[p(\vec{d}_{i} | z_{i})] + \log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})]\\
+& - \log[p(\vec{d}_{i} | z_{i}, \vec{\phi}^{*})]\\
+& + \log[p(\vec{d}_{i} | \vec{\phi}^{*})] - \log[p(z_{i} | \vec{\phi}^{*})].
+\end{split}
+\end{align}
+Fig. \ref{fig:pgm} has no direct connection between $\vec{d}_{i}$ and $\vec{\phi}$, so we can break up $\log[p(\vec{d}_{i} | z_{i}, \vec{\phi}^{*})]$ as follows:
+\begin{align}
+\begin{split}
+\label{eq:split}
+\log[p(\vec{d}_{i} | z_{i})] =& \log[p(\vec{d}_{i} | z_{i})] + \log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})]\\
+& - \log[p(\vec{d}_{i} | z_{i})] - \log[p(\vec{d}_{i} | \vec{\phi}^{*})]\\
+& + \log[p(\vec{d}_{i} | \vec{\phi}^{*})] - \log[p(z_{i} | \vec{\phi}^{*})].
+\end{split}
+\end{align}
+Canceling terms, we find
+\begin{align}
+\label{eq:cancel}
+\log[p(\vec{d}_{i} | z_{i})] =& \log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})] - \log[p(z_{i} | \vec{\phi}^{*})].
+\end{align}
+
+Now we combine Eqs. \ref{eq:hyper_bayes}, \ref{eq:marginalize}, \ref{eq:independence_hyper}, \ref{eq:independence}, and \ref{eq:cancel} to arrive at 
+\begin{align}
+\begin{split}
+\label{eq:final}
+\log[p(\vec{\phi} | \{\vec{d}_{i}\})] \propto& \log[p(\vec{\phi})] + \log\left[\int \exp\left[\sum_{i}^{N} \left(\right.\right.\right.\\
+& \left.\left.\left. + \log[p(z_{i} | \vec{\phi})] - \log[p(z_{i} | \vec{\phi}^{*})]\right.\right.\right.\\
+& \left.\left.\left. + \log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})]
+\right)\right] d\{z_{i}\}\right].
+\end{split}
+\end{align}
+Thus, if we have a catalog of photo-$z$ interim posteriors $\{p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})\}$, the interim prior parameters $\vec{\phi}^{*}$, and a prior distribution $p(\vec{\phi})$, we may find the posterior $\log[p(\vec{\phi} | \{\vec{d}_{i}\})]$ on the redshift distribution $n(z)$.
+
+This framework entails a number of choices and assumptions that must be addressed explicitly:
 \begin{enumerate}
+	\item The chosen functional form of $n(z)$ with parameters $\vec{\phi}$ must be capable of describing the true redshift distribution.
+	\item The photometric data and redshift for each galaxy must be independent of the photometric data and redshifts of all other galaxies.
+	\item There is one interim prior shared among all galaxies in the survey, and its parameters with known parameters $\vec{\phi}^{*}$ are known.
+	\item We must choose a hyperprior probability distribution $p(\vec{\phi})$ over the hyperparameters.
 	\item While we advocate for the approach of hierarchical inference, the probabilistic graphical model presented here is not the only one that could be proposed.
 \end{enumerate}
 
 \subsection{Alternative Approaches}
 \label{sec:others}
 
-It is useful to translate some popular existing methods for deriving $n(z)$ from photo-$z$ PDFs into the mathematical framework of Sec. \ref{sec:model}.
+It is useful to translate some popular existing methods for deriving $n(z)$ from photo-$z$ PDFs into the mathematical framework of Sec. \ref{sec:model}.  We briefly discuss the conditions under which they are equivalent to Eq. \ref{eq:final}, which are elaborated upon in the Appendix.
+
+\subsubsection{Stacking}
+\label{sec:stacking}
+
+The most common way to combine photo-$z$ interim posteriors into an estimator $\hat{n}_{stack}(z)$ for $n(z)$ is to "stack" them, which corresponds to
+\begin{align}
+\label{eq:stack}
+\hat{n}^{stack}(z) &= \frac{1}{N}\ \sum_{i}^{N} \exp\left[\log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})]\right].
+\end{align}
+
+\subsubsection{Point Estimation}
+\label{sec:point_estimation}
+
+In some cases, estimators $\hat{n}^{point}(z)$ are obtained by assuming the photo-$z$ PDFs are effectively delta functions by reducing them to point estimates according to
+\begin{align}
+\label{eq:delta}
+p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*}) &\approx \delta(z, \hat{z}_{i}^{point})
+\end{align}
+before applying Eq. \ref{eq:stack}.  The most popular redshift point estimators are the mean $\hat{z}^{mean}_{i}$, median $\hat{z}^{median}_{i}$, and mode $\hat{z}^{mode}_{i}$ of the original photo-$z$ interim posterior.
 
 \subsection{Implementation}
 \label{sec:implementation}
@@ -94,6 +197,7 @@ The publicly available \chippr code implements the probabilistic graphical model
 In addition to the choices and assumptions underlying the probabilistic graphical model, the implementation of \chippr makes choices and assumptions of its own.
 
 \begin{enumerate}
+	\item \chippr is only applicable if the redshift interim posteriors and interim prior are accurate.
 	\item \chippr currently only accepts photo-$z$ PDFs and produces $n(z)$ samples of a single format, that of the piecewise constant parametrization, also referred to as a binned histogram parametrization and a sum of top hat functions.
 \end{enumerate}
 
@@ -113,14 +217,14 @@ The mock data in these tests consists of photo-$z$ interim posteriors rather tha
 The mock data used here are produced by the following steps.
 
 \begin{enumerate}
-	\item \label{itm:true} Choose a true $n(z)$ that is a continuous function with known parameters $\vec{\theta}$.
-	\item \label{itm:sample} Sample the true $n(z)$ to create a catalog of $N$ true redshifts $z_{i}$.
-	\item \label{itm:scatter} Choose a true intrinsic scatter $\sigma$, and sample Gaussians $p(z'_{i} | z_{i}, \sigma) = \mathcal{N}(z_{i}, \sigma)$ to get "observed" redshifts $z'_{i}$ defining Gaussian likelihoods $p(\vec{d}_{i} | z'_{i}, \sigma) = \mathcal{N}(z'_{i}, \sigma)$.
-	\item \label{itm:interim} Choose a parametrization and the parameters $\vec{\phi}^{*}$ of the interim prior.
-	\item \label{itm:posterior} Create interim posteriors $p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*}) = p(\vec{d}_{i} | z_{i})\ p(z_{i} | \vec{\phi}^{*})$ in this parametrization.
+	\item \label{itm:true} Choose a true $n(z)$ that is a continuous function with known parameters $\vec{\phi}'$.
+	\item \label{itm:sample} Sample the true $n(z)$ to create a catalog of $N$ true redshifts $z'_{i}$.
+	\item \label{itm:scatter} Choose a true intrinsic scatter parameter $\sigma$, and sample Gaussians $p(z''_{i} | z'_{i}, \sigma) = \mathcal{N}(z'_{i}, \sigma)$ to get "observed" redshifts $z'_{i}$ defining Gaussian likelihoods $p(\vec{d}_{i} | z''_{i}, \sigma) = \mathcal{N}(z''_{i}, \sigma)$.
+	\item \label{itm:interim} Choose a parametrization and the parameters $\vec{\phi}^{*}$ of the interim prior $p(z_{i} | \vec{\phi}^{*})$.
+	\item \label{itm:posterior} Create interim posteriors $\log[p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})] = \log[p(\vec{d}_{i} | z'_{i})]\ \log[p(z_{i} | \vec{\phi}^{*})]$ in this parametrization.
 \end{enumerate}
 
-In all of the following validation tests, we use $10$ bins and $N = 10,000$ galaxies.  In Secs. \ref{sec:truth} and \ref{sec:likelihoods}, we use a flat interim prior.  This method for deriving mock data is referred to as the fiducial case, and variations on it will refer directly to the steps that are altered.
+In all of the following validation tests, we use a piecewise constant parametrization in log-space with $10$ bins.  $N = 10,000$ galaxies.  In Secs. \ref{sec:truth} and \ref{sec:likelihoods}, we use a flat interim prior.  This method for deriving mock data is referred to as the fiducial case, and variations on it will refer directly to the steps that are altered.
 
 \subsubsection{$n(z)$ Accuracy Metric}
 \label{sec:accuracy}
@@ -183,7 +287,7 @@ One major concern about photo-$z$s is the intrinsic scatter of point estimators,
 	\end{center}
 \end{figure}
 
-As the intrinsic scatter increases, the discrepancy between estimators increases.  
+To emulate intrinsic scatter, we modify the fiducial case to simply broaden the single Gaussian component of the likelihood.  To enforce self-consistency, the mean is a random variable drawn from a Gaussian distribution with the newly increased variance.
 
 \subsubsection{Template-like Catastrophic Outliers}
 \label{sec:tempcatout}
@@ -266,16 +370,25 @@ We summarize the details of the \texttt{Buzzard} simulation here.
 \subsubsection{Cosmological Constraint Metric}
 \label{sec:cosmo}
 
-Because the mock data is associated with true values of the cosmological parameters, we may compare the quality of cosmological constraints.
+Because the realistic mock data of Sec. \ref{sec:buzzard} is associated with true values of the cosmological parameters, we may compare the quality of cosmological constraints under different estimators of $n(z)$, creating a figure like Fig. \ref{fig:scgsr}.  We perform this analysis using a forecasting code that takes $n(z)$ and produces projected error ellipses in the space of cosmological parameters.  
 
-\textbf{Check Dark Energy Task Force metrics on error ellipses, multi-dimensional KLD, centroid offset, etc.}
+\begin{figure}
+	\begin{center}
+		Not my figure! (N. MacCrann via J. DeRose)
+		\includegraphics[width=0.5\textwidth]{cosmo_constraints.png}
+		\caption{[I'd like to be able to make a plot like this with the different $n(z)$ estimators produced by \texttt{chippr} from the same set of photo-$z$ PDFs.  Then I can calculate some metrics of the accuracy and precision of the error distributions relative to the true values of the cosmological parameters that produced the mock data.]}
+		\label{fig:scgsr}
+	\end{center}
+\end{figure}
+
+% \textbf{Check Dark Energy Task Force metrics on error ellipses, multi-dimensional KLD, centroid offset, etc.}
 
 \subsection{Results}
 \label{sec:results}
 
 \begin{figure}
 	\begin{center}
-		%\includegraphics[width=0.5\textwidth]{money.png}
+% 		\includegraphics[width=0.5\textwidth]{money.png}
 		\caption{[moneyplot of error ellipses resulting from different $n(z)$ estimators]}
 		\label{fig:money}
 	\end{center}
@@ -284,7 +397,7 @@ Because the mock data is associated with true values of the cosmological paramet
 \section{Discussion}
 \label{sec:discussion}
 
-Thee results of Fig \ref{fig:money} have significant implications for the developing data analysis pipelines of next-generation telescope surveys.  However, the method presented here has its own limitations, which are reiterated to discourage the community from applying this work inappropriately.
+The results of Fig \ref{fig:money} have significant implications for the developing data analysis pipelines of next-generation telescope surveys.  However, the method presented here has its own limitations, which are reiterated to discourage the community from applying this work inappropriately.
 
 We intend to pursue a number of extensions of the work presented in this paper in future work.
 
@@ -426,7 +539,8 @@ In conclusion, we discourage the community from continuing to use the stacked es
 %\section{Discussion}
 %\label{sec:discussion}
 
-%\appendix{}
+\appendix{}
+%showing stacking is always too broad
 
 \begin{acknowledgements}
 AIM thanks Mohammadjavad Vakili for insightful input on statistics, Geoffrey Ryan for assistance in debugging, and Boris Leistedt for helpful comments provided in the preparation of this paper.

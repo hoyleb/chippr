@@ -46,7 +46,7 @@ def plot_obs_scatter(true_zs, pfs, z_grid, plot_loc='', plot_name='scatter.png')
     pfs: numpy.ndarray, float
         matrix of interim posteriors evaluated on a fine grid
     z_grid: numpy.ndarray, float
-        vector of redshifts at which
+        vector of bin midpoints
     plot_loc: string, optional
         location in which to store plot
     plot_name: string, optional
