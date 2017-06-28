@@ -174,11 +174,20 @@ def make_catalog(given_key):
 
     test_info = make_true(given_key)
     true_zs = test_info['truth']['zs']
+    true_amps = test_info['truth']['amps']
+    true_means = test_info['truth']['means']
+    true_sigmas =  test_info['truth']['sigmas']
+    n_mix_comps = len(true_amps)
+    true_funcs = []
+    for c in range(n_mix_comps):
+        true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
+    true_nz = chippr.gmix(true_amps, true_funcs,
+            limits=(test_info['params']['bin_min'], test_info['params']['bin_max']))
 
     interim_prior = make_interim_prior(given_key)
 
     posteriors = chippr.catalog(param_file_name, loc=test_dir)
-    output = posteriors.create(true_zs, interim_prior)
+    output = posteriors.create(true_nz, interim_prior, N=test_info['params']['n_gals'])
     # data = np.exp(output['log_interim_posteriors'])
     posteriors.write()
     data_dir = posteriors.data_dir

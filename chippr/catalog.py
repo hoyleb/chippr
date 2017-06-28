@@ -98,15 +98,16 @@ class catalog(object):
 
         return coarse
 
-    def create(self, truth, int_pr, vb=True):
+    def create(self, truth, int_pr, N=d.n_gals, vb=True):
         """
         Function creating a catalog of interim posterior probability
         distributions, will split this up into helper functions
 
         Parameters
         ----------
-        truth: numpy.ndarray, float
-            vector of true redshifts
+        truth: chippr.gmix object or chippr.gauss object or chippr.discrete
+        object
+            true redshift distribution object
         int_pr: chippr.gmix object or chippr.gauss object or chippr.discrete
         object
             interim prior distribution object
@@ -118,7 +119,8 @@ class catalog(object):
         self.cat: dict
             dictionary comprising catalog information
         """
-        self.true_samps = truth
+        self.truth = truth
+        self.true_samps = self.truth.sample(10**N)
         if vb:
             plots.plot_true_histogram(self.true_samps, plot_loc=self.plot_dir)
         self.n_items = len(self.true_samps)

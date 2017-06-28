@@ -10,6 +10,8 @@ max_x = 1.
 
 n_bins = 10
 
+n_gals = 4
+
 constant_sigma = 0.03
 
 gr_threshold = 1.2
@@ -54,10 +56,10 @@ def check_basic_setup(params):
     params: dict
         dictionary containing key/value pairs for simulation
     """
-    # if 'n_items' not in params:
-    #     params['n_items'] = n_items
-    # else:
-    #     params['n_items'] = 10 ** int(params['n_items'][0])
+    if 'n_gals' not in params:
+        params['n_gals'] = n_gals
+    else:
+        params['n_gals'] = int(params['n_gals'][0])
     if 'n_bins' not in params:
         params['n_bins'] = n_bins
     else:
