@@ -62,7 +62,7 @@ def just_plot(given_key):
 
     true_zs = true_nz_params['zs']
     bin_mids = (data['bin_ends'][1:] + data['bin_ends'][:-1]) / 2.
-    catalog_plots.plot_obs_scatter(true_zs, data['log_interim_posteriors'], bin_mids)
+    catalog_plots.plot_obs_scatter(true_zs, data['log_interim_posteriors'], bin_mids, plot_loc=os.path.join(test_dir, saved_location))
 
     prior = set_up_prior(data)
     n_bins = len(data['log_interim_prior'])
