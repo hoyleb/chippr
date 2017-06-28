@@ -128,7 +128,14 @@ def do_inference(given_key):
     z_difs = zs[1:]-zs[:-1]
     with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
         true_nz_params = pickle.load(true_file)
-    true_nz = chippr.gmix(true_nz_params['amps'], true_nz_params['means'], true_nz_params['sigmas'],
+    true_amps = true_nz_params['amps']
+    true_means = true_nz_params['means']
+    true_sigmas =  true_nz_params['sigmas']
+    n_mix_comps = len(true_amps)
+    true_funcs = []
+    for c in range(n_mix_comps):
+        true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
+    true_nz = chippr.gmix(true_amps, true_funcs,
             limits=(min(zs), max(zs)))
 
     (prior, cov) = set_up_prior(data, params)
@@ -155,7 +162,7 @@ def do_inference(given_key):
         n_ivals = 10 * n_bins
     initial_values = prior.sample(n_ivals)
     log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
-    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
 

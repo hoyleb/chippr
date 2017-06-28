@@ -72,7 +72,11 @@ def make_true(given_key):
         true_means = np.array([0.5, 0.2, 0.75]) * bin_range + min(test_info['bin_ends'])
         true_sigmas = np.array([0.4, 0.2, 0.1]) * bin_range
 
-    true_nz = chippr.gmix(true_amps, true_means, true_sigmas,
+    n_mix_comps = len(true_amps)
+    true_funcs = []
+    for c in range(n_mix_comps):
+        true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
+    true_nz = chippr.gmix(true_amps, true_funcs,
             limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
 
     true_dict = {'amps': true_amps, 'means': true_means, 'sigmas': true_sigmas}
@@ -105,7 +109,11 @@ def make_interim_prior(given_key):
         int_amps = np.array([0.35, 0.5, 0.15])
         int_means = np.array([0.1, 0.5, 0.9]) * bin_range + min(test_info['bin_ends'])
         int_sigmas = np.array([0.1, 0.1, 0.1]) * bin_range
-        interim_prior = chippr.gmix(int_amps, int_means, int_sigmas,
+        n_mix_comps = len(int_amps)
+        int_funcs = []
+        for c in range(n_mix_comps):
+            int_funcs.append(chippr.gauss(int_means[c], int_sigmas[c]**2))
+        interim_prior = chippr.gmix(int_amps, int_funcs,
             limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
     elif test_info['params']['interim_prior'] == 'training':
         int_amps = np.array([0.150,0.822,1.837,2.815,3.909,
@@ -123,7 +131,11 @@ def make_interim_prior(given_key):
         int_amps = f(bin_mids)
         int_means = bin_mids
         int_sigmas = bin_difs
-        interim_prior = chippr.gmix(int_amps, int_means, int_sigmas,
+        n_mix_comps = len(int_amps)
+        int_funcs = []
+        for c in range(n_mix_comps):
+            int_funcs.append(chippr.gauss(int_means[c], int_sigmas[c]**2))
+        interim_prior = chippr.gmix(int_amps, int_funcs,
                 limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
     else:
         bin_ends = np.array([test_info['params']['bin_min'], test_info['params']['bin_max']])
@@ -185,7 +197,7 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    test_name = 'template_prior'
+    test_name = 'fiducial'
     all_tests = {}
     test_info = {}
     test_info['name'] = test_name
