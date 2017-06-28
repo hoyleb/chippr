@@ -294,32 +294,33 @@ proposed.
 
 It is useful to translate some popular existing methods for deriving $n(z)$ 
 from photo-$z$ PDFs into the mathematical framework of Sec. \ref{sec:model}.  
-We do not advocate for these methods for reasons addressed in the Appendix.
+We briefly discuss the conditions under which they are equivalent to Eq. 
+\ref{eq:final}, which are elaborated upon in the Appendix.
 
 \subsubsection{Stacking}
 \label{sec:stacking}
 
-The most common way to combine photo-$z$ PDFs into an estimator 
-$\hat{n}_{stack}(z)$ for $n(z)$ is to stack them, which corresponds to
+The most common way to combine photo-$z$ interim posteriors into an estimator 
+$\hat{n}_{stack}(z)$ for $n(z)$ is to "stack" them, which corresponds to
 \begin{align}
 \label{eq:stack}
-\hat{n}^{stack}(z) &= \frac{1}{N}\ \sum_{i}^{N} p(z_{i} | \vec{d}_{i}, 
-\vec{\phi}^{*}).
+\hat{n}^{stack}(z) &= \frac{1}{N}\ \sum_{i}^{N} \exp\left[\log[p(z_{i} | 
+\vec{d}_{i}, \vec{\phi}^{*})]\right].
 \end{align}
 
 \subsubsection{Point Estimation}
 \label{sec:point_estimation}
 
-In some cases, estimators $\hat{n}(z)$ are obtained by assuming the photo-$z$ 
-PDFs are effectively delta functions by reducing them to point estimates 
-according to
+In some cases, estimators $\hat{n}^{point}(z)$ are obtained by assuming the 
+photo-$z$ PDFs are effectively delta functions by reducing them to point 
+estimates according to
 \begin{align}
 \label{eq:delta}
 p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*}) &\approx \delta(z, \hat{z}_{i}^{point})
 \end{align}
-before applying Eq. \ref{eq:stack}.  The most common redshift point estimators 
+before applying Eq. \ref{eq:stack}.  The most popular redshift point estimators 
 are the mean $\hat{z}^{mean}_{i}$, median $\hat{z}^{median}_{i}$, and mode 
-$\hat{z}^{mode}_{i}$ of the original photo-$z$ interim posterior.  
+$\hat{z}^{mode}_{i}$ of the original photo-$z$ interim posterior.
 
 \subsection{Implementation}
 \label{sec:implementation}
