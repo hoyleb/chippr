@@ -53,7 +53,9 @@ def plot_prob_space(z_grid, p_space, plot_loc='', plot_name='prob_space.png'):
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
     plt.subplot(1, 1, 1)
-    plt.pcolormesh(z_grid, z_grid, p_space.T, cmap='viridis')
+    # all_points = [[(z_grid[kk], z_grid[jj]) for kk in range(len(z_grid))] for jj in range(len(z_grid))]
+    all_vals = np.array([[p_space.evaluate_one(np.array([z_grid[jj], z_grid[kk]])) for jj in range(len(z_grid))] for kk in range(len(z_grid))])
+    plt.pcolormesh(z_grid, z_grid, all_vals, cmap='viridis')
     plt.colorbar()
     plt.xlabel(r'$z_{spec}$')
     plt.ylabel(r'$z_{phot}$')
@@ -61,16 +63,14 @@ def plot_prob_space(z_grid, p_space, plot_loc='', plot_name='prob_space.png'):
     f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
     return
 
-def plot_scatter(true_zs, obs_zs, pfs, z_grid, plot_loc='', plot_name='scatter.png'):
+def plot_scatter(zs, pfs, z_grid, plot_loc='', plot_name='scatter.png'):
     """
     Plots a scatterplot of true and observed redshift values
 
     Parameters
     ----------
-    true_zs: numpy.ndarray, float
-        vector of true values of scalar input
-    obs_zs: numpy.ndarray, float
-        vector of observed values of scalar input
+    zs: numpy.ndarray, float
+        matrix of spec, phot values
     z_grid: numpy.ndarray, float
         fine grid of redshifts
     pfs: numpy.ndarray, float
@@ -80,7 +80,10 @@ def plot_scatter(true_zs, obs_zs, pfs, z_grid, plot_loc='', plot_name='scatter.p
     plot_name: string, optional
         filename for plot
     """
-    n = len(obs_zs)
+    n = len(zs)
+    zs = zs.T
+    true_zs = zs[0]
+    obs_zs = zs[1]
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
     sps = f.add_subplot(1, 1, 1)
@@ -98,18 +101,18 @@ def plot_scatter(true_zs, obs_zs, pfs, z_grid, plot_loc='', plot_name='scatter.p
         plt.plot(z_grid, norm_pf + sorted_obs[randos[r]], c='k')
         plt.hlines(sorted_obs[randos[r]], min(z_grid), max(z_grid), color='k', alpha=0.5, linestyle='--')
     sps.set_xlabel(r'$z_{true}$')
-    sps.set_ylabel(r'$\hat{z}_{MAP}$')
+    sps.set_ylabel(r'$z_{obs}$')
     f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     return
 
-def plot_obs_scatter(true_zs, pfs, z_grid, plot_loc='', plot_name='obs_scatter.png'):
+def plot_obs_scatter(zs, pfs, z_grid, plot_loc='', plot_name='obs_scatter.png'):
     """
     Plots a scatterplot of true and observed redshift values
 
     Parameters
     ----------
-    true_zs: numpy.ndarray, float
+    s: numpy.ndarray, float
         vector of true values of scalar input
     pfs: numpy.ndarray, float
         matrix of interim posteriors evaluated on a fine grid
@@ -120,6 +123,7 @@ def plot_obs_scatter(true_zs, pfs, z_grid, plot_loc='', plot_name='obs_scatter.p
     plot_name: string, optional
         filename for plot
     """
+    true_zs = zs.T[0]
     obs_zs = np.array([z_grid[np.argmax(pf)] for pf in pfs])
     max_pfs = np.max(pfs)
     n = len(obs_zs)
