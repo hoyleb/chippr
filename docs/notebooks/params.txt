@@ -3,10 +3,10 @@ bin_min 0.0
 bin_max 1.0
 variable_sigmas 0
 constant_sigma 0.05
-catastrophic_outliers training
+catastrophic_outliers template
 outlier_fraction 0.2
 outlier_mean 0.4
-outlier_sigma 0.075
+outlier_sigma 0.05
 gr_threshold 1.2
 n_accepted 3
 n_burned 2

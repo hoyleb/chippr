@@ -198,34 +198,39 @@ class catalog(object):
         maxs = [true_func.max_x, 100.]
         grid_means = self.z_fine#np.array([(self.z_fine[kk], self.z_fine[kk]]) for kk in range(self.n_tot)])
         grid_amps = true_func.evaluate(grid_means)#np.ones(self.n_tot)#
+        grid_amps /= (np.sum(grid_amps) * self.dz_fine)
 
         if not self.params['variable_sigmas']:
             grid_sigma = self.params['constant_sigma']# * np.identity(2)
             # grid_sigmas = self.params['constant_sigma'] * np.ones(self.n_tot)#np.ones((self.n_tot, self.n_tot, 2))
             grid_funcs = [gauss(grid_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[mvn(grid_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[[mvn(grid_means[kk][jj], grid_sigmas[kk][jj]**2) for jj in range(self.n_tot)] for kk in range(self.n_tot)]
-            grid_funcs = [multi_dist([grid_funcs[kk], grid_funcs[kk]]) for kk in range(self.n_tot)]
+            grid_funcs = [multi_dist([discrete(np.array([grid_means[kk] - self.dz_fine / 2., grid_means[kk] + self.dz_fine / 2.]), np.array([1.])), grid_funcs[kk]]) for kk in range(self.n_tot)]
         else:
             print('variable sigmas is not yet implemented')
             return
 
-        if self.params['catastrophic_outliers'] != 0:
+        if self.params['catastrophic_outliers'] != '0':
             # np.append(grid_amps, [self.params['outlier_fraction'] / self.n_tot])
             self.outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
             # out_amps = np.ones(self.n_tot) * self.params['outlier_fraction'] / self.n_items
             # grid_amps *= (1. - out_amp) / self.n_items
             # grid_amps.append(out_amp)
 
-            in_amps = grid_amps * (1. - self.params['outlier_fraction']) / self.n_tot
-            out_amps = grid_amps * self.params['outlier_fraction'] / self.n_tot
+            in_amps = np.ones(self.n_tot)#grid_amps# * (1. - self.params['outlier_fraction'])
+            out_amps = np.ones(self.n_tot)#grid_amps# * self.params['outlier_fraction']
             if self.params['catastrophic_outliers'] == 'template':
                 out_func = multi_dist([self.uniform_lf, self.outlier_lf])
-                out_amps *= self.uniform_lf.evaluate(grid_means)
-                grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_func], limits=(mins, maxs)) for kk in range(self.n_tot)]
+                out_amp = self.uniform_lf.evaluate(grid_means)
 
             elif self.params['catastrophic_outliers'] == 'training':
                 out_func = multi_dist([self.outlier_lf, self.uniform_lf])
-                out_amps *= self.outlier_lf.evaluate(grid_means)
-                grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_func], limits=(mins, maxs)) for kk in range(self.n_tot)]
+                out_amp = self.outlier_lf.evaluate(grid_means)
+
+            out_amps *= out_amp
+            out_amps /= (np.sum(out_amps) * self.dz_fine)
+            in_amps *= (1. - self.params['outlier_fraction'])
+            out_amps *= self.params['outlier_fraction']
+            grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_func], limits=(mins, maxs)) for kk in range(self.n_tot)]
                 # np.append(grid_means, [self.params['outlier_mean'], self.uniform_lf.sample_one()])
 
         # true n(z) in z_spec, uniform in z_phot
@@ -269,7 +274,6 @@ class catalog(object):
             array of likelihood values for each item as a function of fine
             binning
         """
-        zs = self.z_fine[:, np.newaxis]
         lfs = []
         for n in self.N_range:
             points = zip(self.z_fine, [self.samps[n][1]] * self.n_tot)
