@@ -115,7 +115,7 @@ def check_catastrophic_outliers(params):
         dictionary containing key/value pairs for simulation
     """
     if 'catastrophic_outliers' not in params:
-        params['catastrophic_outliers'] = 0
+        params['catastrophic_outliers'] = '0'
     else:
         params['catastrophic_outliers'] = str(params['catastrophic_outliers'][0])
     if 'outlier_fraction' not in params:

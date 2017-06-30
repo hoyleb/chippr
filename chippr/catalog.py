@@ -88,17 +88,18 @@ class catalog(object):
         Parameters
         ----------
         fine: numpy.ndarray, float
-            vector of values of function on fine grid
+            matrix of probability values of function on fine grid for N galaxies
 
         Returns
         -------
         coarse: numpy.ndarray, float
             vector of binned values of function
         """
-        coarse = fine / (np.sum(fine) * self.dz_fine)
-        coarse = np.array([np.sum(coarse[k * self.n_fine : (k+1) * self.n_fine]) * self.dz_fine for k in range(self.n_coarse)])
-        coarse /= np.sum(coarse * self.dz_coarse)
-
+        fine = fine.T
+        fine /= np.sum(fine, axis=0)[np.newaxis, :] * self.dz_fine
+        coarse = np.array([np.sum(fine[k * self.n_fine : (k+1) * self.n_fine], axis=0) * self.dz_fine for k in range(self.n_coarse)])
+        coarse /= np.sum(coarse, axis=0)[np.newaxis, :]  * self.dz_coarse
+        coarse = coarse.T
         return coarse
 
     def create(self, truth, int_pr, N=d.n_gals, vb=True):
@@ -140,38 +141,27 @@ class catalog(object):
         ## next, sample discrete to get z_true, z_obs
         self.samps = self.sample(self.N)
         if vb:
+            self.cat['true_vals'] = self.samps
             plots.plot_true_histogram(self.samps.T[0], plot_loc=self.plot_dir)
 
         ## then literally take slices (evaluate at constant z_phot)
         self.obs_lfs = self.evaluate_lfs()
-        for n in range(self.N):
-            self.obs_lfs[n] /= np.sum(self.obs_lfs[n]) * self.dz_fine
+        #self.obs_lfs /= np.sum(self.obs_lfs, axis=1)[:, np.newaxis] * self.dz_fine
 
         if vb:
             plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir)
 
         self.int_pr = int_pr
-        int_pr_fine = self.int_pr.evaluate(self.z_fine)
+        int_pr_fine = np.array([self.int_pr.evaluate(self.z_fine)])
         int_pr_coarse = self.coarsify(int_pr_fine)
+        truth_fine = self.truth.evaluate(self.z_fine)
 
-        # rewrite to take advantage of numpy array manipulation
-        pfs_fine = np.zeros((self.N, self.n_tot))
-        for n in self.N_range:
-            pfs_fine[n] += int_pr_fine * self.obs_lfs[n]
-            pfs_fine[n] /= np.sum(pfs_fine[n]) * self.dz_fine
-        #
-        # if vb:
-        #     plots.plot_obs_scatter(self.samps, pfs_fine, self.z_fine, plot_loc=self.plot_dir)
-
-        # rewrite to take advantage of numpy array manipulation
-        pfs_coarse = np.zeros((self.N, self.n_coarse))
-        for n in self.N_range:
-            pfs_coarse[n] += self.coarsify(pfs_fine[n])
-            pfs_coarse[n] /= np.sum(pfs_coarse[n]) * self.dz_coarse
+        pfs_fine = self.obs_lfs * int_pr_fine[np.newaxis, :] / truth_fine[np.newaxis, :]
+        pfs_coarse = self.coarsify(pfs_fine)
 
         self.cat['bin_ends'] = self.bin_ends
-        self.cat['log_interim_prior'] = u.safe_log(int_pr_coarse)
-        self.cat['log_interim_posteriors'] = u.safe_log(pfs_coarse)
+        self.cat['log_interim_prior'] = u.safe_log(int_pr_coarse[0])
+        self.cat['log_interim_posteriors'] = u.safe_log(pfs_coarse[0])
 
         return self.cat
 
@@ -199,6 +189,7 @@ class catalog(object):
         grid_means = self.z_fine#np.array([(self.z_fine[kk], self.z_fine[kk]]) for kk in range(self.n_tot)])
         grid_amps = true_func.evaluate(grid_means)#np.ones(self.n_tot)#
         grid_amps /= (np.sum(grid_amps) * self.dz_fine)
+        assert np.isclose(np.sum(grid_amps) * self.dz_fine, 1.)
 
         if not self.params['variable_sigmas']:
             grid_sigma = self.params['constant_sigma']# * np.identity(2)
@@ -217,19 +208,20 @@ class catalog(object):
             # grid_amps.append(out_amp)
 
             in_amps = np.ones(self.n_tot)#grid_amps# * (1. - self.params['outlier_fraction'])
-            out_amps = np.ones(self.n_tot)#grid_amps# * self.params['outlier_fraction']
+            # out_amps = np.ones(self.n_tot)#grid_amps# * self.params['outlier_fraction']
             if self.params['catastrophic_outliers'] == 'template':
                 out_func = multi_dist([self.uniform_lf, self.outlier_lf])
-                out_amp = self.uniform_lf.evaluate(grid_means)
+                out_amps = self.uniform_lf.evaluate(grid_means)
 
             elif self.params['catastrophic_outliers'] == 'training':
                 out_func = multi_dist([self.outlier_lf, self.uniform_lf])
-                out_amp = self.outlier_lf.evaluate(grid_means)
+                out_amps = self.outlier_lf.evaluate(grid_means)
 
-            out_amps *= out_amp
             out_amps /= (np.sum(out_amps) * self.dz_fine)
             in_amps *= (1. - self.params['outlier_fraction'])
             out_amps *= self.params['outlier_fraction']
+            assert np.isclose(np.sum(in_amps) * self.dz_fine, (1. - self.params['outlier_fraction']))
+            assert np.isclose(np.sum(out_amps) * self.dz_fine, self.params['outlier_fraction'])
             grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_func], limits=(mins, maxs)) for kk in range(self.n_tot)]
                 # np.append(grid_means, [self.params['outlier_mean'], self.uniform_lf.sample_one()])
 
@@ -278,7 +270,11 @@ class catalog(object):
         for n in self.N_range:
             points = zip(self.z_fine, [self.samps[n][1]] * self.n_tot)
             lfs.append(self.prob_space.evaluate(np.array(points)))
-        return np.array(lfs)
+        lfs = np.array(lfs)
+        if vb:
+            print('lf shape '+str(np.shape(lfs))+' should be n_gals * n_zs_fine')
+        lfs /= np.sum(lfs, axis=-1)[:, np.newaxis] * self.dz_fine
+        return lfs
 
     def write(self, loc='data', style='.txt'):
         """
@@ -297,6 +293,10 @@ class catalog(object):
                 out.writerow(self.cat['bin_ends'])
                 out.writerow(self.cat['log_interim_prior'])
                 for line in self.cat['log_interim_posteriors']:
+                    out.writerow(line)
+            with open(os.path.join(self.data_dir, 'true_vals' + style), 'wb') as csvfile:
+                out = csv.writer(csvfile, delimiter=' ')
+                for line in self.cat['true_vals']:
                     out.writerow(line)
         return
 

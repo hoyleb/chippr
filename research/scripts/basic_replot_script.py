@@ -60,9 +60,13 @@ def just_plot(given_key):
     true_nz = chippr.gmix(true_amps, true_funcs,
             limits=(simulated_posteriors.params['bin_min'], simulated_posteriors.params['bin_max']))
 
-    true_zs = true_nz_params['zs']
+    true_data = os.path.join(test_dir, saved_location)
+    with open(os.path.join(true_data, 'true_vals.txt'), 'rb') as csvfile:
+        tuples = (line.split(None) for line in csvfile)
+        alldata = [[float(pair[k]) for k in range(0,len(pair))] for pair in tuples]
+    true_vals = np.array(alldata)
     bin_mids = (data['bin_ends'][1:] + data['bin_ends'][:-1]) / 2.
-    catalog_plots.plot_obs_scatter(true_zs, data['log_interim_posteriors'], bin_mids, plot_loc=os.path.join(test_dir, saved_location))
+    catalog_plots.plot_obs_scatter(true_vals.T, np.exp(data['log_interim_posteriors']), bin_mids, plot_loc=os.path.join(test_dir, 'plots'))
 
     prior = set_up_prior(data)
     n_bins = len(data['log_interim_prior'])

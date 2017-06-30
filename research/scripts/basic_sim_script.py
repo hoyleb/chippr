@@ -82,8 +82,8 @@ def make_true(given_key):
     true_dict = {'amps': true_amps, 'means': true_means, 'sigmas': true_sigmas}
     true_dict['bins'] = test_info['bin_ends']
 
-    true_zs = true_nz.sample(test_info['params']['n_galaxies'])
-    true_dict['zs'] = true_zs
+    # true_zs = true_nz.sample(test_info['params']['n_galaxies'])
+    # true_dict['zs'] = true_zs
     test_info['truth'] = true_dict
 
     return(test_info)
@@ -173,7 +173,6 @@ def make_catalog(given_key):
                                 test_info['params']['n_bins'] + 1)
 
     test_info = make_true(given_key)
-    true_zs = test_info['truth']['zs']
     true_amps = test_info['truth']['amps']
     true_means = test_info['truth']['means']
     true_sigmas =  test_info['truth']['sigmas']

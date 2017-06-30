@@ -55,7 +55,7 @@ def plot_prob_space(z_grid, p_space, plot_loc='', plot_name='prob_space.png'):
     plt.subplot(1, 1, 1)
     # all_points = [[(z_grid[kk], z_grid[jj]) for kk in range(len(z_grid))] for jj in range(len(z_grid))]
     all_vals = np.array([[p_space.evaluate_one(np.array([z_grid[jj], z_grid[kk]])) for jj in range(len(z_grid))] for kk in range(len(z_grid))])
-    plt.pcolormesh(z_grid, z_grid, all_vals, cmap='viridis')
+    plt.pcolormesh(z_grid, z_grid, u.safe_log(all_vals), cmap='viridis')
     plt.colorbar()
     plt.xlabel(r'$z_{spec}$')
     plt.ylabel(r'$z_{phot}$')
@@ -106,14 +106,14 @@ def plot_scatter(zs, pfs, z_grid, plot_loc='', plot_name='scatter.png'):
 
     return
 
-def plot_obs_scatter(zs, pfs, z_grid, plot_loc='', plot_name='obs_scatter.png'):
+def plot_obs_scatter(true_vals, pfs, z_grid, plot_loc='', plot_name='obs_scatter.png'):
     """
     Plots a scatterplot of true and observed redshift values
 
     Parameters
     ----------
-    s: numpy.ndarray, float
-        vector of true values of scalar input
+    true_vals: numpy.ndarray, float
+        2 * n_gals array of true values of scalar input
     pfs: numpy.ndarray, float
         matrix of interim posteriors evaluated on a fine grid
     z_grid: numpy.ndarray, float
@@ -123,10 +123,10 @@ def plot_obs_scatter(zs, pfs, z_grid, plot_loc='', plot_name='obs_scatter.png'):
     plot_name: string, optional
         filename for plot
     """
-    true_zs = zs.T[0]
-    obs_zs = np.array([z_grid[np.argmax(pf)] for pf in pfs])
+    true_zs = true_vals[0]
+    obs_zs = true_vals[1]#np.array([z_grid[np.argmax(pf)] for pf in pfs])
     max_pfs = np.max(pfs)
-    n = len(obs_zs)
+    n = len(true_zs)
     dz = (max(z_grid) - min(z_grid)) / len(z_grid)
     jitters = np.random.uniform(-1. * dz / 2., dz / 2., n)
     obs_zs = obs_zs + jitters
