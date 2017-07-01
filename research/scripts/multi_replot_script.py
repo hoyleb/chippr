@@ -67,7 +67,7 @@ def just_plot(given_key):
     true_vals = np.array(alldata)
     bin_mids = (data['bin_ends'][1:] + data['bin_ends'][:-1]) / 2.
     catalog_plots.plot_obs_scatter(true_vals.T, np.exp(data['log_interim_posteriors']), bin_mids, plot_loc=os.path.join(test_dir, 'plots'))
-    
+
     prior = set_up_prior(data)
     n_bins = len(data['log_interim_prior'])
     n_ivals = 2 * n_bins
@@ -100,6 +100,6 @@ if __name__ == "__main__":
             test_info['name'] = test_name
             all_tests[test_name] = test_info
 
-    nps = mp.cpu_count()-1
+    nps = mp.cpu_count()
     pool = mp.Pool(nps)
     pool.map(just_plot, all_tests.keys())

@@ -181,7 +181,6 @@ class catalog(object):
         -----
         Does not currently support variable sigmas, only one outlier population at a time
         """
-        self.uniform_lf = discrete(np.array([self.z_min, self.z_max]), np.array([1.]))
         # this is one Gaussian for each z_spec, to be evaluated at each z_phot
         true_func = self.truth#multi_dist([self.truth, self.uniform_lf])
         mins = [true_func.min_x, -100.]
@@ -191,11 +190,14 @@ class catalog(object):
         grid_amps /= (np.sum(grid_amps) * self.dz_fine)
         assert np.isclose(np.sum(grid_amps) * self.dz_fine, 1.)
 
+        uniform_lf = discrete(np.array([self.z_min, self.z_max]), np.array([1.]))
+        uniform_lfs = [discrete(np.array([grid_means[kk] - self.dz_fine / 2., grid_means[kk] + self.dz_fine / 2.]), np.array([1.])) for kk in range(self.n_tot)]
+
         if not self.params['variable_sigmas']:
             grid_sigma = self.params['constant_sigma']# * np.identity(2)
             # grid_sigmas = self.params['constant_sigma'] * np.ones(self.n_tot)#np.ones((self.n_tot, self.n_tot, 2))
             grid_funcs = [gauss(grid_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[mvn(grid_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[[mvn(grid_means[kk][jj], grid_sigmas[kk][jj]**2) for jj in range(self.n_tot)] for kk in range(self.n_tot)]
-            grid_funcs = [multi_dist([discrete(np.array([grid_means[kk] - self.dz_fine / 2., grid_means[kk] + self.dz_fine / 2.]), np.array([1.])), grid_funcs[kk]]) for kk in range(self.n_tot)]
+            grid_funcs = [multi_dist([uniform_lfs[kk], grid_funcs[kk]]) for kk in range(self.n_tot)]
         else:
             print('variable sigmas is not yet implemented')
             return
@@ -210,11 +212,11 @@ class catalog(object):
             in_amps = np.ones(self.n_tot)#grid_amps# * (1. - self.params['outlier_fraction'])
             # out_amps = np.ones(self.n_tot)#grid_amps# * self.params['outlier_fraction']
             if self.params['catastrophic_outliers'] == 'template':
-                out_func = multi_dist([self.uniform_lf, self.outlier_lf])
-                out_amps = self.uniform_lf.evaluate(grid_means)
+                out_funcs = [multi_dist([uniform_lfs[kk], self.outlier_lf]) for kk in range(self.n_tot)]
+                out_amps = uniform_lf.evaluate(grid_means)
 
             elif self.params['catastrophic_outliers'] == 'training':
-                out_func = multi_dist([self.outlier_lf, self.uniform_lf])
+                out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
                 out_amps = self.outlier_lf.evaluate(grid_means)
 
             out_amps /= (np.sum(out_amps) * self.dz_fine)
@@ -222,7 +224,7 @@ class catalog(object):
             out_amps *= self.params['outlier_fraction']
             assert np.isclose(np.sum(in_amps) * self.dz_fine, (1. - self.params['outlier_fraction']))
             assert np.isclose(np.sum(out_amps) * self.dz_fine, self.params['outlier_fraction'])
-            grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_func], limits=(mins, maxs)) for kk in range(self.n_tot)]
+            grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_funcs[kk]], limits=(mins, maxs)) for kk in range(self.n_tot)]
                 # np.append(grid_means, [self.params['outlier_mean'], self.uniform_lf.sample_one()])
 
         # true n(z) in z_spec, uniform in z_phot

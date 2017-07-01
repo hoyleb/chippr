@@ -215,6 +215,6 @@ if __name__ == "__main__":
             test_info['name'] = test_name[:-1]
             all_tests[test_name] = test_info
 
-    nps = mp.cpu_count()-1
+    nps = mp.cpu_count()
     pool = mp.Pool(nps)
     pool.map(make_catalog, all_tests.keys())
