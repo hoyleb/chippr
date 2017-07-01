@@ -67,7 +67,7 @@ class catalog(object):
         self.n_coarse = self.params['n_bins']
         self.z_min = self.params['bin_min']
         self.z_max = self.params['bin_max']
-        self.n_fine = self.n_coarse
+        self.n_fine = 10#self.n_coarse
         self.n_tot = self.n_coarse * self.n_fine
         z_range = self.z_max - self.z_min
 
