@@ -1,4 +1,7 @@
 smooth_truth
+fiducial
 high_scatter
+template_outliers
+training_outliers
 template_prior
 training_prior

@@ -54,7 +54,7 @@ def set_up_prior(data, params):
     n_pdfs = len(log_z_posts)
 
     a = 1.# / n_bins
-    b = 30.#1. / z_difs ** 2
+    b = 20.#1. / z_difs ** 2
     c = a / n_pdfs
     prior_var = np.eye(n_bins)
     for k in range(n_bins):

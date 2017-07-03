@@ -273,8 +273,6 @@ class catalog(object):
             points = zip(self.z_fine, [self.samps[n][1]] * self.n_tot)
             lfs.append(self.prob_space.evaluate(np.array(points)))
         lfs = np.array(lfs)
-        if vb:
-            print('lf shape '+str(np.shape(lfs))+' should be n_gals * n_zs_fine')
         lfs /= np.sum(lfs, axis=-1)[:, np.newaxis] * self.dz_fine
         return lfs
 
