@@ -1,4 +1,5 @@
-n_bins 10
+n_gals 4
+n_bins 20
 bin_min 0.0
 bin_max 1.0
 variable_sigmas 0
@@ -8,4 +9,4 @@ outlier_fraction 0.2
 outlier_mean 0.25
 outlier_sigma 0.05
 n_walkers 100
-gr_threshold 1.2
+gr_threshold 1.1

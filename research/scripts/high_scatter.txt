@@ -6,4 +6,4 @@ variable_sigmas 0
 constant_sigma 0.06
 catastrophic_outliers 0
 n_walkers 100
-gr_threshold 1.2
+gr_threshold 1.1
