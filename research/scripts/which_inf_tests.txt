@@ -1,2 +1,4 @@
-template_outliers
-training_outliers
+smooth_truth
+high_scatter
+template_prior
+training_prior
