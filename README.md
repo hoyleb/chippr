@@ -14,7 +14,7 @@ You can browse the demo notebook here in this repo:
 
 ## Documentation
 
-Documentation can be found on [ReadTheDocs](http://chippr.readthedocs.io/en/master/).
+Documentation can be found on [ReadTheDocs](http://chippr.readthedocs.io/en/master/).  The draft of the paper documenting the details of the method can be found [here](https://github.com/aimalz/chippr/blob/master/research/paper/draft.pdf).
 
 ## People
 
