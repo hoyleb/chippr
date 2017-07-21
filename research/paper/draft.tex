@@ -127,12 +127,7 @@ prior}.
 
 A photo-$z$ PDF is then an \textit{interim posterior} probability distribution 
 of the redshift of a galaxy given its observed photometric data and the interim 
-prior: $p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})$.  We would like to learn about 
-$p(z | \vec{\phi})$ from a catalog of photo-$z$ interim posteriors.
-
-\subsection{Model}
-\label{sec:model}
-
+prior: $p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})$.  
 We present the two attributes of a probabilistic graphical model (PGM) for the 
 redshift distribution $n(z)$: the directed acyclic graph (DAG) and its 
 mathematical interpretation in terms of Bayesian hierarchical inference.  
@@ -151,8 +146,13 @@ their redshift parameters, we can still use them to infer something about the
 global hyperparameters by way of a higher level in the graph.
 
 \begin{figure}
-	\begin{center}
-		\includegraphics[width=0.5\textwidth]{pgm.png}
+	\begin{center}We would like to learn about $p(z | \vec{\phi})$ from a 
+catalog of photo-$z$ interim posteriors.
+		
+		\subsection{Model}
+		\label{sec:model}
+		
+		\includegraphics[width=0.5\textwidth]{fig/pgm.png}
 		\caption{This directed acyclic graph corresponds to a 
 probabilistic graphical model for a Bayesian hierarchical inference of 
 $p(\vec{\phi}|\{\vec{d}_{i}\})$.  In this graph, all random variables are shown 
