@@ -37,13 +37,13 @@ def check_sim_params(params={}):
     params: dict
         dictionary containing final key/value pairs for simulation of catalog
     """
-    print('checking sim params')
+    # print('checking sim params')
     params = check_basic_setup(params)
-    print('basic setup params ok')
+    # print('basic setup params ok')
     params = check_variable_sigmas(params)
-    print('variable sigma params ok')
+    # print('variable sigma params ok')
     params = check_catastrophic_outliers(params)
-    print('catastrophic outlier params ok')
+    # print('catastrophic outlier params ok')
     return params
 
 def check_basic_setup(params):
