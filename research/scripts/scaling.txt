@@ -1,0 +1,13 @@
+n_bins 25
+bin_min 0.
+bin_max 1.
+smooth_truth 0
+interim_prior flat
+variable_sigmas 0
+constant_sigma 0.03
+catastrophic_outliers 0
+outlier_fraction 0.
+gr_threshold 1.1
+n_accepted 4
+n_burned 3
+n_walkers 100
