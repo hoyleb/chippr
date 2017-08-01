@@ -52,6 +52,8 @@ def ingest(in_info):
         with open(in_info) as infile:
             lines = (line.split(None) for line in infile)
             in_dict = {defn[0] : defn[1:] for defn in lines}
+        in_dict['raw'] = 1
     else:
         in_dict = in_info
+        in_dict['raw'] = 0
     return in_dict

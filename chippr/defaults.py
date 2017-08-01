@@ -37,9 +37,13 @@ def check_sim_params(params={}):
     params: dict
         dictionary containing final key/value pairs for simulation of catalog
     """
+    print('checking sim params')
     params = check_basic_setup(params)
+    print('basic setup params ok')
     params = check_variable_sigmas(params)
+    print('variable sigma params ok')
     params = check_catastrophic_outliers(params)
+    print('catastrophic outlier params ok')
     return params
 
 def check_basic_setup(params):
@@ -55,22 +59,26 @@ def check_basic_setup(params):
     -------
     params: dict
         dictionary containing key/value pairs for simulation
+
+    Notes
+    -----
+    Currently, the number of galaxies is really log10 the number of galaxies.  This will one day be changed to permit arbitrary numbers of galaxies!
     """
     if 'n_gals' not in params:
         params['n_gals'] = n_gals
-    else:
+    elif params['raw'] == 1:
         params['n_gals'] = int(params['n_gals'][0])
     if 'n_bins' not in params:
         params['n_bins'] = n_bins
-    else:
+    elif params['raw'] == 1:
         params['n_bins'] = int(params['n_bins'][0])
     if 'bin_min' not in params:
         params['bin_min'] = min_x
-    else:
+    elif params['raw'] == 1:
         params['bin_min'] = float(params['bin_min'][0])
     if 'bin_max' not in params:
         params['bin_max'] = max_x
-    else:
+    elif params['raw'] == 1:
         params['bin_max'] = float(params['bin_max'][0])
     return params
 
@@ -90,12 +98,12 @@ def check_variable_sigmas(params):
     """
     if 'variable_sigmas' not in params:
         params['variable_sigmas'] = 0
-    else:
+    elif params['raw'] == 1:
         params['variable_sigmas'] = int(params['variable_sigmas'][0])
     if not params['variable_sigmas']:
         if 'constant_sigma' not in params:
             params['constant_sigma'] = constant_sigma
-        else:
+        elif params['raw'] == 1:
             params['constant_sigma'] = float(params['constant_sigma'][0])
     return params
 
@@ -116,13 +124,13 @@ def check_catastrophic_outliers(params):
     """
     if 'catastrophic_outliers' not in params:
         params['catastrophic_outliers'] = '0'
-    else:
+    elif params['raw'] == 1:
         params['catastrophic_outliers'] = str(params['catastrophic_outliers'][0])
     if 'outlier_fraction' not in params:
         params['outlier_fraction'] = 0.
-    else:
+    elif params['raw'] == 1:
         params['outlier_fraction']  = float(params['outlier_fraction'][0])
-    if params['outlier_fraction'] > 0.:
+    if params['outlier_fraction'] > 0. and params['raw'] == 1:
         params['outlier_mean'] = float(params['outlier_mean'][0])
         params['outlier_sigma'] = float(params['outlier_sigma'][0])
     else:
@@ -163,18 +171,18 @@ def check_sampler_params(params):
     """
     if 'gr_threshold' not in params:
         params['gr_threshold'] = gr_threshold
-    else:
+    elif params['raw'] == 1:
         params['gr_threshold'] = float(params['gr_threshold'][0])
     if 'n_accepted' not in params:
         params['n_accepted'] = 10 ** n_accepted
-    else:
+    elif params['raw'] == 1:
         params['n_accepted'] = 10 ** int(params['n_accepted'][0])
     if 'n_burned' not in params:
         params['n_burned'] = 10 ** n_burned
-    else:
+    elif params['raw'] == 1:
         params['n_burned'] = 10 ** int(params['n_burned'][0])
     if 'n_walkers' not in params:
         params['n_walkers'] = None
-    else:
+    elif params['raw'] == 1:
         params['n_walkers'] = int(params['n_walkers'][0])
     return params
