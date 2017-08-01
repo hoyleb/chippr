@@ -225,7 +225,7 @@ def do_inference(params):
     initial_values = prior.sample(n_ivals)
     log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
 
-    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
     nz.plot_estimators()
@@ -242,7 +242,6 @@ def one_scale(n_gals):
     print('SET PARAMS ' + str(params['name']))
 
     sim_profile = os.path.join(params['dir'], 'sim_profile.txt')
-    sys.stdout = open(sim_profile, 'w')
     pr = cProfile.Profile()
     pr.enable()
     make_catalog(params)
@@ -251,11 +250,11 @@ def one_scale(n_gals):
     sortby = 'cumtime'
     ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
     ps.print_stats()
-    sys.stdout = sys.__stdout__
+    with open(sim_profile, 'w') as profiler:
+        profiler.write(s.getvalue())
     print('MADE CATALOG ' + str(params['name']))
 
     inf_profile = os.path.join(params['dir'], 'inf_profile.txt')
-    sys.stdout = open(inf_profile, 'w')
     pr = cProfile.Profile()
     pr.enable()
     do_inference(params)
@@ -264,9 +263,8 @@ def one_scale(n_gals):
     sortby = 'cumtime'
     ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
     ps.print_stats()
-    # with open(inf_profile, 'w') as profiler:
-    #     profiler.write(str(ps.print_stats()))
-    sys.stdout = sys.__stdout__
+    with open(inf_profile, 'w') as profiler:
+        profiler.write(s.getvalue())
     print('FINISHED INFERENCE ' + str(params['name']))
 
     return
@@ -276,7 +274,7 @@ if __name__ == "__main__":
     import numpy as np
     import pickle
     import os
-    import sys
+    # import sys
     import shutil
     import cProfile
     import StringIO
@@ -288,7 +286,7 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results/scaling')
-    catalog_sizes = [2]#, 3, 4, 5]
+    catalog_sizes = [2, 3, 4, 5]
 
     start_params = set_shared_params()
     start_params['raw'] = 0
