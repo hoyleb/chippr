@@ -1,26 +1,4 @@
-def set_params(n_gals):
-    """
-    The parameters of all these cases will be the same (and vanilla), except for the number of galaxies being different
-    """
-    params = {}
-
-    params['smooth_truth'] = 0
-    params['interim_prior'] = 'flat'
-    params['n_galaxies'] = n_gals
-    params['n_bins'] = 25
-    params['bin_min'] = 0.
-    params['bin_max'] = 1.
-    params['variable_sigmas'] = 0
-    params['constant_sigma'] = 0.03
-    params['catastrophic_outliers'] = '0'
-    params['gr_threshold'] = 1.1
-    params['n_accepted'] = 10000
-    params['n_burned'] = 1000
-    params['n_walkers'] = 100
-
-    return params
-
-def make_true(given_key):
+def set_shared_params():
     """
     Function to create true redshift distribution to be shared among several
     test cases
@@ -40,103 +18,60 @@ def make_true(given_key):
     test_name is currently ignored but will soon be used to load parameters for
     making true_nz instead of hardcoded values.
     """
-    test_info = all_tests[given_key]
+    params = {}
 
-    if test_info['params']['smooth_truth'] == 1:
-        true_amps = np.array([0.150,0.822,1.837,2.815,3.909,
-                              5.116,6.065,6.477,6.834,7.304,
-                              7.068,6.771,6.587,6.089,5.165,
-                              4.729,4.228,3.664,3.078,2.604,
-                              2.130,1.683,1.348,0.977,0.703,
-                              0.521,0.339,0.283,0.187,0.141,
-                              0.104,0.081,0.055,0.043,0.034])
-        true_grid = np.linspace(test_info['bin_ends'][0], test_info['bin_ends'][-1], len(true_amps) + 1)
-        true_grid_mids = (true_grid[1:] + true_grid[:-1]) / 2.
-        f = spi.interp1d(true_grid_mids, true_amps)
-        bin_mids = (test_info['bin_ends'][1:] + test_info['bin_ends'][:-1]) / 2.
-        bin_difs = test_info['bin_ends'][1:] - test_info['bin_ends'][:-1]
-        true_amps = f(bin_mids)
-        true_means = bin_mids
-        true_sigmas = bin_difs
-    else:
-        bin_range = max(test_info['bin_ends']) - min(test_info['bin_ends'])
-        true_amps = np.array([0.20, 0.35, 0.55])
-        true_means = np.array([0.5, 0.2, 0.75]) * bin_range + min(test_info['bin_ends'])
-        true_sigmas = np.array([0.4, 0.2, 0.1]) * bin_range
+    params['smooth_truth'] = 0
+    params['interim_prior'] = 'flat'
+    params['variable_sigmas'] = 0
+    params['constant_sigma'] = 0.03
+    params['catastrophic_outliers'] = '0'
+    params['gr_threshold'] = 1.1
+    params['n_accepted'] = 10000
+    params['n_burned'] = 1000
+    params['n_walkers'] = 100
 
-    n_mix_comps = len(true_amps)
-    true_funcs = []
-    for c in range(n_mix_comps):
-        true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
-    true_nz = chippr.gmix(true_amps, true_funcs,
-            limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
+    params['n_bins'] = 25
+    params['bin_min'] = 0.
+    params['bin_max'] = 1.
+
+    bin_range = params['bin_max'] - params['bin_min']
+    true_amps = np.array([0.20, 0.35, 0.55])
+    true_means = np.array([0.5, 0.2, 0.75]) * bin_range + params['bin_min']
+    true_sigmas = np.array([0.4, 0.2, 0.1]) * bin_range
+
+    # n_mix_comps = len(true_amps)
+    # true_funcs = []
+    # for c in range(n_mix_comps):
+    #     true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
+    # true_nz = chippr.gmix(true_amps, true_funcs,
+    #         limits=(params['bin_min'], params['bin_max']))
 
     true_dict = {'amps': true_amps, 'means': true_means, 'sigmas': true_sigmas}
-    true_dict['bins'] = test_info['bin_ends']
+    params['truth'] = true_dict
 
-    # true_zs = true_nz.sample(test_info['params']['n_galaxies'])
-    # true_dict['zs'] = true_zs
-    test_info['truth'] = true_dict
+    bin_ends = np.array([params['bin_min'], params['bin_max']])
+    weights = np.array([1.])
+    # interim_prior = chippr.discrete(bin_ends, weights)
+    interim_dict = {'bin_ends': bin_ends, 'weights': weights}
+    params['interim'] = interim_dict
 
-    return(test_info)
+    params['prior_mean'] = 'interim'
+    params['no_prior'] = 0
+    params['no_data'] = 0
 
-def make_interim_prior(given_key):
+    return(params)
+
+def set_unique_params(n_gals):
     """
-    Function to make the histogram-parametrized interim prior
-
-    Parameters
-    ----------
-    given_key: string
-        name of test case for which interim prior is to be made
-
-    Returns
-    -------
-    interim_prior: chippr.discrete or chippr.gauss or chippr.gmix object
-        the discrete distribution that will be the interim prior
+    The parameters of all these cases will be the same (and vanilla), except for the number of galaxies being different
     """
-    test_info = all_tests[given_key]
+    params = start_params
+    params['n_galaxies'] = n_gals
+    params['name'] = str(n_gals)
 
-    if test_info['params']['interim_prior'] == 'template':
-        bin_range = max(test_info['bin_ends']) - min(test_info['bin_ends'])
-        int_amps = np.array([0.35, 0.5, 0.15])
-        int_means = np.array([0.1, 0.5, 0.9]) * bin_range + min(test_info['bin_ends'])
-        int_sigmas = np.array([0.1, 0.1, 0.1]) * bin_range
-        n_mix_comps = len(int_amps)
-        int_funcs = []
-        for c in range(n_mix_comps):
-            int_funcs.append(chippr.gauss(int_means[c], int_sigmas[c]**2))
-        interim_prior = chippr.gmix(int_amps, int_funcs,
-            limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
-    elif test_info['params']['interim_prior'] == 'training':
-        int_amps = np.array([0.150,0.822,1.837,2.815,3.909,
-                              5.116,6.065,6.477,6.834,7.304,
-                              7.068,6.771,6.587,6.089,5.165,
-                              4.729,4.228,3.664,3.078,2.604,
-                              2.130,1.683,1.348,0.977,0.703,
-                              0.521,0.339,0.283,0.187,0.141,
-                              0.104,0.081,0.055,0.043,0.034])
-        int_grid = np.linspace(test_info['bin_ends'][0], test_info['bin_ends'][-1], len(int_amps) + 1)
-        int_grid_mids = (int_grid[1:] + int_grid[:-1]) / 2.
-        f = spi.interp1d(int_grid_mids, int_amps)
-        bin_mids = (test_info['bin_ends'][1:] + test_info['bin_ends'][:-1]) / 2.
-        bin_difs = test_info['bin_ends'][1:] - test_info['bin_ends'][:-1]
-        int_amps = f(bin_mids)
-        int_means =bin_mids
-        int_sigmas = bin_difs
-        n_mix_comps = len(int_amps)
-        int_funcs = []
-        for c in range(n_mix_comps):
-            int_funcs.append(chippr.gauss(int_means[c], int_sigmas[c]**2))
-        interim_prior = chippr.gmix(int_amps, int_funcs,
-                limits=(min(test_info['bin_ends']), max(test_info['bin_ends'])))
-    else:
-        bin_ends = np.array([test_info['params']['bin_min'], test_info['params']['bin_max']])
-        weights = np.array([1.])
-        interim_prior = chippr.discrete(bin_ends, weights)
+    return params
 
-    return(interim_prior)
-
-def make_catalog(given_key):
+def make_catalog(params):
     """
     Function to create a catalog once true redshifts exist
 
@@ -145,39 +80,36 @@ def make_catalog(given_key):
     given_key: string
         name of test case to be run
     """
-    test_info = all_tests[given_key]
-    test_name = test_info['name']
+    test_info = {}
+    test_info['params'] = params
+    test_info['name'] = params['name']
 
-    test_dir = os.path.join(result_dir, test_name)
+    test_dir = os.path.join(result_dir, test_info['name'])
     test_info['dir'] = test_dir
     if os.path.exists(test_dir):
         shutil.rmtree(test_dir)
     os.makedirs(test_dir)
 
-    param_file_name = test_name + '.txt'
-    params = chippr.utils.ingest(param_file_name)
-    params = defaults.check_sim_params(params)
-    params = check_extra_params(params)
-    test_info['params'] = params
-
     test_info['bin_ends'] = np.linspace(test_info['params']['bin_min'],
                                 test_info['params']['bin_max'],
                                 test_info['params']['n_bins'] + 1)
 
-    test_info = make_true(given_key)
-    true_amps = test_info['truth']['amps']
-    true_means = test_info['truth']['means']
-    true_sigmas =  test_info['truth']['sigmas']
+    true_amps = test_info['params']['truth']['amps']
+    true_means = test_info['params']['truth']['means']
+    true_sigmas =  test_info['params']['truth']['sigmas']
     n_mix_comps = len(true_amps)
     true_funcs = []
     for c in range(n_mix_comps):
         true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
     true_nz = chippr.gmix(true_amps, true_funcs,
             limits=(test_info['params']['bin_min'], test_info['params']['bin_max']))
+    test_info['truth'] = test_info['params']['truth']
 
-    interim_prior = make_interim_prior(given_key)
+    bin_ends = np.array([test_info['params']['bin_min'], test_info['params']['bin_max']])
+    weights = np.array([1.])
+    interim_prior = chippr.discrete(bin_ends, weights)
 
-    posteriors = chippr.catalog(param_file_name, loc=test_dir)
+    posteriors = chippr.catalog(params, loc=test_dir)
     output = posteriors.create(true_nz, interim_prior, N=test_info['params']['n_gals'])
     # data = np.exp(output['log_interim_posteriors'])
     posteriors.write()
@@ -185,33 +117,7 @@ def make_catalog(given_key):
     with open(os.path.join(data_dir, 'true_params.p'), 'w') as true_file:
         pickle.dump(test_info['truth'], true_file)
 
-def check_prob_params(params):
-    """
-    Sets parameter values pertaining to components of probability
-
-    Parameters
-    ----------
-    params: dict
-        dictionary containing key/value pairs for probability
-
-    Returns
-    -------
-    params: dict
-        dictionary containing key/value pairs for probability
-    """
-    if 'prior_mean' not in params:
-        params['prior_mean'] = 'interim'
-    else:
-        params['prior_mean'] = params['prior_mean'][0]
-    if 'no_prior' not in params:
-        params['no_prior'] = 0
-    else:
-        params['no_prior'] = int(params['no_prior'][0])
-    if 'no_data' not in params:
-        params['no_data'] = 0
-    else:
-        params['no_data'] = int(params['no_data'][0])
-    return params
+    return
 
 def set_up_prior(data, params):
     """
@@ -259,7 +165,7 @@ def set_up_prior(data, params):
 
     return (prior, prior_var)
 
-def do_inference(given_key):
+def do_inference(params):
     """
     Function to do inference from a catalog of photo-z interim posteriors
 
@@ -268,19 +174,11 @@ def do_inference(given_key):
     given_key: string
         name of test case to be run
     """
-    test_info = all_tests[given_key]
-    test_name = test_info['name']
-
-    test_name = test_name[:-1]
+    test_name = params['name']
     param_file_name = test_name + '.txt'
 
-    params = chippr.utils.ingest(param_file_name)
-    params = check_prob_params(params)
-    params = defaults.check_inf_params(params)
-    print(params)
-
     test_dir = os.path.join(result_dir, test_name)
-    simulated_posteriors = catalog(params=param_file_name, loc=test_dir)
+    simulated_posteriors = catalog(params=params, loc=test_dir)
     saved_location = 'data'
     saved_type = '.txt'
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
@@ -315,28 +213,25 @@ def do_inference(given_key):
     nz.plot_estimators()
     nz.write('nz.p')
 
-    # n_bins = len(nz_mmle)
-    if params['n_walkers'] is not None:
-        n_ivals = params['n_walkers']
-    else:
-        n_ivals = 10 * n_bins
+    n_ivals = params['n_walkers']
     initial_values = prior.sample(n_ivals)
     log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
-    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+
+    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
-
     nz.plot_estimators()
     nz.write('nz.p')
+
+    return
 
 def one_scale(n_gals):
     """
     Combines the catalog generation and inference steps for parallelization to establish scaling behavior
     """
-
-    set_params(n_gals)
-    make_catalog(n_gals)
-    do_inference(n_gals)
+    params = set_unique_params(n_gals)
+    make_catalog(params)
+    do_inference(params)
     print('FINISHED ' + str(n_gals))
     return
 
@@ -352,13 +247,8 @@ if __name__ == "__main__":
 
     result_dir = os.path.join('..', 'results/scaling')
     catalog_sizes = [100, 1000, 10000, 100000]
-    test_name = 'scaling'
 
-    # all_tests = {}
-    # for n_gals in catalog_sizes:
-    #     test_info = {}
-    #     test_info['size'] = n_gals
-    #     all_tests[str(n_gals)] = test_info
+    start_params = set_shared_params()
 
     nps = mp.cpu_count()
     pool = mp.Pool(nps)
