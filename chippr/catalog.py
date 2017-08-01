@@ -38,10 +38,8 @@ class catalog(object):
         else:
             self.params = params
             self.params['raw'] = 0
-        print('ingested params')
 
         self.params = d.check_sim_params(self.params)
-        print('params okay')
 
         if vb:
             print self.params
