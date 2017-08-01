@@ -217,7 +217,7 @@ def do_inference(params):
     initial_values = prior.sample(n_ivals)
     log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
 
-    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
     nz.plot_estimators()
@@ -231,6 +231,7 @@ def one_scale(n_gals):
     """
     params = set_unique_params(n_gals)
     make_catalog(params)
+    print('STARTED ' + str(n_gals))
     do_inference(params)
     print('FINISHED ' + str(n_gals))
     return
