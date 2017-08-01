@@ -127,12 +127,7 @@ prior}.
 
 A photo-$z$ PDF is then an \textit{interim posterior} probability distribution 
 of the redshift of a galaxy given its observed photometric data and the interim 
-prior: $p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})$.  We would like to learn about 
-$p(z | \vec{\phi})$ from a catalog of photo-$z$ interim posteriors.
-
-\subsection{Model}
-\label{sec:model}
-
+prior: $p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})$.  
 We present the two attributes of a probabilistic graphical model (PGM) for the 
 redshift distribution $n(z)$: the directed acyclic graph (DAG) and its 
 mathematical interpretation in terms of Bayesian hierarchical inference.  
@@ -151,8 +146,13 @@ their redshift parameters, we can still use them to infer something about the
 global hyperparameters by way of a higher level in the graph.
 
 \begin{figure}
-	\begin{center}
-		\includegraphics[width=0.5\textwidth]{pgm.png}
+	\begin{center}We would like to learn about $p(z | \vec{\phi})$ from a 
+catalog of photo-$z$ interim posteriors.
+		
+		\subsection{Model}
+		\label{sec:model}
+		
+		\includegraphics[width=0.5\textwidth]{fig/pgm.png}
 		\caption{This directed acyclic graph corresponds to a 
 probabilistic graphical model for a Bayesian hierarchical inference of 
 $p(\vec{\phi}|\{\vec{d}_{i}\})$.  In this graph, all random variables are shown 
@@ -723,7 +723,65 @@ obtaining estimators of $n(z)$.  \chippr is freely available to the community
 for incorporation into evolving data analysis pipelines.  
 
 
-\appendix{}
+\appendix{Catalog Production}
+\label{app:catalog}
+
+Sec. \ref{sec:mockdata} outlines one way to make mock data, but it's not 
+necessarily a logically consistent way to do it, a problem identified in trying 
+to use it for the test cases in Sec. \ref{sec:likelihoods}.  If the goal is to 
+emulate the traditional $z_{spec}$ vs. $z_{phot}$ scatterplots, we need to 
+start from probability distributions in that space.  This means there are two 
+parameters $z_{spec}$ and $z_{phot}$ drawn from a two-dimensional distribution 
+$p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi})$, where $\textul{\sigma}$ 
+contains parameters concerning the relationship between $z_{spec}$ and 
+$z_{phot}$, and $\vec{\phi}$ contains hyperparameters concerning $n(z)$.  We 
+know from basic probability that
+\begin{align}
+\label{eq:trivial}
+p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}) =& p(z_{phot} | z_{spec}, 
+\textul{\sigma}, \vec{\phi})\ p(z_{sped} | \textul{\sigma}, \vec{\phi}).
+\end{align}
+Because $z_{spec}$ depends only on $\vec{\phi}$ and $z_{phot}$ is independent 
+of $\vec{\phi}$, this becomes
+\begin{align}
+\label{eq:simpler}
+p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}) =& p(z_{phot} | z_{spec}, 
+\textul{\sigma})\ p(z_{spec} | \vec{\phi}).
+\end{align}
+We know how to make reasonable choices for both terms on the righthand side of 
+Eq. \ref{eq:simpler}.
+
+In the $z_{spec}$ vs. $z_{phot}$ scatterplot, $p(z_{phot} | z_{spec}, 
+\textul{\sigma}, \vec{\phi})$ would be represented by vertical slices, but we 
+are interested in the horizontal slices that represent $p(z_{spec} | z_{phot}, 
+\textul{\sigma}, \vec{\phi})$.  Now we must distinguish the true 
+hyperparameters $\vec{\phi}_{true}$ from the interim hyperparameters 
+$\vec{\phi}_{int}$.  If the horizontal slices carry information about 
+$\vec{\phi}$, how can we get a catalog of $p(z_{spec} | z_{phot}, 
+\textul{\sigma}, \vec{\phi}_{int})$ that's consistent with $p(z_{spec} | 
+z_{phot}, \textul{\sigma}, \vec{\phi}_{true})$?  Somehow that information needs 
+to be propagated through in order to recover it.
+
+We achieve this goal by dividing out the true $n(z)$ and multiplying by the 
+interim $n(z)$ as in
+\begin{align}
+\label{eq:transformation}
+p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi}_{int}) =& p(z_{spec} | 
+z_{phot}, \textul{\sigma}, \vec{\phi}_{true})\ \frac{p(z_{spec} | 
+\vec{\phi}_{int})}{p(z_{spec} | \vec{\phi}_{true})},
+\end{align}
+since $p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi})$ is separable and 
+the term $p(z_{spec} | z_{phot}, \textul{\sigma})$ changes independently of the 
+$p(z_{spec} | \vec{\phi})$ term.  The information about $\vec{\phi}_{true}$ is 
+retained by the elements of the catalog: only $(z_{spec}, z_{phot})$ pairs 
+drawn from the true distribution will be represented in the catalog!
+
+It appears as if this is the only fully self-consistent way to ensure that a 
+draw from the posterior distribution $p(z_{spec} | z_{phot}, \textul{\sigma}, 
+\vec{\phi})$ does in fact follow that distribution.  In the cases with fiducial 
+posteriors $p(z_{spec} | z_{phot}, \sigma, \vec{\phi})$, the method of Sec. 
+\ref{sec:mockdata} was equivalent to this, but Sec. \ref{sec:likelihoods} 
+requires a more sophisticated approach.
 
 \begin{acknowledgements}
 AIM thanks Mohammadjavad Vakili for insightful input on statistics, Geoffrey 

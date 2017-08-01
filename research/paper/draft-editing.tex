@@ -66,18 +66,18 @@ Before jumping into the details of the model, it is crucial to settle on an inte
 
 In addition to the data $\vec{d}_{i}$, the photo-$z$ PDF also contains information imparted by assumptions that went into the process by which the photo-$z$ was made.  Those assumptions are only relevant insomuch as they impose a preference on the redshift distribution. Thus, they can be reduced to a sort of prior on the distribution of redshifts, which can be parametrized under the chosen functional form by parameters $\vec{\phi}^{*}$.  The redshift distribution $p(z | \vec{\phi}^{*})$ associated with the parameters in $\vec{\phi}^{*}$ shall be called the interim prior because in many cases it was our best guess as to the true redshift distribution before observing any data.  For example, in template-based photo-$z$ PDF methods, the interim prior is a linear combination of the redshift distributions of the classes of templates based on previous observations.  (In training-based photo-$z$ PDF methods, the interim prior is related to the redshift distribution of the training set and thus may not be shared among all galaxies for which photo-$z$ PDFs are produced; however, in this work, we will assume that it is shared among all galaxies in a survey.)  Because the choice of parameters $\vec{\phi}^{*}$ is not causally connected to the data or the true redshift distribution but nonetheless contributes to the photo-$z$ PDF, we call it an \textit{interim prior}.  
 
-A photo-$z$ PDF is then an \textit{interim posterior} probability distribution of the redshift of a galaxy given its observed photometric data and the interim prior: $p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})$.  We would like to learn about $p(z | \vec{\phi})$ from a catalog of photo-$z$ interim posteriors.
-
-\subsection{Model}
-\label{sec:model}
-
+A photo-$z$ PDF is then an \textit{interim posterior} probability distribution of the redshift of a galaxy given its observed photometric data and the interim prior: $p(z_{i} | \vec{d}_{i}, \vec{\phi}^{*})$.  
 We present the two attributes of a probabilistic graphical model (PGM) for the redshift distribution $n(z)$: the directed acyclic graph (DAG) and its mathematical interpretation in terms of Bayesian hierarchical inference.  
 
 The fundamental assumption underlying the concept of photo-$z$ estimation is that each galaxy $i$ has some observed photometric data $\vec{d}_{i}$ (fluxes, magnitudes, or colors) that is drawn from a function of its redshift $z_{i}$, which is a parameter in this model.  This function constitutes a forward model for the observations.  The redshifts $\{z_{i}\}$ for all galaxies in a survey are random draws from the redshift distribution, whose parameters  $\vec{\phi}$ under a chosen functional form are called \textit{hyperparameters} because they are shared among all $N$ galaxies in the survey.  Fig. \ref{fig:pgm} illustrates these relationships.  PGMs of this structure are \textit{hierarchical} in that, though the data are only directly influenced by their redshift parameters, we can still use them to infer something about the global hyperparameters by way of a higher level in the graph.
 
 \begin{figure}
-	\begin{center}
-		\includegraphics[width=0.5\textwidth]{pgm.png}
+	\begin{center}We would like to learn about $p(z | \vec{\phi})$ from a catalog of photo-$z$ interim posteriors.
+		
+		\subsection{Model}
+		\label{sec:model}
+		
+		\includegraphics[width=0.5\textwidth]{fig/pgm.png}
 		\caption{This directed acyclic graph corresponds to a probabilistic graphical model for a Bayesian hierarchical inference of $p(\vec{\phi}|\{\vec{d}_{i}\})$.  In this graph, all random variables are shown in circles, with observed random variables shown in shaded circles.  Relationships between variables are indicated by arrows from parameters to the variables distributed according to functions of them.  The box indicates that there are a number of copies of the relationships between boxed parameters, each independent of all others.  The hyperparameters comprising $\vec{\phi}$, which define $n(z)$, are at the top.  Independently drawn from a function of the hyperparameters $\vec{\phi}$ are galaxy redshifts $\{z_{i}\}$ below.  The observed galaxy photometry $\{\vec{d}_{i}\}$, shown in shaded circles, is determined by the redshifts above.}
 	\label{fig:pgm}
 	\end{center}
@@ -539,8 +539,32 @@ In conclusion, we discourage the community from continuing to use the stacked es
 %\section{Discussion}
 %\label{sec:discussion}
 
-\appendix{}
+\appendix{Catalog Production}
+\label{app:catalog}
 %showing stacking is always too broad
+
+Sec. \ref{sec:mockdata} outlines one way to make mock data, but it's not necessarily a logically consistent way to do it, a problem identified in trying to use it for the test cases in Sec. \ref{sec:likelihoods}.  If the goal is to emulate the traditional $z_{spec}$ vs. $z_{phot}$ scatterplots, we need to start from probability distributions in that space.  This means there are two parameters $z_{spec}$ and $z_{phot}$ drawn from a two-dimensional distribution $p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi})$, where $\textul{\sigma}$ contains parameters concerning the relationship between $z_{spec}$ and $z_{phot}$, and $\vec{\phi}$ contains hyperparameters concerning $n(z)$.  We know from basic probability that
+\begin{align}
+\label{eq:trivial}
+p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}) =& p(z_{phot} | z_{spec}, \textul{\sigma}, \vec{\phi})\ p(z_{sped} | \textul{\sigma}, \vec{\phi}).
+\end{align}
+Because $z_{spec}$ depends only on $\vec{\phi}$ and $z_{phot}$ is independent of $\vec{\phi}$, this becomes
+\begin{align}
+\label{eq:simpler}
+p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}) =& p(z_{phot} | z_{spec}, \textul{\sigma})\ p(z_{spec} | \vec{\phi}).
+\end{align}
+We know how to make reasonable choices for both terms on the righthand side of Eq. \ref{eq:simpler}.
+
+In the $z_{spec}$ vs. $z_{phot}$ scatterplot, $p(z_{phot} | z_{spec}, \textul{\sigma}, \vec{\phi})$ would be represented by vertical slices, but we are interested in the horizontal slices that represent $p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi})$.  Now we must distinguish the true hyperparameters $\vec{\phi}_{true}$ from the interim hyperparameters $\vec{\phi}_{int}$.  If the horizontal slices carry information about $\vec{\phi}$, how can we get a catalog of $p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi}_{int})$ that's consistent with $p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi}_{true})$?  Somehow that information needs to be propagated through in order to recover it.
+
+We achieve this goal by dividing out the true $n(z)$ and multiplying by the interim $n(z)$ as in
+\begin{align}
+\label{eq:transformation}
+p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi}_{int}) =& p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi}_{true})\ \frac{p(z_{spec} | \vec{\phi}_{int})}{p(z_{spec} | \vec{\phi}_{true})},
+\end{align}
+since $p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi})$ is separable and the term $p(z_{spec} | z_{phot}, \textul{\sigma})$ changes independently of the $p(z_{spec} | \vec{\phi})$ term.  The information about $\vec{\phi}_{true}$ is retained by the elements of the catalog: only $(z_{spec}, z_{phot})$ pairs drawn from the true distribution will be represented in the catalog!
+
+It appears as if this is the only fully self-consistent way to ensure that a draw from the posterior distribution $p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi})$ does in fact follow that distribution.  In the cases with fiducial posteriors $p(z_{spec} | z_{phot}, \sigma, \vec{\phi})$, the method of Sec. \ref{sec:mockdata} was equivalent to this, but Sec. \ref{sec:likelihoods} requires a more sophisticated approach.
 
 \begin{acknowledgements}
 AIM thanks Mohammadjavad Vakili for insightful input on statistics, Geoffrey Ryan for assistance in debugging, and Boris Leistedt for helpful comments provided in the preparation of this paper.

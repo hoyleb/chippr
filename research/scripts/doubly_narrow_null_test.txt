@@ -1,8 +1,0 @@
-n_bins 10
-bin_min 0.0
-bin_max 1.0
-variable_sigmas 0
-constant_sigma 0.015
-outlier_fraction 0.
-n_walkers 100
-gr_threshold 1.1

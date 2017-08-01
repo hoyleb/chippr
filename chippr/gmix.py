@@ -7,32 +7,51 @@ from chippr import utils as u
 
 class gmix(object):
 
-    def __init__(self, amps, means, sigmas, limits=(d.min_x, d.max_x)):
+    def __init__(self, amps, funcs, limits=(d.min_x, d.max_x)):
         """
-        Object to define a Gaussian mixture probability distribution
+        Object to define a mixture probability distribution
 
         Parameters
         ----------
         amps: ndarray, float
             array with one relative amplitude per component
-        means: ndarray, float
-            array with one mean per component
-        sigmas: ndarray, float
-            array with one standard deviation per component
+        funcs: list, chippr.gauss or chippr.discrete objects
+            list of components
         limits: tuple or list or numpy.ndarray, float, optional
             minimum and maximum sample values to return
         """
 
         self.amps = amps/np.sum(amps)
         self.cumamps = np.cumsum(self.amps)
-        self.means = means
-        self.sigmas = sigmas
         self.n_comps = len(self.amps)
 
-        self.funcs = [chippr.gauss(self.means[c], self.sigmas[c]**2) for c in range(self.n_comps)]
+        self.funcs = funcs#[chippr.gauss(self.means[c], self.sigmas[c]**2) for c in range(self.n_comps)]
+        # for c in range(self.n_comps):
+        #     print('gmix '+str((c, type(self.funcs[c]))))
 
+        self.dims = np.shape(np.array(limits).T)[0]
         self.min_x = limits[0]
         self.max_x = limits[1]
+
+    def evaluate_one(self, x):
+        """
+        Function to evaluate Gaussian mixture
+        once
+
+        Parameters
+        ----------
+        x: float
+            value at which to evaluate Gaussian mixture
+
+        Returns
+        -------
+        p: float
+            probability associated with x
+        """
+        p = 0.
+        for c in range(self.n_comps):
+            p += self.amps[c] * self.funcs[c].evaluate_one(x)
+        return p
 
     def evaluate(self, xs):
         """
@@ -48,7 +67,7 @@ class gmix(object):
         ps: ndarray, float
             values of Gaussian mixture probability distribution at xs
         """
-        ps = np.zeros_like(xs)
+        ps = np.zeros(len(xs))
         for c in range(self.n_comps):
             ps += self.amps[c] * self.funcs[c].evaluate(xs)
         return ps
@@ -63,8 +82,12 @@ class gmix(object):
             a single point sampled from the Gaussian mixture probability distribution
         """
 
-        x = -1.
-        while x < self.min_x or x > self.max_x:
+        x = -1. * np.ones(self.dims)
+        #don't do this every time!
+        min_x = self.min_x * np.ones(self.dims)
+        max_x = self.max_x * np.ones(self.dims)
+
+        while np.any(np.less(x, min_x)) or np.any(np.greater(x, max_x)):
             r = np.random.uniform(0., self.cumamps[-1])
             c = 0
             for k in range(1, self.n_comps):

@@ -9,6 +9,7 @@ from discrete import *
 from gauss import *
 from gmix import *
 from mvn import *
+from multi_dist import *
 from catalog import *
 
 from log_z_dens import *
