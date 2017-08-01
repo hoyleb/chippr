@@ -18,21 +18,27 @@ def set_shared_params():
     test_name is currently ignored but will soon be used to load parameters for
     making true_nz instead of hardcoded values.
     """
-    params = {}
-
-    params['smooth_truth'] = 0
-    params['interim_prior'] = 'flat'
-    params['variable_sigmas'] = 0
-    params['constant_sigma'] = 0.03
-    params['catastrophic_outliers'] = '0'
-    params['gr_threshold'] = 1.1
-    params['n_accepted'] = 10000
-    params['n_burned'] = 1000
-    params['n_walkers'] = 100
-
-    params['n_bins'] = 25
-    params['bin_min'] = 0.
-    params['bin_max'] = 1.
+    # params = {}
+    #
+    # params['n_bins'] = 25
+    # params['bin_min'] = 0.
+    # params['bin_max'] = 1.
+    #
+    # params['smooth_truth'] = 0
+    # params['interim_prior'] = 'flat'
+    # params['variable_sigmas'] = 0
+    # params['constant_sigma'] = 0.03
+    # params['catastrophic_outliers'] = '0'
+    # params['outlier_fraction'] = 0.
+    #
+    # params['gr_threshold'] = 1.1
+    # params['n_accepted'] = 10000
+    # params['n_burned'] = 1000
+    # params['n_walkers'] = 100
+    paramfile = 'scaling.txt'
+    params = chippr.utils.ingest(paramfile)
+    params = chippr.defaults.check_sim_params(params)
+    params = chippr.defaults.check_inf_params(params)
 
     bin_range = params['bin_max'] - params['bin_min']
     true_amps = np.array([0.20, 0.35, 0.55])
@@ -66,8 +72,14 @@ def set_unique_params(n_gals):
     The parameters of all these cases will be the same (and vanilla), except for the number of galaxies being different
     """
     params = start_params
-    params['n_galaxies'] = n_gals
-    params['name'] = str(n_gals)
+    params['n_gals'] = n_gals
+    params['name'] = str(10**n_gals)
+
+    test_dir = os.path.join(result_dir, params['name'])
+    params['dir'] = test_dir
+    if os.path.exists(test_dir):
+        shutil.rmtree(test_dir)
+    os.makedirs(test_dir)
 
     return params
 
@@ -83,12 +95,7 @@ def make_catalog(params):
     test_info = {}
     test_info['params'] = params
     test_info['name'] = params['name']
-
-    test_dir = os.path.join(result_dir, test_info['name'])
-    test_info['dir'] = test_dir
-    if os.path.exists(test_dir):
-        shutil.rmtree(test_dir)
-    os.makedirs(test_dir)
+    test_info['dir'] = params['dir']
 
     test_info['bin_ends'] = np.linspace(test_info['params']['bin_min'],
                                 test_info['params']['bin_max'],
@@ -109,9 +116,10 @@ def make_catalog(params):
     weights = np.array([1.])
     interim_prior = chippr.discrete(bin_ends, weights)
 
-    posteriors = chippr.catalog(params, loc=test_dir)
+    posteriors = chippr.catalog(params=params, loc=test_info['dir'])
     output = posteriors.create(true_nz, interim_prior, N=test_info['params']['n_gals'])
     # data = np.exp(output['log_interim_posteriors'])
+
     posteriors.write()
     data_dir = posteriors.data_dir
     with open(os.path.join(data_dir, 'true_params.p'), 'w') as true_file:
@@ -229,11 +237,34 @@ def one_scale(n_gals):
     """
     Combines the catalog generation and inference steps for parallelization to establish scaling behavior
     """
-    params = set_unique_params(n_gals)
-    make_catalog(params)
     print('STARTED ' + str(n_gals))
+    params = set_unique_params(n_gals)
+    print('SET PARAMS ' + str(params['name']))
+
+    sim_profile = os.path.join(params['dir'], 'sim_profile.txt')
+    pr = cProfile.Profile()
+    pr.enable()
+    make_catalog(params)
+    pr.disable()
+    s = StringIO.StringIO()
+    sortby = 'cumtime'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    with open(sim_profile, 'w') as profiler:
+        profiler.write(ps.print_stats())
+    print('MADE CATALOG ' + str(params['name']))
+
+    inf_profile = os.path.join(params['dir'], 'inf_profile.txt')
+    pr = cProfile.Profile()
+    pr.enable()
     do_inference(params)
-    print('FINISHED ' + str(n_gals))
+    pr.disable()
+    s = StringIO.StringIO()
+    sortby = 'cumtime'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    with open(inf_profile, 'w') as profiler:
+        profiler.write(ps.print_stats())
+    print('FINISHED INFERENCE ' + str(params['name']))
+
     return
 
 if __name__ == "__main__":
@@ -241,15 +272,21 @@ if __name__ == "__main__":
     import numpy as np
     import pickle
     import os
+    import shutil
+    import cProfile
+    import StringIO
+    import pstats
+    import psutil
     import multiprocessing as mp
 
     import chippr
     from chippr import *
 
     result_dir = os.path.join('..', 'results/scaling')
-    catalog_sizes = [100, 1000, 10000, 100000]
+    catalog_sizes = [2]#, 3, 4, 5]
 
     start_params = set_shared_params()
+    start_params['raw'] = 0
 
     nps = mp.cpu_count()
     pool = mp.Pool(nps)
