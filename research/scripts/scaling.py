@@ -225,7 +225,7 @@ def do_inference(params):
     initial_values = prior.sample(n_ivals)
     log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
 
-    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
     nz.plot_estimators()
@@ -283,7 +283,7 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results/scaling')
-    catalog_sizes = [2]#, 3, 4, 5]
+    catalog_sizes = [2, 3, 4, 5]
 
     start_params = set_shared_params()
     start_params['raw'] = 0
