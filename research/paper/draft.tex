@@ -1,4 +1,4 @@
-\documentclass[iop]{emulateapj}
+\documentclass[12pt, onecolumn]{emulateapj}
 
 \usepackage{tikz}
 \usepackage{natbib}
@@ -14,7 +14,7 @@
 
 \newcommand{\myemail}{aimalz@nyu.edu}
 \newcommand{\textul}{\underline}
-\newcommand{\chippr}{\texttt{CHIPPR} }
+\newcommand{\chippr}{\texttt{chippr}}
 
 \shorttitle{How to obtain the redshift distribution from probabilistic redshift 
 estimates}
@@ -38,7 +38,8 @@ Avenue, 7th floor, New York, NY 10010, USA}
 7th floor, New York, NY 10003, USA}
 \altaffiltext{4}{Max-Planck-Institut f\"ur Astronomie, K\"onigstuhl 17, D-69117 
 Heidelberg, Germany}
-\altaffiltext{5}{[SLAC]}
+\altaffiltext{5}{SLAC National Accelerator Laboratory, Menlo Park, CA 94025, 
+USA}
 
 \begin{abstract}
 The redshift distribution $n(z)$ is a crucial ingredient for weak lensing 
@@ -53,11 +54,11 @@ approach to estimating the posterior distribution over $n(z)$ from a survey of
 galaxy photo-$z$ PDFs based upon a probabilistic graphical model of 
 hierarchical inference.  We present the Cosmological Hierarchical Inference 
 with Probabilistic Photometric Redshifts (\chippr) code implementing this 
-technique, as well as its validation on mock data and testing on the 
-\texttt{Buzzard} simulations.  \chippr yields a more accurate characterization 
-of $n(z)$ containing information beyond the best-fit estimator produced by 
-traditional procedures.  The publicly available code is easily extensible to 
-other one-point statistics that depend on redshift.
+technique, as well as its validation on mock data and testing on realistic mock 
+data.  \chippr\ yields a more accurate characterization of $n(z)$ containing 
+information beyond the best-fit estimator produced by traditional procedures.  
+The publicly available code is easily extensible to other one-point statistics 
+that depend on redshift.
 
 \end{abstract}
 
@@ -68,18 +69,21 @@ data analysis --- methods: statistical --- techniques: photometric}
 \section{Introduction}
 \label{sec:introduction}
 
-After a brief literature review addressing how photo-$z$ PDFs are currently 
-used in cosmology, this paper aims to answer the following questions:
+\textbf{Obviously I need to write the lit. review!}
+
+This paper aims to answer the following questions:
 
 \begin{itemize}
 	\item Why should we question existing methods?
 	\item How can we improve the effectiveness of using photo-$z$ PDFs in 
 inference?
-	\item How does the result of \chippr compare to established estimators 
+	\item How does the result of \chippr\ compare to established estimators 
 in terms of the accuracy of $n(z)$?
 	\item How significant is the effect of the discrepancy between $n(z)$ 
 estimators on cosmological constraints?
 \end{itemize}
+
+
 
 \section{Method}
 \label{sec:method}
@@ -325,26 +329,26 @@ $\hat{z}^{mode}_{i}$ of the original photo-$z$ interim posterior.
 \subsection{Implementation}
 \label{sec:implementation}
 
-The publicly available \chippr code implements the probabilistic graphical 
+The publicly available \chippr\ code implements the probabilistic graphical 
 model presented in Sec. \ref{sec:model}.  
 
 In addition to the choices and assumptions underlying the probabilistic 
-graphical model, the implementation of \chippr makes choices and assumptions of 
-its own.
+graphical model, the implementation of \chippr\ makes choices and assumptions 
+of its own.
 
 \begin{enumerate}
-	\item \chippr is only applicable if the redshift interim posteriors and 
-interim prior are accurate.
-	\item \chippr currently only accepts photo-$z$ PDFs and produces $n(z)$ 
-samples of a single format, that of the piecewise constant parametrization, 
-also referred to as a binned histogram parametrization and a sum of top hat 
-functions.
+	\item \chippr\ is only applicable if the redshift interim posteriors 
+and interim prior are accurate.
+	\item \chippr\ currently only accepts photo-$z$ PDFs and produces 
+$n(z)$ samples of a single format, that of the piecewise constant 
+parametrization, also referred to as a binned histogram parametrization and a 
+sum of top hat functions.
 \end{enumerate}
 
 \section{Validation on Simple Mock Data}
 \label{sec:validation}
 
-We demonstrate the superiority of \chippr over alternative approaches in a 
+We demonstrate the superiority of \chippr\ over alternative approaches in a 
 number of compelling test cases on mock data.  Each experiment is characterized 
 by a single change to a fiducial case in order to isolate the influence of 
 systematic effects known to be relevant to photo-$z$ estimation and propagation 
@@ -360,30 +364,86 @@ consistent with one another, indicating that their systematics are not
 well-understood.  Because the mock data is independent of any choice of 
 photo-$z$ PDF production method, we not only ensure that our photo-$z$ interim 
 priors are perfectly understood but also deter readers from assuming that 
-\chippr has any preference over the method by which photo-$z$ interim 
+\chippr\ has any preference over the method by which photo-$z$ interim 
 posteriors are derived from photometric data.
 
 \subsubsection{Mock Data}
 \label{sec:mockdata}
+
+\textbf{This needs reorganization and clarification.}
 
 The mock data used here are produced by the following steps.
 
 \begin{enumerate}
 	\item \label{itm:true} Choose a true $n(z)$ that is a continuous 
 function with known parameters $\vec{\phi}'$.
-	\item \label{itm:sample} Sample the true $n(z)$ to create a catalog of 
-$N$ true redshifts $z'_{i}$.
-	\item \label{itm:scatter} Choose a true intrinsic scatter parameter 
-$\sigma$, and sample Gaussians $p(z''_{i} | z'_{i}, \sigma) = 
-\mathcal{N}(z'_{i}, \sigma)$ to get "observed" redshifts $z'_{i}$ defining 
-Gaussian likelihoods $p(\vec{d}_{i} | z''_{i}, \sigma) = \mathcal{N}(z''_{i}, 
-\sigma)$.
-	\item \label{itm:interim} Choose a parametrization and the parameters 
-$\vec{\phi}^{*}$ of the interim prior $p(z_{i} | \vec{\phi}^{*})$.
-	\item \label{itm:posterior} Create interim posteriors $\log[p(z_{i} | 
-\vec{d}_{i}, \vec{\phi}^{*})] = \log[p(\vec{d}_{i} | z'_{i})]\ \log[p(z_{i} | 
-\vec{\phi}^{*})]$ in this parametrization.
+	\item \label{itm:consistent}  Choose an empirical distribution 
+$p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}')$ emulating the error 
+model with parameters $\textul{\sigma}$ of photo-$z$s $z_{phot}$ and 
+spectroscopic redshifts $z_{spec}$.
+	\item \label{itm:sample} Sample $N$ pairs $(z_{phot}, z_{spec})$ from 
+$p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}')$.
+	\item \label{itm:interim} Choose an interim $n(z)$ with known 
+parameters $\vec{\phi}^{*}$ and construct its empirical distribution 
+$p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}^{*})$.
+	\item \label{itm:propagate} Follow Eq. \ref{eq:transformation} to 
+create the interim empirical distribution.
+	\item \label{itm:posterior} Create interim posteriors $p(z | z_{phot}, 
+\textul{\sigma}, \vec{\phi}^{*})$ by evaluating the interim empirical 
+distribution at values of $z_{phot}$ drawn in It. \ref{itm:sample}.
 \end{enumerate}
+
+With a goal of emulating the systematics of traditional $z_{spec}$ vs. 
+$z_{phot}$ scatterplots, we start from probability distributions in that space. 
+ This means there are two parameters $z_{spec}$ and $z_{phot}$ drawn from a 
+two-dimensional distribution $p(z_{spec}, z_{phot} | \textul{\sigma}, 
+\vec{\phi})$, where $\textul{\sigma}$ contains parameters concerning the 
+relationship between $z_{spec}$ and $z_{phot}$, and $\vec{\phi}$ contains 
+hyperparameters concerning $n(z)$.  We know from basic probability that
+\begin{align}
+\label{eq:trivial}
+p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}) =& p(z_{phot} | z_{spec}, 
+\textul{\sigma}, \vec{\phi})\ p(z_{spec} | \textul{\sigma}, \vec{\phi}).
+\end{align}
+Because $z_{spec}$ depends only on $\vec{\phi}$ and $z_{phot}$ is independent 
+of $\vec{\phi}$, this becomes
+\begin{align}
+\label{eq:simpler}
+p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}) =& p(z_{phot} | z_{spec}, 
+\textul{\sigma})\ p(z_{spec} | \vec{\phi}).
+\end{align}
+We know how to make reasonable choices for both terms on the righthand side of 
+Eq. \ref{eq:simpler} and note that this is equivalent to using $z_{phot}$ as a 
+proxy for photometric data and thinking of $z_{spec}$ as the $z$ we seek to 
+characterize.
+
+In the $z_{spec}$ vs. $z_{phot}$ scatterplot, $p(z_{phot} | z_{spec}, 
+\textul{\sigma}, \vec{\phi})$ would be represented by vertical slices, but we 
+are interested in the horizontal slices that represent $p(z_{spec} | z_{phot}, 
+\textul{\sigma}, \vec{\phi})$.  Now we must distinguish the true 
+hyperparameters $\vec{\phi}'$ we wish to estimate from the interim 
+hyperparameters $\vec{\phi}^{*}$.  If the horizontal slices carry information 
+about $\vec{\phi}$, we would like to get a catalog of $p(z_{spec} | z_{phot}, 
+\textul{\sigma}, \vec{\phi}^{*})$ that's consistent with $p(z_{spec} | 
+z_{phot}, \textul{\sigma}, \vec{\phi}')$.  
+
+We achieve the goal of propagating that information by dividing out the true 
+$n(z)$ and multiplying by the interim $n(z)$ as in
+\begin{align}
+\label{eq:transformation}
+p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi}^{*}) =& p(z_{spec} | 
+z_{phot}, \textul{\sigma}, \vec{\phi}')\ \frac{p(z_{spec} | 
+\vec{\phi}^{*})}{p(z_{spec} | \vec{\phi}')},
+\end{align}
+since $p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi})$ is separable and 
+the term $p(z_{spec} | z_{phot}, \textul{\sigma})$ changes independently of the 
+$p(z_{spec} | \vec{\phi})$ term.  The information about $\vec{\phi}'$ is 
+retained by the elements of the catalog: only $(z_{spec}, z_{phot})$ pairs 
+drawn from the true distribution will be represented in the catalog.
+
+This is the only fully self-consistent way to ensure that a draw from the 
+posterior distribution $p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi})$ 
+does in fact follow that distribution.  
 
 In all of the following validation tests, we use a piecewise constant 
 parametrization in log-space with $10$ bins.  $N = 10,000$ galaxies.  In Secs. 
@@ -394,11 +454,27 @@ variations on it will refer directly to the steps that are altered.
 \subsubsection{$n(z)$ Accuracy Metric}
 \label{sec:accuracy}
 
-The Kullback-Leibler divergence is our primary measure of the accuracy of 
-estimators of $n(z)$ in cases of mock data with known true redshifts.
+\textbf{This needs explication.}
 
-\textbf{Review precision and bias from \texttt{kld.ipynb} and interpret in 
-terms of a \% difference.}
+The Kullback-Leibler divergence (KLD) is our primary measure of the accuracy of 
+estimators of $n(z)$ in cases of mock data with known true redshifts.  The KLD
+\begin{align}
+\label{eq:kld}
+\mathrm{KLD} &= \int_{-\infty}^{\infty}\ n(z)\ 
+\log\left[\frac{n(z)}{\hat{n}(z)}\right]\ dz
+\end{align}
+measures the loss of information when using an estimator of a probability 
+distribution instead of the true probability distribution, where the 
+probability distribution in question is, in our case, the redshift distribution 
+function.  
+
+\subsubsection{Cosmological Parameter Covariance}
+\label{sec:cosmoparams}
+
+We also perform a test with mock data derived from a self-consistent cosmology 
+likelihood analysis using 
+\texttt{CosmoLike}\footnote{https://github.com/CosmoLike} 
+\citep{krause_cosmolike_2017}.
 
 \subsection{Underlying $n(z)$ Effects}
 \label{sec:truth}
@@ -583,7 +659,7 @@ redshifts at high redshifts than low redshifts.
 Existing $n(z)$ estimation routines will always produce a biased estimator when 
 the interim prior is not equal to the true $n(z)$.  We demonstrate here that 
 regardless of the appropriateness of the interim prior as an approximation to 
-the true $n(z)$, \chippr is not affected by the choice of the interim prior so 
+the true $n(z)$, \chippr\ is not affected by the choice of the interim prior so 
 long as it has nontrivial coverage in the space of redshift.  These tests 
 modify Step \ref{itm:interim} of Sec. \ref{sec:mockdata}.
 
@@ -633,30 +709,27 @@ very compelling test in the previous version but somehow isn't anymore.]}
 \label{sec:application}
 
 To show how the choice of $n(z)$ estimator propagates to cosmological 
-constraints, we apply \chippr to a data from a realistic cosmological 
-simulation (probably \texttt{Buzzard}) with photo-$z$ PDFs produced by a 
-popular method (probably \texttt{BPZ}).
+constraints, we apply \chippr\ to a data from a realistic cosmological 
+simulation.
 
 \subsection{Mock Data \& Metrics}
 \label{sec:appintro}
 
-As in Sec. \ref{sec:validintro}, the mock data takes the form of photo-$z$ 
-interim posteriors, but that is where the similarity ends.  These photo-$z$ 
-interim posteriors are derived from the photometry resulting from the 
-\texttt{Buzzard} simulation by way of \texttt{BPZ}.  Because the simulation 
-begins with setting true values of the cosmological parameters, we can 
-propagate the different estimators of $n(z)$ through a forecasting code (which 
-one?) to generate error ellipses on the cosmological parameters.
+\textbf{I need to write this section!}
+
+A cosmological analysis is conducted with \texttt{CosmoLike}.
 
 \subsubsection{Mock Data}
-\label{sec:buzzard}
+\label{sec:realistic}
 
-We summarize the details of the \texttt{Buzzard} simulation here.
+\textbf{This test will combine several systematics discussed above.}
+
+We summarize the details of the realistic data here.
 
 \subsubsection{Cosmological Constraint Metric}
 \label{sec:cosmo}
 
-Because the realistic mock data of Sec. \ref{sec:buzzard} is associated with 
+Because the realistic mock data of Sec. \ref{sec:realistic} is associated with 
 true values of the cosmological parameters, we may compare the quality of 
 cosmological constraints under different estimators of $n(z)$, creating a 
 figure like Fig. \ref{fig:scgsr}.  We perform this analysis using a forecasting 
@@ -711,77 +784,18 @@ propagate to inaccuracies in characterizing the cosmological parameters.
 in a mathematically consistent manner such as the probabilistic graphical model 
 outlined in this paper.
 	\item In addition to coming with its own error distribution, the $n(z)$ 
-estimator produced by \chippr is quantifiably more accurate than established 
+estimator produced by \chippr\ is quantifiably more accurate than established 
 estimators.
-	\item Propagation of the \chippr result leads to a quantifiable 
+	\item Propagation of the \chippr\ result leads to a quantifiable 
 improvement in the constraints on cosmological parameters.
 \end{itemize}
 
 In conclusion, we discourage the community from continuing to use the stacked 
 estimator and reductions of photo-$z$ PDFs to redshift point estimates in 
-obtaining estimators of $n(z)$.  \chippr is freely available to the community 
+obtaining estimators of $n(z)$.  \chippr\ is freely available to the community 
 for incorporation into evolving data analysis pipelines.  
 
 
-\appendix{Catalog Production}
-\label{app:catalog}
-
-Sec. \ref{sec:mockdata} outlines one way to make mock data, but it's not 
-necessarily a logically consistent way to do it, a problem identified in trying 
-to use it for the test cases in Sec. \ref{sec:likelihoods}.  If the goal is to 
-emulate the traditional $z_{spec}$ vs. $z_{phot}$ scatterplots, we need to 
-start from probability distributions in that space.  This means there are two 
-parameters $z_{spec}$ and $z_{phot}$ drawn from a two-dimensional distribution 
-$p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi})$, where $\textul{\sigma}$ 
-contains parameters concerning the relationship between $z_{spec}$ and 
-$z_{phot}$, and $\vec{\phi}$ contains hyperparameters concerning $n(z)$.  We 
-know from basic probability that
-\begin{align}
-\label{eq:trivial}
-p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}) =& p(z_{phot} | z_{spec}, 
-\textul{\sigma}, \vec{\phi})\ p(z_{sped} | \textul{\sigma}, \vec{\phi}).
-\end{align}
-Because $z_{spec}$ depends only on $\vec{\phi}$ and $z_{phot}$ is independent 
-of $\vec{\phi}$, this becomes
-\begin{align}
-\label{eq:simpler}
-p(z_{spec}, z_{phot} | \textul{\sigma}, \vec{\phi}) =& p(z_{phot} | z_{spec}, 
-\textul{\sigma})\ p(z_{spec} | \vec{\phi}).
-\end{align}
-We know how to make reasonable choices for both terms on the righthand side of 
-Eq. \ref{eq:simpler}.
-
-In the $z_{spec}$ vs. $z_{phot}$ scatterplot, $p(z_{phot} | z_{spec}, 
-\textul{\sigma}, \vec{\phi})$ would be represented by vertical slices, but we 
-are interested in the horizontal slices that represent $p(z_{spec} | z_{phot}, 
-\textul{\sigma}, \vec{\phi})$.  Now we must distinguish the true 
-hyperparameters $\vec{\phi}_{true}$ from the interim hyperparameters 
-$\vec{\phi}_{int}$.  If the horizontal slices carry information about 
-$\vec{\phi}$, how can we get a catalog of $p(z_{spec} | z_{phot}, 
-\textul{\sigma}, \vec{\phi}_{int})$ that's consistent with $p(z_{spec} | 
-z_{phot}, \textul{\sigma}, \vec{\phi}_{true})$?  Somehow that information needs 
-to be propagated through in order to recover it.
-
-We achieve this goal by dividing out the true $n(z)$ and multiplying by the 
-interim $n(z)$ as in
-\begin{align}
-\label{eq:transformation}
-p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi}_{int}) =& p(z_{spec} | 
-z_{phot}, \textul{\sigma}, \vec{\phi}_{true})\ \frac{p(z_{spec} | 
-\vec{\phi}_{int})}{p(z_{spec} | \vec{\phi}_{true})},
-\end{align}
-since $p(z_{spec} | z_{phot}, \textul{\sigma}, \vec{\phi})$ is separable and 
-the term $p(z_{spec} | z_{phot}, \textul{\sigma})$ changes independently of the 
-$p(z_{spec} | \vec{\phi})$ term.  The information about $\vec{\phi}_{true}$ is 
-retained by the elements of the catalog: only $(z_{spec}, z_{phot})$ pairs 
-drawn from the true distribution will be represented in the catalog!
-
-It appears as if this is the only fully self-consistent way to ensure that a 
-draw from the posterior distribution $p(z_{spec} | z_{phot}, \textul{\sigma}, 
-\vec{\phi})$ does in fact follow that distribution.  In the cases with fiducial 
-posteriors $p(z_{spec} | z_{phot}, \sigma, \vec{\phi})$, the method of Sec. 
-\ref{sec:mockdata} was equivalent to this, but Sec. \ref{sec:likelihoods} 
-requires a more sophisticated approach.
 
 \begin{acknowledgements}
 AIM thanks Mohammadjavad Vakili for insightful input on statistics, Geoffrey 
