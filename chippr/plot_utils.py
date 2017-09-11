@@ -15,17 +15,23 @@ def set_up_plot():
     """
     Sets up plots to look decent
     """
-    title = 10
-    label = 10
+    title = 16
+    label = 14
     mpl.rcParams['text.usetex'] = True
     mpl.rcParams['axes.titlesize'] = title
     mpl.rcParams['axes.labelsize'] = label
-    mpl.rcParams['figure.subplot.left'] = 0.2
-    mpl.rcParams['figure.subplot.right'] = 0.9
-    mpl.rcParams['figure.subplot.bottom'] = 0.2
-    mpl.rcParams['figure.subplot.top'] = 0.9
-    mpl.rcParams['figure.subplot.wspace'] = 0.5
-    mpl.rcParams['figure.subplot.hspace'] = 0.5
+    # mpl.rcParams['figure.subplot.left'] = 0.2
+    # mpl.rcParams['figure.subplot.right'] = 0.9
+    # mpl.rcParams['figure.subplot.bottom'] = 0.2
+    # mpl.rcParams['figure.subplot.top'] = 0.9
+    # mpl.rcParams['figure.subplot.wspace'] = 0.5
+    # mpl.rcParams['figure.subplot.hspace'] = 0.5
+    mpl.rcParams['mathtext.rm'] = 'serif'
+    mpl.rcParams['font.family'] = 'serif'
+    mpl.rcParams['font.serif'] = 'Times New Roman'
+    mpl.rcParams['savefig.dpi'] = 250
+    mpl.rcParams['savefig.format'] = 'png'
+    mpl.rcParams['savefig.bbox'] = 'tight'
 
     return
 

@@ -17,15 +17,15 @@ from chippr import stat_utils as s
 
 lnz, nz = '', ''#r'$\ln[n(z)]$', r'$n(z)$'
 
-s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 2., 1., 'k', [(0, (1, 1))], 'Truth '
-s_tbp, w_tbp, a_tbp, c_tbp, d_tbp, l_tbp = ':', 2., 0.75, 'k', [(0, (1, 1))], 'Binned True '
-s_int, w_int, a_int, c_int, d_int, l_int = '-', 2., 0.5, 'k', [(0, (1, 1))], 'Interim '
-s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 2.5, 1., 'g', [(0, (2, 2))], 'Stacked '
-s_map, w_map, a_map, c_map, d_map, l_map = '--', 2., 1., 'r', [(0, (2, 1))], 'Modes '
-s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 2., 1., 'r', [(0, (1, 2))], 'Means '
-s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 3., 1., 'c', [(0, (2, 2))], 'HB Optimization '
-s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 3.5, 1., 'b', [(0, (1, 1))], 'HB Samples '
-s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '-', 2., 1., 'k', [(0, (1, 1))], 'Sampled '
+s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 2., 1., 'k', '-', 'True '#[(0, (1, 1))], 'Truth '
+s_tbp, w_tbp, a_tbp, c_tbp, d_tbp, l_tbp = ':', 2., 0.75, 'k', '--', 'Binned True '#[(0, (1, 1))], 'Binned True '
+s_int, w_int, a_int, c_int, d_int, l_int = '-', 2., 0.5, 'k', ':', 'Interim '#[(0, (1, 1))], 'Interim '
+s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 2.5, 1., 'r', '--', 'Stacked '#[(0, (2, 2))], 'Stacked '
+s_map, w_map, a_map, c_map, d_map, l_map = '--', 2., 1., 'r', '-.', 'Modes '#[(0, (2, 1))], 'Modes '
+s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 2., 1., 'r', ':', 'Means '#[(0, (1, 2))], 'Means '
+s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 3., 1., 'b', [(0, (2, 2))], 'HB Optimization '
+s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 3.5, 1., 'b', [(0, (1, 1))], 'HB Samples Mean '
+s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '-', 2., 1., 'k', [(0, (1, 1))], 'HB Samples '
 
 def plot_ivals(ivals, info, plot_dir):
     """

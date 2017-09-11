@@ -1,4 +1,4 @@
-\documentclass[12pt, onecolumn]{emulateapj}
+\documentclass[iop]{emulateapj}
 
 \usepackage{tikz}
 \usepackage{natbib}
@@ -69,9 +69,8 @@ data analysis --- methods: statistical --- techniques: photometric}
 \section{Introduction}
 \label{sec:introduction}
 
-\textbf{Obviously I need to write the lit. review!}
-
-This paper aims to answer the following questions:
+After a brief review of the literature, this paper aims to answer the following 
+questions:
 
 \begin{itemize}
 	\item Why should we question existing methods?
@@ -370,8 +369,6 @@ posteriors are derived from photometric data.
 \subsubsection{Mock Data}
 \label{sec:mockdata}
 
-\textbf{This needs reorganization and clarification.}
-
 The mock data used here are produced by the following steps.
 
 \begin{enumerate}
@@ -453,8 +450,6 @@ variations on it will refer directly to the steps that are altered.
 
 \subsubsection{$n(z)$ Accuracy Metric}
 \label{sec:accuracy}
-
-\textbf{This needs explication.}
 
 The Kullback-Leibler divergence (KLD) is our primary measure of the accuracy of 
 estimators of $n(z)$ in cases of mock data with known true redshifts.  The KLD
@@ -715,16 +710,13 @@ simulation.
 \subsection{Mock Data \& Metrics}
 \label{sec:appintro}
 
-\textbf{I need to write this section!}
-
 A cosmological analysis is conducted with \texttt{CosmoLike}.
 
 \subsubsection{Mock Data}
 \label{sec:realistic}
 
-\textbf{This test will combine several systematics discussed above.}
-
-We summarize the details of the realistic data here.
+The realistic data combines several of the systematic effects of Sec. 
+\ref{sec:mockdata}.
 
 \subsubsection{Cosmological Constraint Metric}
 \label{sec:cosmo}
@@ -803,5 +795,7 @@ Ryan for assistance in debugging, and Boris Leistedt for helpful comments
 provided in the preparation of this paper.
 \end{acknowledgements}
 
+\bibliographystyle{apj}
+\bibliography{references}
 
 \end{document}
