@@ -10,7 +10,7 @@ from chippr import defaults as d
 from chippr import utils as u
 from chippr import plot_utils as pu
 
-def plot_true_histogram(true_samps, n_bins=50, plot_loc='', plot_name='true_hist.png'):
+def plot_true_histogram(true_samps, n_bins=50, true_func=None, plot_loc='', plot_name='true_hist.png'):
     """
     Plots a histogram of true input values
 
@@ -29,6 +29,10 @@ def plot_true_histogram(true_samps, n_bins=50, plot_loc='', plot_name='true_hist
     f = plt.figure(figsize=(5, 5))
     sps = f.add_subplot(1, 1, 1)
     sps.hist(true_samps, bins=n_bins, normed=1, color='k')
+    if true_func is not None:
+        true_eval_x = np.linspace(min(true_samps), max(true_samps), n_bins * 100)
+        true_eval_y = true_func.evaluate(true_eval_x)
+        sps.plot(true_eval_x, true_eval_y, color='r')
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$n(z_{true})$')
     f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)

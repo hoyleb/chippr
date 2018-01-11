@@ -23,8 +23,8 @@ class discrete(object):
         self.bin_range = range(self.n_bins)
 
         self.weights = weights
-        self.normweights = np.cumsum(self.weights) / np.sum(self.weights)
-        self.distweights = np.cumsum(self.weights) / np.dot(self.weights, self.dbins)
+        self.normweights = self.weights / np.sum(self.weights)
+        self.distweights = self.weights / np.dot(self.weights, self.dbins)
 
     def evaluate_one(self, x):
         """

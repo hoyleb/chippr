@@ -142,7 +142,7 @@ class catalog(object):
         self.samps = self.sample(self.N)
         if vb:
             self.cat['true_vals'] = self.samps
-            plots.plot_true_histogram(self.samps.T[0], plot_loc=self.plot_dir)
+            plots.plot_true_histogram(self.samps.T[0], plot_loc=self.plot_dir, true_func=self.truth)
 
         ## then literally take slices (evaluate at constant z_phot)
         self.obs_lfs = self.evaluate_lfs()

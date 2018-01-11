@@ -128,13 +128,19 @@ def do_inference(given_key):
     z_difs = zs[1:]-zs[:-1]
     with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
         true_nz_params = pickle.load(true_file)
-    true_amps = true_nz_params['amps']
-    true_means = true_nz_params['means']
-    true_sigmas =  true_nz_params['sigmas']
-    n_mix_comps = len(true_amps)
-    true_funcs = []
-    for c in range(n_mix_comps):
-        true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
+    if true_nz_params['format'] == 'discrete':
+        fine_grid = true_nz_params['grid']
+        amps = true_nz_params['amps']
+        true_funcs = [chippr.discrete(fine_grid, amps)]
+        true_amps = [1.]
+    elif true_nz_params['format'] == 'gauss':
+        true_amps = true_nz_params['amps']
+        true_means = true_nz_params['means']
+        true_sigmas =  true_nz_params['sigmas']
+        n_mix_comps = len(true_amps)
+        true_funcs = []
+        for c in range(n_mix_comps):
+            true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
     true_nz = chippr.gmix(true_amps, true_funcs,
             limits=(min(zs), max(zs)))
 
@@ -155,19 +161,19 @@ def do_inference(given_key):
     nz.plot_estimators()
     nz.write('nz.p')
 
-    # n_bins = len(nz_mmle)
-    if params['n_walkers'] is not None:
-        n_ivals = params['n_walkers']
-    else:
-        n_ivals = 10 * n_bins
-    initial_values = prior.sample(n_ivals)
-    log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
+    # # n_bins = len(nz_mmle)
+    # if params['n_walkers'] is not None:
+    #     n_ivals = params['n_walkers']
+    # else:
+    #     n_ivals = 10 * n_bins
+    # initial_values = prior.sample(n_ivals)
+    # log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
     # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
-
-    nz_stats = nz.compare()
-
-    nz.plot_estimators()
-    nz.write('nz.p')
+    #
+    # nz_stats = nz.compare()
+    #
+    # nz.plot_estimators()
+    # nz.write('nz.p')
 
 if __name__ == "__main__":
 
