@@ -26,7 +26,7 @@ estimates}
 estimates}
 
 \author{Alex Malz\altaffilmark{1}, David W. Hogg\altaffilmark{1,2,3,4}, Phil 
-Marshall\altaffilmark{5}, \& Others}
+Marshall\altaffilmark{5}}
 \email{aimalz@nyu.edu}
 
 \altaffiltext{1}{Center for Cosmology and Particle Physics, Department of 
@@ -41,29 +41,27 @@ Heidelberg, Germany}
 \altaffiltext{5}{[SLAC]}
 
 \begin{abstract}
-The redshift distribution $n(z)$ is a crucial ingredient for weak lensing 
-cosmology.  Spectroscopically confirmed redshifts for the dim and numerous 
-galaxies observed by weak lensing surveys are expected to be inaccessible, 
-making photometric redshifts (photo-$z$s) the next best alternative.  Because 
-of the nontrivial inference involved in their determination, photo-$z$ point 
-estimates are being superseded by photo-$z$ probability distribution functions 
-(PDFs).  However, analytic methods for utilizing these new data products in 
-cosmological inference are still evolving.  This paper presents a novel 
-approach to estimating the posterior distribution over $n(z)$ from a survey of 
-galaxy photo-$z$ PDFs based upon a probabilistic graphical model of 
-hierarchical inference.  We present the Cosmological Hierarchical Inference 
-with Probabilistic Photometric Redshifts (\chippr) code implementing this 
-technique, as well as its validation on mock data and testing on the 
-\texttt{Buzzard} simulations.  \chippr yields a more accurate characterization 
-of $n(z)$ containing information beyond the best-fit estimator produced by 
-traditional procedures.  The publicly available code is easily extensible to 
-other one-point statistics that depend on redshift.
+A trustworthy estimate of the redshift distribution $n(z)$ is crucial for weak 
+lensing cosmology.  Spectroscopically confirmed redshifts for the dim and 
+numerous galaxies of weak lensing surveys are expected to be inaccessible, 
+making photometric redshifts (photo-$z$s) the next best alternative.  The 
+nontrivial systematics affecting photo-$z$ estimation have motivated the weak 
+lensing community to favor photo-$z$ probability distribution functions (PDFs) 
+as a more comprehensive alternative to photo-$z$ point estimates.  However, 
+analytic methods for utilizing these new data products in cosmological 
+inference are still evolving.  This paper presents the Cosmological 
+Hierarchical Inference with Probabilistic Photometric Redshifts (CHIPPR) model, 
+a novel approach to estimating the $n(z)$ from a catalog of galaxy photo-$z$ 
+PDFs based upon a probabilistic graphical model of hierarchical inference.  We 
+present the publicly available \chippr code implementing this technique, as 
+well as its validation on mock data.  The CHIPPR model yields a more accurate 
+characterization of $n(z)$ containing information beyond the best-fit estimator 
+produced by traditional procedures.
 
 \end{abstract}
 
-\keywords{catalogs --- cosmology: cosmological parameters --- galaxies: 
-statistics --- gravitational lensing: weak --- methods: analytical --- methods: 
-data analysis --- methods: statistical --- techniques: photometric}
+\keywords{cosmology: cosmological parameters --- galaxies: statistics --- 
+gravitational lensing: weak --- methods: data analysis --- methods: statistical}
 
 \section{Introduction}
 \label{sec:introduction}
@@ -784,9 +782,10 @@ posteriors $p(z_{spec} | z_{phot}, \sigma, \vec{\phi})$, the method of Sec.
 requires a more sophisticated approach.
 
 \begin{acknowledgements}
-AIM thanks Mohammadjavad Vakili for insightful input on statistics, Geoffrey 
-Ryan for assistance in debugging, and Boris Leistedt for helpful comments 
-provided in the preparation of this paper.
+AIM thanks Elisabeth Krause for assistance with the \texttt{CosmoLike} code, 
+Mohammadjavad Vakili for insightful input on statistics, Geoffrey Ryan for 
+advice on debugging, and Boris Leistedt for helpful comments provided in the 
+preparation of this paper.
 \end{acknowledgements}
 
 
