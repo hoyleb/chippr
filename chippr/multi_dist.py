@@ -28,6 +28,9 @@ class multi_dist(object):
         self.funcs = [func.dist for func in self.funcs]
         self.dist = ICD(self.funcs)
 
+    def pdf(self, points):
+        return self.evaluate(points)
+
     def evaluate_one(self, point):
         """
         Function to evaluate the probability at a point in multidimensional
@@ -64,14 +67,6 @@ class multi_dist(object):
         probs: float
             probabilities associated with points
         """
-# <<<<<<< HEAD
-#         if len(np.shape(points)) == 1:
-#             return self.evaluate_one(points)
-#         probs = np.ones(len(points))
-#         points = points.T
-#         for d in range(self.dims):
-#             probs *= self.funcs[d].evaluate(points[d])
-# =======
         # if len(np.shape(points.T)) == 1:
         #     return self.evaluate_one(points)
         # probs = np.ones(len(points))
@@ -79,7 +74,6 @@ class multi_dist(object):
         # for d in range(self.dims):
         #     probs *= self.funcs[d].evaluate(points[d])
         probs = self.dist.probability(points)
-# >>>>>>> 36e0405ccf793555ef4a20c9b763ca00ac75d5c5
         return probs
 
     def sample_one(self):

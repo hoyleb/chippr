@@ -42,12 +42,10 @@ class gmix(object):
         self.min_x = limits[0]
         self.max_x = limits[1]
 
-# <<<<<<< HEAD
-#     def pdf(self, xs):
-#         return self.evaluate(xs)
-# =======
         self.dist = GMM(self.funcs, weights=self.amps)
-# >>>>>>> 36e0405ccf793555ef4a20c9b763ca00ac75d5c5
+
+    def pdf(self, xs):
+        return self.evaluate(xs)
 
     def evaluate_one(self, x):
         """
