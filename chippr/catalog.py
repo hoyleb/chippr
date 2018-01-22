@@ -143,8 +143,8 @@ class catalog(object):
         ## this far!
         ## next, sample discrete to get z_true, z_obs
         self.samps = self.sample(self.N)
+        self.cat['true_vals'] = self.samps
         if vb:
-            self.cat['true_vals'] = self.samps
             plots.plot_true_histogram(self.samps.T[0], plot_loc=self.plot_dir)
 
         ## then literally take slices (evaluate at constant z_phot)
@@ -168,7 +168,7 @@ class catalog(object):
 
         return self.cat
 
-    def make_probs(self, vb=True):
+    def make_probs(self, truth=None, vb=True):
         """
         Makes the continuous 2D probability distribution over z_spec, z_phot
 
@@ -184,8 +184,11 @@ class catalog(object):
         -----
         Does not currently support variable sigmas, only one outlier population at a time
         """
+        if truth is None:
         # this is one Gaussian for each z_spec, to be evaluated at each z_phot
-        true_func = self.truth#multi_dist([self.truth, self.uniform_lf])
+            true_func = self.truth#multi_dist([self.truth, self.uniform_lf])
+        else:
+            true_func = truth
         # mins = [true_func.min_x, -100.]
         # maxs = [true_func.max_x, 100.]
         grid_means = self.z_fine#np.array([(self.z_fine[kk], self.z_fine[kk]]) for kk in range(self.n_tot)])
@@ -250,7 +253,7 @@ class catalog(object):
         Parameters
         ----------
         N: int
-            number og samples to take
+            number of samples to take
         vb: boolean
             print progress to stdout?
 
@@ -260,7 +263,8 @@ class catalog(object):
             (z_spec, z_phot) pairs
         """
         self.n_gals = N
-        samps = self.prob_space.sample(N)
+        if vb: print(self.n_gals)
+        samps = self.prob_space.sample(self.n_gals)
         return samps
 
     def evaluate_lfs(self, vb=True):
