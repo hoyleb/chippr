@@ -1,4 +1,5 @@
-numpy
-scipy
-matplotlib
 emcee
+matplotlib
+numpy
+pomegranate
+scipy
