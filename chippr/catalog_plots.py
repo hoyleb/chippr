@@ -53,8 +53,10 @@ def plot_prob_space(z_grid, p_space, plot_loc='', plot_name='prob_space.png'):
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
     plt.subplot(1, 1, 1)
-    # all_points = [[(z_grid[kk], z_grid[jj]) for kk in range(len(z_grid))] for jj in range(len(z_grid))]
-    all_vals = np.array([[p_space.evaluate_one(np.array([z_grid[jj], z_grid[kk]])) for jj in range(len(z_grid))] for kk in range(len(z_grid))])
+    all_points = np.array([[(z_grid[kk], z_grid[jj]) for kk in range(len(z_grid))] for jj in range(len(z_grid))])
+    orig_shape = np.shape(all_points)
+    # all_vals = np.array([[p_space.evaluate_one(np.array([z_grid[jj], z_grid[kk]])) for jj in range(len(z_grid))] for kk in range(len(z_grid))])
+    all_vals = p_space.evaluate(all_points.reshape((orig_shape[0]*orig_shape[1], orig_shape[2]))).reshape((orig_shape[0], orig_shape[1]))
     plt.pcolormesh(z_grid, z_grid, u.safe_log(all_vals), cmap='viridis')
     plt.colorbar()
     plt.xlabel(r'$z_{spec}$')
