@@ -87,6 +87,10 @@ def check_variable_sigmas(params):
     -------
     params: dict
         dictionary containing key/value pairs for simulation
+
+    Notes
+    -----
+    rms_scatter --> variable_sigmas
     """
     if 'variable_sigmas' not in params:
         params['variable_sigmas'] = 0
@@ -113,6 +117,10 @@ def check_catastrophic_outliers(params):
     -------
     params: dict
         dictionary containing key/value pairs for simulation
+
+    Notes
+    -----
+    
     """
     if 'catastrophic_outliers' not in params:
         params['catastrophic_outliers'] = '0'

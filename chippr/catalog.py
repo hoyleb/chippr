@@ -67,7 +67,7 @@ class catalog(object):
         self.n_coarse = self.params['n_bins']
         self.z_min = self.params['bin_min']
         self.z_max = self.params['bin_max']
-        self.n_fine = 10#self.n_coarse
+        self.n_fine = 2#self.n_coarse
         self.n_tot = self.n_coarse * self.n_fine
         z_range = self.z_max - self.z_min
 
@@ -78,6 +78,8 @@ class catalog(object):
         self.z_fine = np.arange(self.z_min + 0.5 * self.dz_fine, self.z_max, self.dz_fine)
 
         self.bin_ends = np.arange(self.z_min, self.z_max + self.dz_coarse, self.dz_coarse)
+        self.bin_difs_coarse = self.dz_coarse * np.ones(self.n_coarse)
+        self.bin_difs_fine = self.dz_fine * np.ones(self.n_tot)
 
         return
 
@@ -134,6 +136,7 @@ class catalog(object):
         self.proc_bins()
 
         self.prob_space = self.make_probs()
+        # print('make_probs returns '+str(type(self.prob_space)))
         if vb:
             plots.plot_prob_space(self.z_fine, self.prob_space, plot_loc=self.plot_dir)
 
@@ -183,12 +186,16 @@ class catalog(object):
         """
         # this is one Gaussian for each z_spec, to be evaluated at each z_phot
         true_func = self.truth#multi_dist([self.truth, self.uniform_lf])
-        mins = [true_func.min_x, -100.]
-        maxs = [true_func.max_x, 100.]
+        # mins = [true_func.min_x, -100.]
+        # maxs = [true_func.max_x, 100.]
         grid_means = self.z_fine#np.array([(self.z_fine[kk], self.z_fine[kk]]) for kk in range(self.n_tot)])
-        grid_amps = true_func.evaluate(grid_means)#np.ones(self.n_tot)#
-        grid_amps /= (np.sum(grid_amps) * self.dz_fine)
-        assert np.isclose(np.sum(grid_amps) * self.dz_fine, 1.)
+        grid_amps = true_func.pdf(grid_means)#np.ones(self.n_tot)#
+        grid_amps /= np.dot(grid_amps, self.bin_difs_fine)
+        try:
+            test_norm = np.dot(grid_amps, self.bin_difs_fine)
+            assert np.isclose(test_norm, 1.)
+        except:
+            print('N(z) PDF amplitudes not normalized: '+str(test_norm))
 
         uniform_lf = discrete(np.array([self.z_min, self.z_max]), np.array([1.]))
         uniform_lfs = [discrete(np.array([grid_means[kk] - self.dz_fine / 2., grid_means[kk] + self.dz_fine / 2.]), np.array([1.])) for kk in range(self.n_tot)]
@@ -213,23 +220,26 @@ class catalog(object):
             # out_amps = np.ones(self.n_tot)#grid_amps# * self.params['outlier_fraction']
             if self.params['catastrophic_outliers'] == 'template':
                 out_funcs = [multi_dist([uniform_lfs[kk], self.outlier_lf]) for kk in range(self.n_tot)]
-                out_amps = uniform_lf.evaluate(grid_means)
+                out_amps = uniform_lf.pdf(grid_means)
 
             elif self.params['catastrophic_outliers'] == 'training':
                 out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
-                out_amps = self.outlier_lf.evaluate(grid_means)
+                out_amps = self.outlier_lf.pdf(grid_means)
 
-            out_amps /= (np.sum(out_amps) * self.dz_fine)
+            out_amps /= np.dot(out_amps, self.bin_difs_fine)
             in_amps *= (1. - self.params['outlier_fraction'])
             out_amps *= self.params['outlier_fraction']
-            assert np.isclose(np.sum(in_amps) * self.dz_fine, (1. - self.params['outlier_fraction']))
-            assert np.isclose(np.sum(out_amps) * self.dz_fine, self.params['outlier_fraction'])
-            grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_funcs[kk]], limits=(mins, maxs)) for kk in range(self.n_tot)]
+            try:
+                test_out_frac = np.dot(out_amps, self.bin_difs_fine)
+                assert np.isclose(test_out_frac, self.params['outlier_fraction'])
+            except:
+                print('outlier fraction not normalized: '+str(test_out_frac))
+            grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_funcs[kk]]) for kk in range(self.n_tot)]
                 # np.append(grid_means, [self.params['outlier_mean'], self.uniform_lf.sample_one()])
 
         # true n(z) in z_spec, uniform in z_phot
         # grid_amps *= true_func.evaluate(grid_means)
-        p_space = gmix(grid_amps, grid_funcs, limits=(mins, maxs))
+        p_space = gmix(grid_amps, grid_funcs)
 
         return p_space
 

@@ -33,6 +33,9 @@ class gauss(object):
         """
         return 1./self.var
 
+    def pdf(self, xs):
+        return self.evaluate(xs)
+
     def evaluate_one(self, x):
         """
         Function to evaluate Gaussian probability distribution once

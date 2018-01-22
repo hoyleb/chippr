@@ -33,6 +33,9 @@ class gmix(object):
         self.min_x = limits[0]
         self.max_x = limits[1]
 
+    def pdf(self, xs):
+        return self.evaluate(xs)
+
     def evaluate_one(self, x):
         """
         Function to evaluate Gaussian mixture

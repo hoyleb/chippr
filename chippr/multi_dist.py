@@ -57,7 +57,7 @@ class multi_dist(object):
         probs: float
             probabilities associated with points
         """
-        if len(np.shape(points.T)) == 1:
+        if len(np.shape(points)) == 1:
             return self.evaluate_one(points)
         probs = np.ones(len(points))
         points = points.T

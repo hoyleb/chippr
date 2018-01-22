@@ -26,6 +26,9 @@ class discrete(object):
         self.normweights = np.cumsum(self.weights) / np.sum(self.weights)
         self.distweights = np.cumsum(self.weights) / np.dot(self.weights, self.dbins)
 
+    def pdf(self, xs):
+        return self.evaluate(xs)
+
     def evaluate_one(self, x):
         """
         Function to evaluate the discrete probability distribution at one point
@@ -42,8 +45,11 @@ class discrete(object):
         """
         p = d.eps
         for k in self.bin_range:
-            if x > self.bin_ends[k] and x < self.bin_ends[k+1]:
-                p = self.distweights[k]
+            try:
+                if x > self.bin_ends[k] and x < self.bin_ends[k+1]:
+                    p = self.distweights[k]
+            except ValueError:
+                print('x should be a float: '+str(x))
         return p
 
     def evaluate(self, xs):
