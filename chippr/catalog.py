@@ -155,9 +155,9 @@ class catalog(object):
             plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir)
 
         self.int_pr = int_pr
-        int_pr_fine = np.array([self.int_pr.evaluate(self.z_fine)])
+        int_pr_fine = np.array([self.int_pr.pdf(self.z_fine)])
         int_pr_coarse = self.coarsify(int_pr_fine)
-        truth_fine = self.truth.evaluate(self.z_fine)
+        truth_fine = self.truth.pdf(self.z_fine)
 
         pfs_fine = self.obs_lfs * int_pr_fine[np.newaxis, :] / truth_fine[np.newaxis, :]
         pfs_coarse = self.coarsify(pfs_fine)
@@ -285,7 +285,7 @@ class catalog(object):
         lfs = []
         for n in self.N_range:
             points = zip(self.z_fine, [self.samps[n][1]] * self.n_tot)
-            lfs.append(self.prob_space.evaluate(np.array(points)))
+            lfs.append(self.prob_space.pdf(np.array(points)))
         lfs = np.array(lfs)
         lfs /= np.sum(lfs, axis=-1)[:, np.newaxis] * self.dz_fine
         return lfs

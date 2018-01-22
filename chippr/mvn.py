@@ -57,6 +57,9 @@ class mvn(object):
         inv = np.linalg.inv(self.var)
         return inv
 
+    def pdf(self, points):
+        return self.evaluate(points)
+
     def evaluate_one(self, z):
         """
         Function to evaluate multivariate Gaussian probability distribution
