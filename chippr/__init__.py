@@ -7,6 +7,7 @@ from plot_utils import *
 from sim_utils import *
 from discrete import *
 from gauss import *
+from gamma import *
 from gmix import *
 from mvn import *
 from multi_dist import *

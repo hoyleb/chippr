@@ -16,7 +16,7 @@ def check_extra_params(params):
         params['smooth_truth'] = 0
     else:
         params['smooth_truth'] = int(params['smooth_truth'][0])
-        params['true_shape'] = int(params['true_shape'][0])
+        # params['true_shape'] = int(params['true_shape'][0])
         params['true_loc'] = float(params['true_loc'][0])
         params['true_scale'] = 1./float(params['true_scale'][0])
 
@@ -56,11 +56,11 @@ def make_true(given_key):
     test_info = all_tests[given_key]
 
     if test_info['params']['smooth_truth'] == 1:
-        true_shape = test_info['params']['true_shape']
+        # true_shape = test_info['params']['true_shape']
         true_loc = test_info['params']['true_loc']
         true_scale = test_info['params']['true_scale']
-        true_nz = sps.erlang(true_shape, true_loc, true_scale)
-        true_dict = {'amps': [true_shape], 'means': [true_loc], 'sigmas': [true_scale]}
+        true_nz = gamma(true_loc, true_scale**2)#sps.erlang(true_shape, true_loc, true_scale)
+        true_dict = {'amps': [1.], 'means': [true_loc], 'sigmas': [true_scale]}
         # true_amps = np.array([0.150,0.822,1.837,2.815,3.909,
         #                       5.116,6.065,6.477,6.834,7.304,
         #                       7.068,6.771,6.587,6.089,5.165,
@@ -179,7 +179,8 @@ def make_catalog(given_key):
 
     test_info['bin_ends'] = np.linspace(test_info['params']['bin_min'],
                                 test_info['params']['bin_max'],
-                                test_info['params']['n_bins'] + 1)
+                                test_info['params']['n_bins']+1)
+    print('bin ends to simulation = '+str(test_info['bin_ends']))
 
     test_info, true_nz = make_true(given_key)
     # true_amps = test_info['truth']['amps']
@@ -197,6 +198,7 @@ def make_catalog(given_key):
     posteriors = chippr.catalog(param_file_name, loc=test_dir)
     output = posteriors.create(true_nz, interim_prior, N=test_info['params']['n_gals'])
     # data = np.exp(output['log_interim_posteriors'])
+    print('bin ends from simulation: '+str(posteriors.bin_ends))
     posteriors.write()
     data_dir = posteriors.data_dir
     with open(os.path.join(data_dir, 'true_params.p'), 'w') as true_file:

@@ -5,8 +5,8 @@ seed = 42
 eps = sys.float_info.min
 log_eps = sys.float_info.min_exp
 
-min_x = 0.
-max_x = 1.
+min_x = 0.001
+max_x = 3.501
 
 n_bins = 10
 
@@ -120,7 +120,7 @@ def check_catastrophic_outliers(params):
 
     Notes
     -----
-    
+
     """
     if 'catastrophic_outliers' not in params:
         params['catastrophic_outliers'] = '0'

@@ -104,10 +104,10 @@ def plot_scatter(zs, pfs, z_grid, plot_loc='', plot_name='scatter.png'):
     sorted_obs = obs_zs[np.argsort(obs_zs)]
     for r in range(d.plot_colors):
         pf = sorted_pfs[randos[r]]
-        plt.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c='k')
         norm_pf = pf / max_pfs / (d.plot_colors + 1)
-        plt.plot(z_grid, norm_pf + sorted_obs[randos[r]], c='k')
+        plt.step(z_grid, norm_pf + sorted_obs[randos[r]], c='k', where='mid')# plt.plot(z_grid, norm_pf + sorted_obs[randos[r]], c='k')
         plt.hlines(sorted_obs[randos[r]], min(z_grid), max(z_grid), color='k', alpha=0.5, linestyle='--')
+        plt.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c='r')
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$z_{obs}$')
     f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
@@ -149,9 +149,9 @@ def plot_obs_scatter(true_vals, pfs, z_grid, plot_loc='', plot_name='obs_scatter
     sorted_obs = obs_zs[np.argsort(obs_zs)]
     for r in range(d.plot_colors):
         pf = sorted_pfs[randos[r]]
-        plt.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c='k')
+        plt.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c='r')
         norm_pf = pf / max_pfs / (d.plot_colors + 1)
-        plt.plot(z_grid, norm_pf + sorted_obs[randos[r]], c='k')
+        plt.step(z_grid, norm_pf + sorted_obs[randos[r]], c='k', where='mid')
         plt.hlines(sorted_obs[randos[r]], min(z_grid), max(z_grid), color='k', alpha=0.5, linestyle='--')
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$\hat{z}_{MAP}$')

@@ -74,10 +74,10 @@ class catalog(object):
         self.dz_coarse = z_range / self.n_coarse
         self.dz_fine = z_range / self.n_tot
 
-        self.z_coarse = np.arange(self.z_min + 0.5 * self.dz_coarse, self.z_max, self.dz_coarse)
-        self.z_fine = np.arange(self.z_min + 0.5 * self.dz_fine, self.z_max, self.dz_fine)
+        self.z_coarse = np.linspace(self.z_min + 0.5 * self.dz_coarse, self.z_max - 0.5 * self.dz_coarse, self.n_coarse)
+        self.z_fine = np.linspace(self.z_min + 0.5 * self.dz_fine, self.z_max - 0.5 * self.dz_fine, self.n_tot)
 
-        self.bin_ends = np.arange(self.z_min, self.z_max + self.dz_coarse, self.dz_coarse)
+        self.bin_ends = np.linspace(self.z_min, self.z_max, self.n_coarse+1)
         self.bin_difs_coarse = self.dz_coarse * np.ones(self.n_coarse)
         self.bin_difs_fine = self.dz_fine * np.ones(self.n_tot)
 
@@ -134,6 +134,7 @@ class catalog(object):
         # self.samp_range = range(self.n_items)
 
         self.proc_bins()
+        if vb: print('bin ends early on in catalog: '+str(self.bin_ends))
 
         self.prob_space = self.make_probs()
         # print('make_probs returns '+str(type(self.prob_space)))

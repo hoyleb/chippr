@@ -286,14 +286,14 @@ def plot_estimators(info, plot_dir):
         bin_true = np.exp(bin_log_true)
 
         # tru, =
-        sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']),
-                        linewidth=w_tru, alpha=a_tru, color=c_tru,
-                        label=l_tru+lnz)
+        # sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']),
+        #                 linewidth=w_tru, alpha=a_tru, color=c_tru,
+        #                 label=l_tru+lnz)
         # black_plots.append(tru)
         # black_labels.append(l_tru+lnz)
         #tbp, =
-        # pu.plot_step(sps_log, info['bin_ends'], bin_log_true, w=w_tbp,
-        #                 s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp, l=l_tbp+lnz)
+        pu.plot_step(sps_log, info['bin_ends'], bin_log_true, w=w_tbp,
+                        s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp, l=l_tbp+lnz)
         pu.plot_step(mini_sps, info['bin_ends'], ((bin_true / bin_true) - 1.) * 100.,
                         w=w_tbp, s=s_tbp, a=a_tbp, c=c_tbp, d=d_tbp)
         # black_plots.append(tbp)

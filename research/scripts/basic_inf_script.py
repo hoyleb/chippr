@@ -44,12 +44,14 @@ def set_up_prior(data, params):
         prior distribution as multivariate normal
     """
     zs = data['bin_ends']
+    print(str(len(zs))+' input redshift bin ends')
     log_nz_intp = data['log_interim_prior']
     log_z_posts = data['log_interim_posteriors']
 
     z_difs = zs[1:]-zs[:-1]
     z_mids = (zs[1:]+zs[:-1])/2.
     n_bins = len(z_mids)
+    print(str(n_bins)+' bin centers')
 
     n_pdfs = len(log_z_posts)
 
@@ -58,10 +60,12 @@ def set_up_prior(data, params):
     c = a / n_pdfs
     prior_var = np.eye(n_bins)
     for k in range(n_bins):
+        print(k)
         prior_var[k] = a * np.exp(-0.5 * b * (z_mids[k] - z_mids) ** 2)
-    prior_var += c * np.identity(n_bins)
+    prior_var += c * np.eye(n_bins)
 
     prior_mean = log_nz_intp
+    print('prior dimensions: '+str((np.shape(prior_mean), np.shape(prior_var))))
     prior = mvn(prior_mean, prior_var)
     if params['prior_mean'] is 'sample':
         prior_mean = prior.sample_one()
@@ -95,18 +99,27 @@ def do_inference(given_key):
     saved_type = '.txt'
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
     zs = data['bin_ends']
+    print('bin_ends read by inference '+str(zs))
     z_difs = zs[1:]-zs[:-1]
-    with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
-        true_nz_params = pickle.load(true_file)
-    true_amps = true_nz_params['amps']
-    true_means = true_nz_params['means']
-    true_sigmas =  true_nz_params['sigmas']
-    n_mix_comps = len(true_amps)
-    true_funcs = []
-    for c in range(n_mix_comps):
-        true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
-    true_nz = chippr.gmix(true_amps, true_funcs,
-            limits=(min(zs), max(zs)))
+    # with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
+    #     true_nz_params = pickle.load(true_file)
+    #     print(true_nz_params)
+    # true_amps = true_nz_params['amps']
+    # true_means = true_nz_params['means']
+    # true_sigmas =  true_nz_params['sigmas']
+    # n_mix_comps = len(true_amps)
+    # true_funcs = []
+    # for c in range(n_mix_comps):
+    #     true_funcs.append(chippr.gamma(true_means[c], true_sigmas[c]**2))#gauss(true_means[c], true_sigmas[c]**2))
+    # true_nz = chippr.gamma(true_means[0], true_sigmas[0]**2)
+    with open(os.path.join(os.path.join(test_dir, saved_location), 'true_vals.txt'), 'r') as true_file:
+        true_data = csv.reader(true_file, delimiter=' ')
+        true_vals = []
+        for z in true_data:
+            true_vals.append(float(z[0]))
+        true_vals = np.array(true_vals)
+        true_vals = np.histogram(true_vals, bins=zs, normed=True)[0]
+    true_nz = chippr.discrete(zs, true_vals)
 
     (prior, cov) = set_up_prior(data, params)
 
@@ -133,7 +146,7 @@ def do_inference(given_key):
         n_ivals = 10 * n_bins
     initial_values = start.sample(n_ivals)
 
-    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
 
@@ -145,12 +158,13 @@ if __name__ == "__main__":
     import numpy as np
     import pickle
     import os
+    import csv
 
     import chippr
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    test_name = 'fiducial'
+    test_name = 'single'
     all_tests = {}
     test_info = {}
     test_info['name'] = test_name

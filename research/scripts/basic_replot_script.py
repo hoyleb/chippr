@@ -48,30 +48,33 @@ def just_plot(given_key):
     saved_type = '.txt'
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
 
-    with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
-        true_nz_params = pickle.load(true_file)
-    true_amps = true_nz_params['amps']
-    true_means = true_nz_params['means']
-    true_sigmas =  true_nz_params['sigmas']
-    n_mix_comps = len(true_amps)
-    true_funcs = []
-    for c in range(n_mix_comps):
-        true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
-    true_nz = chippr.gmix(true_amps, true_funcs,
-            limits=(simulated_posteriors.params['bin_min'], simulated_posteriors.params['bin_max']))
+    # with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
+    #     true_nz_params = pickle.load(true_file)
+    # true_amps = true_nz_params['amps']
+    # true_means = true_nz_params['means']
+    # true_sigmas =  true_nz_params['sigmas']
+    # n_mix_comps = len(true_amps)
+    # true_funcs = []
+    # for c in range(n_mix_comps):
+    #     true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
+    # true_nz = chippr.gmix(true_amps, true_funcs,
+    #         limits=(simulated_posteriors.params['bin_min'], simulated_posteriors.params['bin_max']))
 
     true_data = os.path.join(test_dir, saved_location)
     with open(os.path.join(true_data, 'true_vals.txt'), 'rb') as csvfile:
         tuples = (line.split(None) for line in csvfile)
         alldata = [[float(pair[k]) for k in range(0,len(pair))] for pair in tuples]
-    true_vals = np.array(alldata)
+    true_vals = np.array(alldata).T
     bin_mids = (data['bin_ends'][1:] + data['bin_ends'][:-1]) / 2.
-    catalog_plots.plot_obs_scatter(true_vals.T, np.exp(data['log_interim_posteriors']), bin_mids, plot_loc=os.path.join(test_dir, 'plots'))
+    catalog_plots.plot_obs_scatter(true_vals, np.exp(data['log_interim_posteriors']), bin_mids, plot_loc=os.path.join(test_dir, 'plots'))
 
     prior = set_up_prior(data)
     n_bins = len(data['log_interim_prior'])
     n_ivals = 2 * n_bins
     initial_values = prior.sample(n_ivals)
+
+    true_nz = np.log(np.histogram(true_vals[0], bins=data['bin_ends'], normed=True)[0])
+    true_nz = chippr.discrete(data['bin_ends'], true_nz)
 
     nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
@@ -91,7 +94,7 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    test_name = 'fiducial'
+    test_name = 'single'
 
     all_tests = {}
     test_info = {}
