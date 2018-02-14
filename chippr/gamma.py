@@ -53,7 +53,7 @@ class gamma(object):
             true if within bounds
         """
         if self.bounds is not None:
-            y = ((x >= self.bounds[0]) and (x <= self.bounds[1]))
+            y = ((np.asarray(x) >= self.bounds[0]).all() and (np.asarray(x) <= self.bounds[1]).all())
         else:
             y = True
         return y
