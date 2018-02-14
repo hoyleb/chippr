@@ -134,7 +134,7 @@ class catalog(object):
         # self.samp_range = range(self.n_items)
 
         self.proc_bins()
-        if vb: print('bin ends early on in catalog: '+str(self.bin_ends))
+        # if vb: print('bin ends early on in catalog: '+str(self.bin_ends))
 
         self.prob_space = self.make_probs()
         # print('make_probs returns '+str(type(self.prob_space)))
@@ -251,7 +251,7 @@ class catalog(object):
 
         return p_space
 
-    def sample(self, N, vb=True):
+    def sample(self, N, vb=False):
         """
         Samples (z_spec, z_phot) pairs
 

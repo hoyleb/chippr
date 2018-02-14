@@ -452,14 +452,21 @@ class log_z_dens(object):
         out_info: dict
             dictionary of all available statistics
         """
-        self.info['stats']['kld'] = {}
+        self.info['stats']['kld'], self.info['stats']['log_kld'] = {}, {}
+        self.info['stats']['rms'], self.info['stats']['log_rms'] = {}, {}
+
         if self.truth is not None:
             for key in self.info['estimators']:
-                self.info['stats']['kld'][key] = s.calculate_kld(self.tru_nz, self.info['estimators'][key])
+                self.info['stats']['kld'][key] = s.calculate_kld(np.exp(self.info['log_tru_nz']), np.exp(self.info['estimators'][key]))
+                # self.info['stats']['log_kld'][key] = s.calculate_kld(self.log_tru_nz, self.info['estimators'][key])
+                self.info['stats']['rms']['true_nz' + '__' + key[4:]] = s.calculate_rms(np.exp(self.info['log_tru_nz']), np.exp(self.info['estimators'][key]))
+                self.info['stats']['log_rms']['log_true_nz'+ '__' + key] = s.calculate_rms(self.info['log_tru_nz'], self.info['estimators'][key])
 
-        self.info['stats']['rms'], self.info['stats']['log_rms'] = {}, {}
-        for key_1 in self.info['estimators']:
-            for key_2 in self.info['estimators']:
+        for i in range(len(self.info['estimators'].keys())):
+            key_1 = self.info['estimators'].keys()[i]
+            for j in range(len(self.info['estimators'].keys()[:i])):
+                key_2 = self.info['estimators'].keys()[j]
+                # print(((i,j), (key_1, key_2)))
                 self.info['stats']['log_rms'][key_1 + '__' + key_2] = s.calculate_rms(self.info['estimators'][key_1], self.info['estimators'][key_2])
                 self.info['stats']['rms'][key_1[4:] + '__' + key_2[4:]] = s.calculate_rms(np.exp(self.info['estimators'][key_1]), np.exp(self.info['estimators'][key_2]))
 

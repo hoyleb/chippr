@@ -17,14 +17,14 @@ from chippr import stat_utils as s
 
 lnz, nz = '', ''#r'$\ln[n(z)]$', r'$n(z)$'
 
-s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 2., 1., 'k', [(0, (1, 1))], 'Truth '
-s_tbp, w_tbp, a_tbp, c_tbp, d_tbp, l_tbp = ':', 2., 0.75, 'k', [(0, (1, 1))], 'Binned True '
-s_int, w_int, a_int, c_int, d_int, l_int = '-', 2., 0.5, 'k', [(0, (1, 1))], 'Interim '
-s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 2.5, 1., 'g', [(0, (2, 2))], 'Stacked '
-s_map, w_map, a_map, c_map, d_map, l_map = '--', 2., 1., 'r', [(0, (2, 1))], 'Modes '
-s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 2., 1., 'r', [(0, (1, 2))], 'Means '
-s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 3., 1., 'c', [(0, (2, 2))], 'HB Optimization '
-s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 3.5, 1., 'b', [(0, (1, 1))], 'HB Samples '
+s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 2., 1., 'k', [(0, (1, 1))], 'Underlying Truth '
+s_tbp, w_tbp, a_tbp, c_tbp, d_tbp, l_tbp = ':', 2., 0.75, 'k', [(0, (1, 1))], 'Binned Truth '
+s_int, w_int, a_int, c_int, d_int, l_int = '-', 2., 0.5, 'k', [(0, (1, 1))], 'Interim Prior '
+s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 2., 0.5, 'g', [(0, (2, 2))], 'Stacked '
+s_map, w_map, a_map, c_map, d_map, l_map = '--', 2., 0.5, 'r', [(0, (2, 1))], 'Modes '
+s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 2., 0.5, 'r', [(0, (1, 2))], 'Means '
+s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 2., 0.75, 'b', [(0, (2, 2))], 'CHIPPR MLE'
+s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 2., 0.5, 'b', [(0, (1, 1))], 'CHIPPR Samples '
 s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '-', 2., 1., 'k', [(0, (1, 1))], 'Sampled '
 
 def plot_ivals(ivals, info, plot_dir):
@@ -254,6 +254,12 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
 
     return plot_information
 
+def make_err_txt(info, key):
+    rms = "{0:.3e}".format(info['stats']['rms']['true_nz'+ '__' + key[4:]])
+    kld = "{0:.3e}".format(info['stats']['kld'][key])
+    plot_txt = r'(KLD='+kld+', RMSE='+rms+')'
+    return plot_txt
+
 def plot_estimators(info, plot_dir):
     """
     Makes a log and linear plot of n(z) estimators from a log_z_dens object
@@ -286,9 +292,9 @@ def plot_estimators(info, plot_dir):
         bin_true = np.exp(bin_log_true)
 
         # tru, =
-        sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']),
-                        linewidth=w_tru, alpha=a_tru, color=c_tru,
-                        label=l_tru+lnz)
+        # sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']),
+        #                 linewidth=w_tru, alpha=a_tru, color=c_tru,
+        #                 label=l_tru+lnz)
         # black_plots.append(tru)
         # black_labels.append(l_tru+lnz)
         #tbp, =
@@ -328,39 +334,45 @@ def plot_estimators(info, plot_dir):
 
     if 'log_stacked_nz' in info['estimators']:
         # stk, =
-        pu.plot_step(sps_log, info['bin_ends'],
-                        info['estimators']['log_stacked_nz'], w=w_stk,
-                        s=s_stk, a=a_stk, c=c_stk, d=d_stk, l=l_stk+lnz)
         # color_plots.insert(0, stk)
         # color_labels.insert(0, l_stk+lnz)
+        err_txt = None
         if info['truth'] is not None:
+            err_txt = make_err_txt(info, 'log_stacked_nz')
             pu.plot_step(mini_sps, info['bin_ends'],
                             (np.exp(info['estimators']['log_stacked_nz']) / bin_true - 1.) * 100.,
                             w=w_stk, s=s_stk, a=a_stk, c=c_stk, d=d_stk)
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_stacked_nz'], w=w_stk,
+                        s=s_stk, a=a_stk, c=c_stk, d=d_stk, l=l_stk+lnz+err_txt)
 
     if 'log_mexp_nz' in info['estimators']:
         # exp, =
-        pu.plot_step(sps_log, info['bin_ends'],
-                        info['estimators']['log_mexp_nz'], w=w_exp,
-                        s=s_exp, a=a_exp, c=c_exp, d=d_exp, l=l_exp+lnz)
         # color_plots.insert(0, exp)
         # color_labels.insert(0, l_exp+lnz)
+        err_txt = None
         if info['truth'] is not None:
+            err_txt = make_err_txt(info, 'log_mexp_nz')
             pu.plot_step(mini_sps, info['bin_ends'],
                             (np.exp(info['estimators']['log_mexp_nz']) / bin_true - 1.) * 100.,
                             w=w_exp, s=s_exp, a=a_exp, c=c_exp, d=d_exp)
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_mexp_nz'], w=w_exp,
+                        s=s_exp, a=a_exp, c=c_exp, d=d_exp, l=l_exp+lnz+err_txt)
 
     if 'log_mmap_nz' in info['estimators']:
         # mmp, =
-        pu.plot_step(sps_log, info['bin_ends'],
-                        info['estimators']['log_mmap_nz'], w=w_map,
-                        s=s_map, a=a_map, c=c_map, d=d_map, l=l_map+lnz)
         # color_plots.insert(0, mmp)
         # color_labels.insert(0, l_map+lnz)
+        err_txt = None
         if info['truth'] is not None:
+            err_txt = make_err_txt(info, 'log_mmap_nz')
             pu.plot_step(mini_sps, info['bin_ends'],
                             (np.exp(info['estimators']['log_mmap_nz']) / bin_true - 1.) * 100.,
                             w=w_map, s=s_map, a=a_map, c=c_map, d=d_map)
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_mmap_nz'], w=w_map,
+                        s=s_map, a=a_map, c=c_map, d=d_map, l=l_map+lnz+err_txt)
 
     if 'log_mean_sampled_nz' in info['estimators']:
         plot_samples(info, plot_dir)
@@ -386,7 +398,9 @@ def plot_estimators(info, plot_dir):
         #                 w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz)
         # color_plots.insert(0, bfe)
         # color_labels.insert(0, l_bfe+lnz)
+        err_txt = None
         if info['truth'] is not None:
+            err_txt = make_err_txt(info, 'log_mean_sampled_nz')
             for k in range(len(info['bin_ends'])-1):
                 x_errs = [info['bin_ends'][k], info['bin_ends'][k],
                             info['bin_ends'][k+1], info['bin_ends'][k+1]]
@@ -404,21 +418,23 @@ def plot_estimators(info, plot_dir):
 
     elif 'log_mmle_nz' in info['estimators']:
         # mle, =
-        pu.plot_step(sps_log, info['bin_ends'],
-                        info['estimators']['log_mmle_nz'], w=w_mle,
-                        s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz)
         # color_plots.insert(0, mle)
         # color_labels.insert(0, l_mle+lnz)
+        err_txt = None
         if info['truth'] is not None:
+            err_txt = make_err_txt(info, 'log_mmle_nz')
             pu.plot_step(mini_sps, info['bin_ends'],
                             (np.exp(info['estimators']['log_mmle_nz']) / bin_true - 1.) * 100.,
                             w=w_mle, s=s_mle, a=a_mle, c=c_mle, d=d_mle)
+        pu.plot_step(sps_log, info['bin_ends'],
+                        info['estimators']['log_mmle_nz'], w=w_mle,
+                        s=s_mle, a=a_mle, c=c_mle, d=d_mle, l=l_mle+lnz+err_txt)
 
     # sps_log.legend(handles=color_plots[:-1], fontsize='x-small', loc='lower center', frameon=False)
-    sps_log.legend(fontsize='x-small', loc='lower center', frameon=False)
+    sps_log.legend(fontsize='x-small', loc='upper right', frameon=False)
     f.subplots_adjust(hspace=0, wspace=0)
     f.savefig(os.path.join(plot_dir, 'estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
-
+    print(info['stats'])
     return
 
 def plot_samples(info, plot_dir):

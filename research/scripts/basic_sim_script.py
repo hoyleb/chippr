@@ -59,7 +59,7 @@ def make_true(given_key):
         # true_shape = test_info['params']['true_shape']
         true_loc = test_info['params']['true_loc']
         true_scale = test_info['params']['true_scale']
-        true_nz = gamma(true_loc, true_scale**2)#sps.erlang(true_shape, true_loc, true_scale)
+        true_nz = gamma(true_loc, true_scale**2, bounds=(min(test_info['bin_ends']), max(test_info['bin_ends'])))#sps.erlang(true_shape, true_loc, true_scale)
         true_dict = {'amps': [1.], 'means': [true_loc], 'sigmas': [true_scale]}
         # true_amps = np.array([0.150,0.822,1.837,2.815,3.909,
         #                       5.116,6.065,6.477,6.834,7.304,
@@ -180,7 +180,7 @@ def make_catalog(given_key):
     test_info['bin_ends'] = np.linspace(test_info['params']['bin_min'],
                                 test_info['params']['bin_max'],
                                 test_info['params']['n_bins']+1)
-    print('bin ends to simulation = '+str(test_info['bin_ends']))
+    # print('bin ends to simulation = '+str(test_info['bin_ends']))
 
     test_info, true_nz = make_true(given_key)
     # true_amps = test_info['truth']['amps']
@@ -198,7 +198,7 @@ def make_catalog(given_key):
     posteriors = chippr.catalog(param_file_name, loc=test_dir)
     output = posteriors.create(true_nz, interim_prior, N=test_info['params']['n_gals'])
     # data = np.exp(output['log_interim_posteriors'])
-    print('bin ends from simulation: '+str(posteriors.bin_ends))
+    # print('bin ends from simulation: '+str(posteriors.bin_ends))
     posteriors.write()
     data_dir = posteriors.data_dir
     with open(os.path.join(data_dir, 'true_params.p'), 'w') as true_file:

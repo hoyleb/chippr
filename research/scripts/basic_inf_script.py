@@ -44,14 +44,14 @@ def set_up_prior(data, params):
         prior distribution as multivariate normal
     """
     zs = data['bin_ends']
-    print(str(len(zs))+' input redshift bin ends')
+    # print(str(len(zs))+' input redshift bin ends')
     log_nz_intp = data['log_interim_prior']
     log_z_posts = data['log_interim_posteriors']
 
     z_difs = zs[1:]-zs[:-1]
     z_mids = (zs[1:]+zs[:-1])/2.
     n_bins = len(z_mids)
-    print(str(n_bins)+' bin centers')
+    # print(str(n_bins)+' bin centers')
 
     n_pdfs = len(log_z_posts)
 
@@ -60,12 +60,12 @@ def set_up_prior(data, params):
     c = a / n_pdfs
     prior_var = np.eye(n_bins)
     for k in range(n_bins):
-        print(k)
+        # print(k)
         prior_var[k] = a * np.exp(-0.5 * b * (z_mids[k] - z_mids) ** 2)
     prior_var += c * np.eye(n_bins)
 
     prior_mean = log_nz_intp
-    print('prior dimensions: '+str((np.shape(prior_mean), np.shape(prior_var))))
+    # print('prior dimensions: '+str((np.shape(prior_mean), np.shape(prior_var))))
     prior = mvn(prior_mean, prior_var)
     if params['prior_mean'] is 'sample':
         prior_mean = prior.sample_one()
@@ -99,7 +99,7 @@ def do_inference(given_key):
     saved_type = '.txt'
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
     zs = data['bin_ends']
-    print('bin_ends read by inference '+str(zs))
+    # print('bin_ends read by inference '+str(zs))
     z_difs = zs[1:]-zs[:-1]
     # with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
     #     true_nz_params = pickle.load(true_file)
@@ -129,24 +129,24 @@ def do_inference(given_key):
     print('stacked: '+str(np.dot(np.exp(nz_stacked), z_difs)))
     nz_mmap = nz.calculate_mmap()
     print('MMAP: '+str(np.dot(np.exp(nz_mmap), z_difs)))
-    nz_mexp = nz.calculate_mexp()
-    print('MExp: '+str(np.dot(np.exp(nz_mexp), z_difs)))
+    # nz_mexp = nz.calculate_mexp()
+    # print('MExp: '+str(np.dot(np.exp(nz_mexp), z_difs)))
     nz_mmle = nz.calculate_mmle(nz_stacked, no_data=params['no_data'], no_prior=params['no_prior'])
     print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs)))
-    nz.plot_estimators()
-    nz.write('nz.p')
+    # nz.plot_estimators()
+    # nz.write('nz.p')
 
-    #start_mean = mvn(nz_mmle, cov).sample_one()
-    start = prior#mvn(data['log_interim_prior'], cov)
-
-    n_bins = len(nz_mmle)
-    if params['n_walkers'] is not None:
-        n_ivals = params['n_walkers']
-    else:
-        n_ivals = 10 * n_bins
-    initial_values = start.sample(n_ivals)
-
-    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
+    # #start_mean = mvn(nz_mmle, cov).sample_one()
+    # start = prior#mvn(data['log_interim_prior'], cov)
+    #
+    # n_bins = len(nz_mmle)
+    # if params['n_walkers'] is not None:
+    #     n_ivals = params['n_walkers']
+    # else:
+    #     n_ivals = 10 * n_bins
+    # initial_values = start.sample(n_ivals)
+    #
+    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
 
