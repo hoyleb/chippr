@@ -433,8 +433,8 @@ class log_z_dens(object):
             self.log_bfe_nz = self.info['estimators']['log_mean_sampled_nz']
             self.bfe_nz = np.exp(self.log_smp_nz)
 
-        if vb:
-            plots.plot_samples(self.info, self.plot_dir)
+        # if vb:
+            # plots.plot_samples(self.info, self.plot_dir)
 
         return self.log_smp_nz
 
