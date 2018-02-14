@@ -55,9 +55,9 @@ def set_up_prior(data, params):
 
     n_pdfs = len(log_z_posts)
 
-    a = 1.# / n_bins
-    b = 20.#1. / z_difs ** 2
-    c = a / n_pdfs
+    a = 1.#amplitude
+    b = 5.#wavelength
+    c = 1.e-2#random fluctuations
     prior_var = np.eye(n_bins)
     for k in range(n_bins):
         # print(k)
@@ -133,23 +133,24 @@ def do_inference(given_key):
     # print('MExp: '+str(np.dot(np.exp(nz_mexp), z_difs)))
     nz_mmle = nz.calculate_mmle(nz_stacked, no_data=params['no_data'], no_prior=params['no_prior'])
     print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs)))
-    # nz.plot_estimators()
-    # nz.write('nz.p')
-
-    # #start_mean = mvn(nz_mmle, cov).sample_one()
-    # start = prior#mvn(data['log_interim_prior'], cov)
-    #
-    # n_bins = len(nz_mmle)
-    # if params['n_walkers'] is not None:
-    #     n_ivals = params['n_walkers']
-    # else:
-    #     n_ivals = 10 * n_bins
-    # initial_values = start.sample(n_ivals)
-    #
-    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
 
     nz_stats = nz.compare()
+    nz.plot_estimators()
+    nz.write('nz.p')
 
+    #start_mean = mvn(nz_mmle, cov).sample_one()
+    start = prior#mvn(data['log_interim_prior'], cov)
+
+    n_bins = len(nz_mmle)
+    if params['n_walkers'] is not None:
+        n_ivals = params['n_walkers']
+    else:
+        n_ivals = 10 * n_bins
+    initial_values = start.sample(n_ivals)
+
+    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'], n_procs=1)
+
+    nz_stats = nz.compare()
     nz.plot_estimators()
     nz.write('nz.p')
 
