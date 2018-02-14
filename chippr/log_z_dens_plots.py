@@ -17,14 +17,14 @@ from chippr import stat_utils as s
 
 lnz, nz = '', ''#r'$\ln[n(z)]$', r'$n(z)$'
 
-s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 2., 1., 'k', [(0, (1, 1))], 'Underlying Truth '
-s_tbp, w_tbp, a_tbp, c_tbp, d_tbp, l_tbp = ':', 2., 0.75, 'k', [(0, (1, 1))], 'Binned Truth '
-s_int, w_int, a_int, c_int, d_int, l_int = '-', 2., 0.5, 'k', [(0, (1, 1))], 'Interim Prior '
+s_tru, w_tru, a_tru, c_tru, d_tru, l_tru = '-', 2., 1., 'k', [(0, (1, 0.001))], 'Underlying Truth '
+s_tbp, w_tbp, a_tbp, c_tbp, d_tbp, l_tbp = ':', 2., 0.75, 'k', [(0, (1, 0.001))], 'Binned Truth '
+s_int, w_int, a_int, c_int, d_int, l_int = '-', 2., 0.5, 'k', [(0, (1, 0.001))], 'Interim Prior '
 s_stk, w_stk, a_stk, c_stk, d_stk, l_stk = '--', 2., 0.5, 'g', [(0, (2, 2))], 'Stacked '
 s_map, w_map, a_map, c_map, d_map, l_map = '--', 2., 0.5, 'r', [(0, (2, 1))], 'Modes '
 s_exp, w_exp, a_exp, c_exp, d_exp, l_exp = '--', 2., 0.5, 'r', [(0, (1, 2))], 'Means '
-s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 2., 0.75, 'b', [(0, (2, 2))], 'CHIPPR MLE'
-s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 2., 0.5, 'b', [(0, (1, 1))], 'CHIPPR Samples '
+s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 2., 0.5, 'b', [(0, (1, 2))], 'CHIPPR Optimization \n'
+s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 2., 0.5, 'b', [(0, (2, 1))], 'CHIPPR Samples \n'
 s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '-', 2., 1., 'k', [(0, (1, 1))], 'Sampled '
 
 def plot_ivals(ivals, info, plot_dir):
@@ -377,21 +377,6 @@ def plot_estimators(info, plot_dir):
     if 'log_mean_sampled_nz' in info['estimators']:
         plot_samples(info, plot_dir)
         (locs, scales) = s.norm_fit(info['log_sampled_nz_meta_data']['chains'])
-        for k in range(len(info['bin_ends'])-1):
-            x_errs = [info['bin_ends'][k], info['bin_ends'][k],
-                        info['bin_ends'][k+1], info['bin_ends'][k+1]]
-            log_y_errs_1 = np.array([locs[k] - scales[k], locs[k] + scales[k],
-                                locs[k] + scales[k], locs[k] - scales[k]])
-            log_y_errs_2 = np.array([locs[k] - 2 * scales[k], locs[k] + 2 * scales[k],
-                                locs[k] + 2 * scales[k], locs[k] - 2 * scales[k]])
-            # y_errs_1 = [np.exp(locs[k] - scales[k]), np.exp(locs[k] + scales[k]),
-            #             np.exp(locs[k] + scales[k]), np.exp(locs[k] - scales[k])]
-            # y_errs_2 = [np.exp(locs[k] - 2 * scales[k]), np.exp(locs[k] + 2 * scales[k]),
-            #             np.exp(locs[k] + 2 * scales[k]), np.exp(locs[k] - 2 * scales[k])]
-            sps_log.fill(x_errs, log_y_errs_1, color=c_bfe, alpha=0.5,
-                            linewidth=0.)
-            sps_log.fill(x_errs, log_y_errs_2, color=c_bfe, alpha=0.25,
-                            linewidth=0.)
         # bfe, =
         # pu.plot_step(sps_log, info['bin_ends'],
         #                 info['estimators']['log_mean_sampled_nz'],
@@ -415,6 +400,22 @@ def plot_estimators(info, plot_dir):
             # pu.plot_step(mini_sps, info['bin_ends'],
             #                 (1. - np.exp(info['estimators']['log_mean_sampled_nz']) / bin_true) * 100.,
             #                 w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe)
+        for k in range(len(info['bin_ends'])-1):
+            x_errs = [info['bin_ends'][k], info['bin_ends'][k],
+                        info['bin_ends'][k+1], info['bin_ends'][k+1]]
+            log_y_errs_1 = np.array([locs[k] - scales[k], locs[k] + scales[k],
+                                locs[k] + scales[k], locs[k] - scales[k]])
+            log_y_errs_2 = np.array([locs[k] - 2 * scales[k], locs[k] + 2 * scales[k],
+                                locs[k] + 2 * scales[k], locs[k] - 2 * scales[k]])
+            # y_errs_1 = [np.exp(locs[k] - scales[k]), np.exp(locs[k] + scales[k]),
+            #             np.exp(locs[k] + scales[k]), np.exp(locs[k] - scales[k])]
+            # y_errs_2 = [np.exp(locs[k] - 2 * scales[k]), np.exp(locs[k] + 2 * scales[k]),
+            #             np.exp(locs[k] + 2 * scales[k]), np.exp(locs[k] - 2 * scales[k])]
+            sps_log.fill(x_errs, log_y_errs_1, color=c_bfe, alpha=0.5,
+                            linewidth=0.)
+            sps_log.fill(x_errs, log_y_errs_2, color=c_bfe, alpha=0.25,
+                            linewidth=0.)
+        plt.plot([100., 100.], w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz+err_txt)
 
     elif 'log_mmle_nz' in info['estimators']:
         # mle, =
