@@ -12,7 +12,11 @@ n_bins = 10
 
 n_gals = 4
 
+cat_out_rate = 0.1
+cat_out_mean = 1.
+cat_out_sigma = 0.01
 constant_sigma = 0.03
+constant_bias = 0.003
 
 gr_threshold = 1.2
 
@@ -100,6 +104,16 @@ def check_variable_sigmas(params):
         params['constant_sigma'] = constant_sigma
     else:
         params['constant_sigma'] = float(params['constant_sigma'][0])
+
+    if 'ez_bias' not in params:
+        params['ez_bias'] = 0
+    else:
+        params['ez_bias'] = int(params['ez_bias'][0])
+    if 'constant_sigma' not in params:
+        params['bias_val'] = constant_bias
+    else:
+        params['bias_val'] = float(params['bias_val'][0])
+
     return params
 
 def check_catastrophic_outliers(params):
@@ -125,15 +139,18 @@ def check_catastrophic_outliers(params):
         params['catastrophic_outliers'] = '0'
     else:
         params['catastrophic_outliers'] = str(params['catastrophic_outliers'][0])
-    if 'outlier_fraction' not in params:
-        params['outlier_fraction'] = 0.
-    else:
-        params['outlier_fraction']  = float(params['outlier_fraction'][0])
-    if params['outlier_fraction'] > 0.:
-        params['outlier_mean'] = float(params['outlier_mean'][0])
-        params['outlier_sigma'] = float(params['outlier_sigma'][0])
-    else:
-        params['outlier_fraction'] = 0.
+        if 'outlier_fraction' not in params:
+            params['outlier_fraction'] = cat_out_rate
+        else:
+            params['outlier_fraction']  = float(params['outlier_fraction'][0])
+            if 'outlier_mean' in params:#params['outlier_fraction'] > 0.:
+                params['outlier_mean'] = float(params['outlier_mean'][0])
+            else:
+                params['outlier_mean'] = cat_out_mean
+            if 'outlier_sigma' in params:
+                params['outlier_sigma'] = float(params['outlier_sigma'][0])
+            else:
+                params['outlier_sigma'] = cat_out_sigma
     return params
 
 def check_inf_params(params={}):
