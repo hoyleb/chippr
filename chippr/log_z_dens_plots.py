@@ -375,7 +375,7 @@ def plot_estimators(info, plot_dir):
                         s=s_map, a=a_map, c=c_map, d=d_map, l=l_map+lnz+err_txt)
 
     if 'log_mean_sampled_nz' in info['estimators']:
-        plot_samples(info, plot_dir)
+        # plot_samples(info, plot_dir)
         (locs, scales) = s.norm_fit(info['log_sampled_nz_meta_data']['chains'])
         # bfe, =
         # pu.plot_step(sps_log, info['bin_ends'],

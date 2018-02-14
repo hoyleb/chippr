@@ -183,7 +183,7 @@ class catalog(object):
 
         Notes
         -----
-        Does not currently support variable sigmas, only one outlier population at a time
+        only one outlier population at a time
         """
         if truth is None:
         # this is one Gaussian for each z_spec, to be evaluated at each z_phot
