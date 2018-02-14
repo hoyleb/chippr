@@ -10,7 +10,7 @@ import chippr
 
 class gauss(object):
 
-    def __init__(self, mean, var):
+    def __init__(self, mean, var, bounds=None):
         """
         A univariate Gaussian probability distribution object
 
@@ -25,7 +25,7 @@ class gauss(object):
         self.var = var
         self.sigma = self.norm_var()
         self.invvar = self.invert_var()
-        self.dist = ND(self.mean, self.sigma)
+        self.dist = ND(self.mean, self.sigma)            
 
     def norm_var(self):
         """

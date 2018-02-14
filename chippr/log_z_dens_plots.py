@@ -286,9 +286,9 @@ def plot_estimators(info, plot_dir):
         bin_true = np.exp(bin_log_true)
 
         # tru, =
-        # sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']),
-        #                 linewidth=w_tru, alpha=a_tru, color=c_tru,
-        #                 label=l_tru+lnz)
+        sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']),
+                        linewidth=w_tru, alpha=a_tru, color=c_tru,
+                        label=l_tru+lnz)
         # black_plots.append(tru)
         # black_labels.append(l_tru+lnz)
         #tbp, =

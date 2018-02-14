@@ -204,14 +204,18 @@ class catalog(object):
         uniform_lf = discrete(np.array([self.z_min, self.z_max]), np.array([1.]))
         uniform_lfs = [discrete(np.array([grid_means[kk] - self.dz_fine / 2., grid_means[kk] + self.dz_fine / 2.]), np.array([1.])) for kk in range(self.n_tot)]
 
+        grid_sigma = self.params['constant_sigma']
         if not self.params['variable_sigmas']:
-            grid_sigma = self.params['constant_sigma']# * np.identity(2)
+            # * np.identity(2)
             # grid_sigmas = self.params['constant_sigma'] * np.ones(self.n_tot)#np.ones((self.n_tot, self.n_tot, 2))
             grid_funcs = [gauss(grid_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[mvn(grid_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[[mvn(grid_means[kk][jj], grid_sigmas[kk][jj]**2) for jj in range(self.n_tot)] for kk in range(self.n_tot)]
-            grid_funcs = [multi_dist([uniform_lfs[kk], grid_funcs[kk]]) for kk in range(self.n_tot)]
         else:
-            print('variable sigmas is not yet implemented')
-            return
+            # print('attempt at variable sigmas with '+str(grid_sigma)+' of '+str(type(grid_sigma)))
+            grid_sigmas = grid_sigma * (1. + grid_means)
+            # print('made the sigma grid')
+            grid_funcs = [gauss(grid_means[kk], grid_sigmas[kk]**2) for kk in range(self.n_tot)]
+            # print('made the grid functions')
+        grid_funcs = [multi_dist([uniform_lfs[kk], grid_funcs[kk]]) for kk in range(self.n_tot)]
 
         if self.params['catastrophic_outliers'] != '0':
             # np.append(grid_amps, [self.params['outlier_fraction'] / self.n_tot])

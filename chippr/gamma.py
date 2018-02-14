@@ -3,39 +3,72 @@
 import sys
 
 import numpy as np
+import scipy.misc as spm
 
 from pomegranate.distributions import GammaDistribution as GD
 
 import chippr
+from chippr import defaults as d
 
 class gamma(object):
 
-    def __init__(self, shape, ratesqr):
+    def __init__(self, shape, ratesqr, bounds=None):
         """
-        A univariate Gaussian probability distribution object
+        A univariate Gamma (Erlang) probability distribution object
 
         Parameters
         ----------
-        shape: float
-            shape parameter of gamma probability distribution
+        shape: int
+            shape parameter of gamma (erlang) probability distribution
         ratesqr: float
-            square of rate parameter of gamma probability distribution
+            square of rate parameter of gamma (erlang) probability distribution
+        bounds: tuple, float, optional
+            limits of the distribution
         """
         self.shape = shape
         self.rate = np.sqrt(ratesqr)
         self.dist = GD(self.shape, self.rate)
+
+        self.bounds = bounds
+        if self.bounds is not None:
+            def cdf(x):
+                return 1. - sum([1. / spm.factorial(n) * np.exp(-1. * self.rate * x) * (self.rate * x) ** n for n in np.arange(self.shape)])
+            self.integral = cdf(self.bounds[1]) - cdf(self.bounds[0])
+            self.scale = 1. / self.integral#integrate between bounds
+        else:
+            self.scale = 1.
+
+    def check_bounds(self, x):
+        """
+        Checks if point of evaluation is within the bounds
+
+        Parameters
+        ----------
+        x: float
+            value at which to check boundedness
+
+        Returns
+        -------
+        y: boolean
+            true if within bounds
+        """
+        if self.bounds is not None:
+            y = ((x >= self.bounds[0]) and (x <= self.bounds[1]))
+        else:
+            y = True
+        return y
 
     def pdf(self, xs):
         return self.evaluate(xs)
 
     def evaluate_one(self, x):
         """
-        Function to evaluate Gaussian probability distribution once
+        Function to evaluate Gamma probability distribution once
 
         Parameters
         ----------
         x: float
-            value at which to evaluate Gaussian probability distribution
+            value at which to evaluate Gamma probability distribution
 
         Returns
         -------
@@ -44,12 +77,15 @@ class gamma(object):
         """
         # p = 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
         # np.exp(-0.5 * (self.mean - x) * self.invvar * (self.mean - x))
-        p = self.dist.probability(x)
+        if self.check_bounds(x):
+            p = self.scale * self.dist.probability(x)
+        else:
+            p = d.eps
         return p
 
     def evaluate(self, xs):
         """
-        Function to evaluate univariate Gaussian probability distribution at multiple points
+        Function to evaluate univariate Gamma probability distribution at multiple points
 
         Parameters
         ----------
@@ -66,25 +102,31 @@ class gamma(object):
         # ps = np.zeros_like(xs)
         # for n, x in enumerate(xs):
         #     ps[n] += self.evaluate_one(x)
-        ps = self.dist.probability(xs)
+        if self.check_bounds(xs):
+            ps = self.scale * self.dist.probability(xs)
+        else:
+            ps = d.eps * np.ones(len(xs))
         return ps
 
     def sample_one(self):
         """
-        Function to take one sample from univariate Gaussian probability distribution
+        Function to take one sample from univariate Gamma probability distribution
 
         Returns
         -------
         x: float
-            single sample from Gaussian probability distribution
+            single sample from Gamma probability distribution
         """
         # x = self.mean + self.sigma * np.random.normal()
-        x = self.dist.sample(1)
+        bounded = False
+        while not bounded:
+            x = self.dist.sample(1)
+            bounded = self.check_bounds(x)
         return x
 
     def sample(self, n_samps):
         """
-        Function to sample univariate Gaussian probability distribution
+        Function to sample univariate Gamma probability distribution
 
         Parameters
         ----------
@@ -94,10 +136,22 @@ class gamma(object):
         Returns
         -------
         xs: ndarray, float
-            array of n_samps samples from Gaussian probability distribution
+            array of n_samps samples from Gamma probability distribution
         """
         # print('gauss trying to sample '+str(n_samps)+' from '+str(self.dist))
         # xs = np.array([self.sample_one() for n in range(n_samps)])
-        xs = np.array(self.dist.sample(n_samps))
+        def partial_sample(n_s, x=None):
+            if x is None:
+                x = np.array(self.dist.sample(n_s))
+            else:
+                x_again = np.array(self.dist.sample(n_s))
+                x = np.concatenate((x, x_again))
+            return (n, x)
+        i = 0
+        xs = np.empty(0)
+        while i < n_samps:
+            (i, xs) = partial_sample(n_samps - i, xs=xs)
+            xs = xs[self.check_bounds(xs)]
+            i = len(xs)
         # print('gauss sampled '+str(n_samps)+' from '+str(self.dist))
-        return xs
+        return xs[:n_samps]

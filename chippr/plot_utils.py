@@ -56,6 +56,10 @@ def plot_step(sub_plot, bin_ends, to_plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0
         label for function
     r: boolean, optional
         True for rasterized, False for vectorized
+
+    Notes
+    -----
+    Make this not need a subplot
     """
 
     plot_h(sub_plot, bin_ends, to_plot, s, c, a, w, d, l, r)

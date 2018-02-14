@@ -96,11 +96,10 @@ def check_variable_sigmas(params):
         params['variable_sigmas'] = 0
     else:
         params['variable_sigmas'] = int(params['variable_sigmas'][0])
-    if not params['variable_sigmas']:
-        if 'constant_sigma' not in params:
-            params['constant_sigma'] = constant_sigma
-        else:
-            params['constant_sigma'] = float(params['constant_sigma'][0])
+    if 'constant_sigma' not in params:
+        params['constant_sigma'] = constant_sigma
+    else:
+        params['constant_sigma'] = float(params['constant_sigma'][0])
     return params
 
 def check_catastrophic_outliers(params):
