@@ -415,7 +415,7 @@ def plot_estimators(info, plot_dir):
                             linewidth=0.)
             sps_log.fill(x_errs, log_y_errs_2, color=c_bfe, alpha=0.25,
                             linewidth=0.)
-        plt.plot([100., 100.], w=w_bfe, s=s_bfe, a=a_bfe, c=c_bfe, d=d_bfe, l=l_bfe+lnz+err_txt)
+        plt.plot([100.], [100.], linewidth=w_bfe, linestyle=s_bfe, alpha=a_bfe, color=c_bfe, dashes=d_bfe, label=l_bfe+lnz+err_txt)
 
     elif 'log_mmle_nz' in info['estimators']:
         # mle, =
