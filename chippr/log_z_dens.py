@@ -57,7 +57,7 @@ class log_z_dens(object):
         self.n_pdfs = len(self.log_pdfs)
         self.info['log_interim_posteriors'] = self.log_pdfs
 
-        self.precomputed = self.precompute()
+        # self.precomputed = self.precompute()
 
         if vb:
             print(str(self.n_bins) + ' bins, ' + str(len(self.log_pdfs)) + ' interim posterior PDFs')
@@ -100,8 +100,8 @@ class log_z_dens(object):
         return
 
     def precompute(self):
-        integrated_int_pr = self.n_pdfs * self.log_int_pr
-        integrated_int_posts = np.sum(self.log_pdfs, axis=0)
+        integrated_int_pr = np.log(self.n_pdfs * self.int_pr)
+        integrated_int_posts = np.log(np.sum(self.pdfs, axis=0))
         precomputed = integrated_int_posts - integrated_int_pr
         return precomputed
 
@@ -120,12 +120,12 @@ class log_z_dens(object):
         log_hyper_likelihood: float
             log likelihood probability associated with parameters in log_nz
         """
-        # nz = np.exp(log_nz)
-        # norm_nz = nz / np.dot(nz, self.bin_difs)
+        nz = np.exp(log_nz)
+        norm_nz = nz / np.dot(nz, self.bin_difs)
         # testing whether the norm step is still necessary
-        # hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)
-        # log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - norm_nz
-        log_hyper_likelihood = np.dot(np.exp(log_nz + self.precomputed), self.bin_difs)
+        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)
+        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - np.log(np.dot(norm_nz, self.bin_difs))
+        # log_hyper_likelihood = np.dot(np.exp(log_nz + self.precomputed), self.bin_difs)
         return log_hyper_likelihood
 
     def evaluate_log_hyper_prior(self, log_nz):
