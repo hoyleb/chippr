@@ -96,12 +96,20 @@ class log_z_dens(object):
             os.makedirs(self.res_dir)
 
         return
-
-    def precompute(self):
-        integrated_int_pr = np.log(np.dot(self.int_pr, self.bin_difs))
-        integrated_int_posts = np.log(np.dot(self.pdfs, axis=0)
-        precomputed = integrated_int_posts - integrated_int_pr
-        return precomputed
+    #
+    # def precompute(self):
+    #     """
+    #     Function to precompute values that show up in posterior that are independent of n(z) params
+    #
+    #     Returns
+    #     -------
+    #     precomputed: float
+    #         log-probability component independent of test params
+    #     """
+    #     integrated_int_pr = np.log(np.dot(self.int_pr, self.bin_difs))
+    #     integrated_int_posts = np.log(np.dot(self.pdfs, axis=0)
+    #     precomputed = integrated_int_posts - integrated_int_pr
+    #     return precomputed
 
     def evaluate_log_hyper_likelihood(self, log_nz):
         """
@@ -234,7 +242,7 @@ class log_z_dens(object):
             array of logged redshift density function bin values maximizing
             hyperposterior
         """
-        self.precomputed = self.precompute()
+        # self.precomputed = self.precompute()
         if 'log_mmle_nz' not in self.info['estimators']:
             log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior, vb=vb)
             mle_nz = np.exp(log_mle)
@@ -391,7 +399,7 @@ class log_z_dens(object):
         log_samples_nz: ndarray, float
             array of sampled log redshift density function bin values
         """
-        self.precomputed = self.precompute()
+        # self.precomputed = self.precompute()
         if 'log_mean_sampled_nz' not in self.info['estimators']:
             self.n_walkers = len(ivals)
             if no_data:
