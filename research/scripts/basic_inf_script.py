@@ -131,28 +131,28 @@ def do_inference(given_key):
     print('MMAP: '+str(np.dot(np.exp(nz_mmap), z_difs)))
     # nz_mexp = nz.calculate_mexp()
     # print('MExp: '+str(np.dot(np.exp(nz_mexp), z_difs)))
-    nz_mmle = nz.calculate_mmle(nz_stacked, no_data=params['no_data'], no_prior=params['no_prior'])
+    nz_mmle = nz.calculate_mmle(nz_stacked, no_data=params['no_data'], no_prior=params['no_prior'], vb=True)
     print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs)))
 
     nz_stats = nz.compare()
     nz.plot_estimators()
     nz.write('nz.p')
-
-    #start_mean = mvn(nz_mmle, cov).sample_one()
-    start = prior#mvn(data['log_interim_prior'], cov)
-
-    n_bins = len(nz_mmle)
-    if params['n_walkers'] is not None:
-        n_ivals = params['n_walkers']
-    else:
-        n_ivals = 10 * n_bins
-    initial_values = start.sample(n_ivals)
-
-    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'], n_procs=1)
-
-    nz_stats = nz.compare()
-    nz.plot_estimators()
-    nz.write('nz.p')
+    #
+    # #start_mean = mvn(nz_mmle, cov).sample_one()
+    # start = prior#mvn(data['log_interim_prior'], cov)
+    #
+    # n_bins = len(nz_mmle)
+    # if params['n_walkers'] is not None:
+    #     n_ivals = params['n_walkers']
+    # else:
+    #     n_ivals = 10 * n_bins
+    # initial_values = start.sample(n_ivals)
+    #
+    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'], n_procs=1)
+    #
+    # nz_stats = nz.compare()
+    # nz.plot_estimators()
+    # nz.write('nz.p')
 
 if __name__ == "__main__":
 

@@ -2,6 +2,7 @@ import numpy as np
 import csv
 import timeit
 import os
+import pickle as pkl
 
 import matplotlib as mpl
 mpl.use('PS')
@@ -54,6 +55,8 @@ class catalog(object):
         self.data_dir = os.path.join(loc, 'data')
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
+        with open(os.path.join(self.data_dir, 'params.p'), 'wb') as paramfile:
+            pkl.dump(self.params, paramfile)
 
     def proc_bins(self, vb=True):
         """

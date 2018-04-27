@@ -57,8 +57,6 @@ class log_z_dens(object):
         self.n_pdfs = len(self.log_pdfs)
         self.info['log_interim_posteriors'] = self.log_pdfs
 
-        self.precomputed = self.precompute()
-
         if vb:
             print(str(self.n_bins) + ' bins, ' + str(len(self.log_pdfs)) + ' interim posterior PDFs')
 
@@ -100,8 +98,8 @@ class log_z_dens(object):
         return
 
     def precompute(self):
-        integrated_int_pr = self.n_pdfs * self.log_int_pr
-        integrated_int_posts = np.sum(self.log_pdfs, axis=0)
+        integrated_int_pr = np.log(np.dot(self.int_pr, self.bin_difs))
+        integrated_int_posts = np.log(np.dot(self.pdfs, axis=0)
         precomputed = integrated_int_posts - integrated_int_pr
         return precomputed
 
@@ -120,12 +118,15 @@ class log_z_dens(object):
         log_hyper_likelihood: float
             log likelihood probability associated with parameters in log_nz
         """
-        # nz = np.exp(log_nz)
-        # norm_nz = nz / np.dot(nz, self.bin_difs)
+        nz = np.exp(log_nz)
+        norm_nz = nz / np.dot(nz, self.bin_difs)
+
         # testing whether the norm step is still necessary
-        # hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)
-        # log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - norm_nz
-        log_hyper_likelihood = np.dot(np.exp(log_nz + self.precomputed), self.bin_difs)
+        hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)
+        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - np.log(np.dot(norm_nz, self.bin_difs))
+
+        # this used to work...
+        # log_hyper_likelihood = np.dot(np.exp(log_nz + self.precomputed), self.bin_difs)
         return log_hyper_likelihood
 
     def evaluate_log_hyper_prior(self, log_nz):
@@ -189,12 +190,15 @@ class log_z_dens(object):
             hyperposterior
         """
         if no_data:
+            if vb: print('only optimizing prior')
             def _objective(log_nz):
                 return -2. * self.evaluate_log_hyper_prior(log_nz)
         elif no_prior:
+            if vb: print('only optimizing likelihood')
             def _objective(log_nz):
                 return -2. * self.evaluate_log_hyper_likelihood(log_nz)
         else:
+            if vb: print('optimizing posterior')
             def _objective(log_nz):
                 return -2. * self.evaluate_log_hyper_posterior(log_nz)
 
@@ -230,8 +234,9 @@ class log_z_dens(object):
             array of logged redshift density function bin values maximizing
             hyperposterior
         """
+        self.precomputed = self.precompute()
         if 'log_mmle_nz' not in self.info['estimators']:
-            log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior)
+            log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior, vb=vb)
             mle_nz = np.exp(log_mle)
             self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
             self.log_mle_nz = u.safe_log(self.mle_nz)
@@ -386,6 +391,7 @@ class log_z_dens(object):
         log_samples_nz: ndarray, float
             array of sampled log redshift density function bin values
         """
+        self.precomputed = self.precompute()
         if 'log_mean_sampled_nz' not in self.info['estimators']:
             self.n_walkers = len(ivals)
             if no_data:

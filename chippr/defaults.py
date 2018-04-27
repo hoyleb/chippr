@@ -42,6 +42,7 @@ def check_sim_params(params={}):
         dictionary containing final key/value pairs for simulation of catalog
     """
     params = check_basic_setup(params)
+    params = check_bias_params(params)
     params = check_variable_sigmas(params)
     params = check_catastrophic_outliers(params)
     return params
@@ -78,6 +79,30 @@ def check_basic_setup(params):
         params['bin_max'] = float(params['bin_max'][0])
     return params
 
+def check_bias_params(params):
+    """
+    Sets parameter values pertaining to presence of a systematic bias
+
+    Parameters
+    ----------
+    params: dict
+        dictionary containing key/value pairs for simulation
+
+    Returns
+    -------
+    params: dict
+        dictionary containing key/value pairs for simulation
+    """
+    if 'ez_bias' not in params:
+        params['ez_bias'] = 0
+    else:
+        params['ez_bias'] = int(params['ez_bias'][0])
+        if 'ez_bias_val' not in params:
+            params['ez_bias_val'] = constant_bias
+        else:
+            params['ez_bias_val'] = float(params['ez_bias_val'][0])
+    return params
+
 def check_variable_sigmas(params):
     """
     Sets parameter values pertaining to widths of Gaussian PDF components
@@ -104,15 +129,6 @@ def check_variable_sigmas(params):
         params['constant_sigma'] = constant_sigma
     else:
         params['constant_sigma'] = float(params['constant_sigma'][0])
-
-    if 'ez_bias' not in params:
-        params['ez_bias'] = 0
-    else:
-        params['ez_bias'] = int(params['ez_bias'][0])
-    if 'constant_sigma' not in params:
-        params['bias_val'] = constant_bias
-    else:
-        params['bias_val'] = float(params['bias_val'][0])
 
     return params
 
