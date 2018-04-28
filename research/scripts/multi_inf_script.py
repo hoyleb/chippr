@@ -81,8 +81,8 @@ def set_up_prior(data, params):
     n_pdfs = len(log_z_posts)
 
     a = 1.# / n_bins
-    b = 20.#1. / z_difs ** 2
-    c = a / n_pdfs
+    b = 3.#1. / z_difs ** 2
+    c = 3.e-2#a / n_pdfs
     prior_var = np.eye(n_bins)
     for k in range(n_bins):
         prior_var[k] = a * np.exp(-0.5 * b * (z_mids[k] - z_mids) ** 2)
@@ -126,46 +126,32 @@ def do_inference(given_key):
     data = simulated_posteriors.read(loc=saved_location, style=saved_type)
     zs = data['bin_ends']
     z_difs = zs[1:]-zs[:-1]
-    with open(os.path.join(os.path.join(test_dir, saved_location), 'true_params.p'), 'r') as true_file:
-        true_nz_params = pickle.load(true_file)
-    true_amps = true_nz_params['amps']
-    true_means = true_nz_params['means']
-    true_sigmas =  true_nz_params['sigmas']
-    n_mix_comps = len(true_amps)
-    true_funcs = []
-    for c in range(n_mix_comps):
-        true_funcs.append(chippr.gauss(true_means[c], true_sigmas[c]**2))
-    true_nz = chippr.gmix(true_amps, true_funcs,
-            limits=(min(zs), max(zs)))
+    with open(os.path.join(os.path.join(test_dir, saved_location), 'true_vals.txt'), 'r') as true_file:
+        true_data = csv.reader(true_file, delimiter=' ')
+        true_vals = []
+        for z in true_data:
+            true_vals.append(float(z[0]))
+        true_vals = np.array(true_vals)
+        true_vals = np.histogram(true_vals, bins=zs, normed=True)[0]
+    true_nz = chippr.discrete(zs, true_vals)
 
     (prior, cov) = set_up_prior(data, params)
 
     nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
     nz_stacked = nz.calculate_stacked()
-    print('stacked: '+str(np.dot(np.exp(nz_stacked), z_difs)))
+    # print('stacked: '+str(np.dot(np.exp(nz_stacked), z_difs)))
     nz_mmap = nz.calculate_mmap()
-    print('MMAP: '+str(np.dot(np.exp(nz_mmap), z_difs)))
-    nz_mexp = nz.calculate_mexp()
-    print('MExp: '+str(np.dot(np.exp(nz_mexp), z_difs)))
+    # print('MMAP: '+str(np.dot(np.exp(nz_mmap), z_difs)))
+    # nz_mexp = nz.calculate_mexp()
+    # print('MExp: '+str(np.dot(np.exp(nz_mexp), z_difs)))
+
+    start_mmle = timeit.default_timer()
     nz_mmle = nz.calculate_mmle(nz_stacked, no_data=params['no_data'], no_prior=params['no_prior'])
-    print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs)))
+    end_mmle = timeit.default_timer()-start_mmle
+    print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs))+' in '+str(end_mmle))
 
     nz_stats = nz.compare()
-    nz.plot_estimators()
-    nz.write('nz.p')
-
-    # n_bins = len(nz_mmle)
-    if params['n_walkers'] is not None:
-        n_ivals = params['n_walkers']
-    else:
-        n_ivals = 10 * n_bins
-    initial_values = prior.sample(n_ivals)
-    log_z_dens_plots.plot_ivals(initial_values, nz.info, nz.plot_dir)
-    # nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'])
-
-    nz_stats = nz.compare()
-
     nz.plot_estimators()
     nz.write('nz.p')
 
