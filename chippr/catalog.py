@@ -217,7 +217,7 @@ class catalog(object):
             grid_funcs = [gauss(pdf_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[mvn(grid_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[[mvn(grid_means[kk][jj], grid_sigmas[kk][jj]**2) for jj in range(self.n_tot)] for kk in range(self.n_tot)]
         else:
             # print('attempt at variable sigmas with '+str(grid_sigma)+' of '+str(type(grid_sigma)))
-            grid_sigmas = grid_sigma * (1. + grid_means)
+            grid_sigmas = grid_sigma * (1. + pdf_means)
             # print('made the sigma grid')
             grid_funcs = [gauss(pdf_means[kk], grid_sigmas[kk]**2) for kk in range(self.n_tot)]
             # print('made the grid functions')
