@@ -97,10 +97,14 @@ def check_bias_params(params):
         params['ez_bias'] = 0
     else:
         params['ez_bias'] = int(params['ez_bias'][0])
-        if 'ez_bias_val' not in params:
-            params['ez_bias_val'] = constant_bias
-        else:
-            params['ez_bias_val'] = float(params['ez_bias_val'][0])
+    if 'ez_bias_val' not in params:
+        params['ez_bias_val'] = constant_bias
+    else:
+        params['ez_bias_val'] = float(params['ez_bias_val'][0])
+    if 'variable_bias' not in params:
+        params['variable bias'] = 0
+    else:
+        params['variable bias'] = int(params['ez_bias'][0])
     return params
 
 def check_variable_sigmas(params):
@@ -121,14 +125,14 @@ def check_variable_sigmas(params):
     -----
     rms_scatter --> variable_sigmas
     """
-    if 'variable_sigmas' not in params:
-        params['variable_sigmas'] = 0
-    else:
-        params['variable_sigmas'] = int(params['variable_sigmas'][0])
     if 'constant_sigma' not in params:
         params['constant_sigma'] = constant_sigma
     else:
         params['constant_sigma'] = float(params['constant_sigma'][0])
+    if 'variable_sigmas' not in params:
+        params['variable_sigmas'] = 0
+    else:
+        params['variable_sigmas'] = int(params['variable_sigmas'][0])
 
     return params
 

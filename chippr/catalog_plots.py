@@ -99,9 +99,10 @@ def plot_scatter(zs, pfs, z_grid, plot_loc='', plot_name='scatter.png'):
     randos = np.floor(n / (d.plot_colors + 1)) * np.arange(1., d.plot_colors + 1)# np.random.choice(range(len(z_grid)), d.plot_colors)
     randos = randos.astype(int)
     max_pfs = np.max(pfs)
-    sorted_pfs = pfs[np.argsort(obs_zs)]
-    sorted_true = true_zs[np.argsort(obs_zs)]
-    sorted_obs = obs_zs[np.argsort(obs_zs)]
+    sort_inds = np.argsort(obs_zs)
+    sorted_pfs = pfs[sort_inds]
+    sorted_true = true_zs[sort_inds]
+    sorted_obs = obs_zs[sort_inds]
     for r in range(d.plot_colors):
         pf = sorted_pfs[randos[r]]
         norm_pf = pf / max_pfs / (d.plot_colors + 1)
@@ -144,9 +145,10 @@ def plot_obs_scatter(true_vals, pfs, z_grid, plot_loc='', plot_name='obs_scatter
     sps.scatter(true_zs, obs_zs, c='k', marker='.', s = 1., alpha=0.1)
     randos = np.floor(n / (d.plot_colors + 1)) * np.arange(1., d.plot_colors + 1)# np.random.choice(range(len(z_grid)), d.plot_colors)
     randos = randos.astype(int)
-    sorted_pfs = pfs[np.argsort(obs_zs)]
-    sorted_true = true_zs[np.argsort(obs_zs)]
-    sorted_obs = obs_zs[np.argsort(obs_zs)]
+    ordered = np.argsort(obs_zs)
+    sorted_pfs = pfs[ordered]
+    sorted_true = true_zs[ordered]
+    sorted_obs = obs_zs[ordered]
     for r in range(d.plot_colors):
         pf = sorted_pfs[randos[r]]
         plt.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c='r')

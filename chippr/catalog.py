@@ -79,6 +79,7 @@ class catalog(object):
 
         self.z_coarse = np.linspace(self.z_min + 0.5 * self.dz_coarse, self.z_max - 0.5 * self.dz_coarse, self.n_coarse)
         self.z_fine = np.linspace(self.z_min + 0.5 * self.dz_fine, self.z_max - 0.5 * self.dz_fine, self.n_tot)
+        self.z_all = np.linspace(self.z_min, self.z_max, self.n_tot + 1)
 
         self.bin_ends = np.linspace(self.z_min, self.z_max, self.n_coarse+1)
         self.bin_difs_coarse = self.dz_coarse * np.ones(self.n_coarse)
@@ -130,23 +131,17 @@ class catalog(object):
         """
         self.N = 10**N
         self.N_range = range(self.N)
-
         self.truth = truth
-        # self.true_samps = self.truth.sample(10**N)
-        # self.n_items = len(self.true_samps)
-        # self.samp_range = range(self.n_items)
 
         self.proc_bins()
-        # if vb: print('bin ends early on in catalog: '+str(self.bin_ends))
 
         self.prob_space = self.make_probs()
         # print('make_probs returns '+str(type(self.prob_space)))
         if vb:
             plots.plot_prob_space(self.z_fine, self.prob_space, plot_loc=self.plot_dir)
 
-        ## this far!
         ## next, sample discrete to get z_true, z_obs
-        self.samps = self.sample(self.N)
+        self.samps = self.prob_space.sample(self.N)
         self.cat['true_vals'] = self.samps
         if vb:
             plots.plot_true_histogram(self.samps.T[0], plot_loc=self.plot_dir)
@@ -172,7 +167,7 @@ class catalog(object):
 
         return self.cat
 
-    def make_probs(self, truth=None, vb=True):
+    def make_probs(self, vb=True):
         """
         Makes the continuous 2D probability distribution over z_spec, z_phot
 
@@ -188,74 +183,159 @@ class catalog(object):
         -----
         only one outlier population at a time for now
         """
-        if truth is None:
-        # this is one Gaussian for each z_spec, to be evaluated at each z_phot
-            true_func = self.truth#multi_dist([self.truth, self.uniform_lf])
-        else:
-            true_func = truth
-        # mins = [true_func.min_x, -100.]
-        # maxs = [true_func.max_x, 100.]
-        grid_means = self.z_fine#np.array([(self.z_fine[kk], self.z_fine[kk]]) for kk in range(self.n_tot)])
-        grid_amps = true_func.pdf(grid_means)#np.ones(self.n_tot)#
-        grid_amps /= np.dot(grid_amps, self.bin_difs_fine)
-        try:
-            test_norm = np.dot(grid_amps, self.bin_difs_fine)
-            assert np.isclose(test_norm, 1.)
-        except:
-            print('N(z) PDF amplitudes not normalized: '+str(test_norm))
+        x_vals = self.z_fine#self.truth.sample(self.N)
+        hor_amps = self.truth.evaluate(x_vals) * self.bin_difs_fine
+        hor_funcs = [discrete(np.array([self.z_all[kk], self.z_all[kk+1]]), np.array([1.])) for kk in range(self.n_tot)]
 
-        uniform_lf = discrete(np.array([self.z_min, self.z_max]), np.array([1.]))
-        uniform_lfs = [discrete(np.array([grid_means[kk] - self.dz_fine / 2., grid_means[kk] + self.dz_fine / 2.]), np.array([1.])) for kk in range(self.n_tot)]
-
-        grid_sigma = self.params['constant_sigma']
-        pdf_means = grid_means
-        if self.params['ez_bias']:
-            pdf_means += self.params['shift_val'] * (1. + grid_means)
+        sigma = self.params['constant_sigma']
         if not self.params['variable_sigmas']:
-            # * np.identity(2)
-            # grid_sigmas = self.params['constant_sigma'] * np.ones(self.n_tot)#np.ones((self.n_tot, self.n_tot, 2))
-            grid_funcs = [gauss(pdf_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[mvn(grid_means[kk], grid_sigma**2) for kk in range(self.n_tot)]#[[mvn(grid_means[kk][jj], grid_sigmas[kk][jj]**2) for jj in range(self.n_tot)] for kk in range(self.n_tot)]
+            sigmas = np.ones(self.N) * sigma
         else:
-            # print('attempt at variable sigmas with '+str(grid_sigma)+' of '+str(type(grid_sigma)))
-            grid_sigmas = grid_sigma * (1. + pdf_means)
-            # print('made the sigma grid')
-            grid_funcs = [gauss(pdf_means[kk], grid_sigmas[kk]**2) for kk in range(self.n_tot)]
-            # print('made the grid functions')
-        grid_funcs = [multi_dist([uniform_lfs[kk], grid_funcs[kk]]) for kk in range(self.n_tot)]
+            sigmas = sigma * (1. + x_vals)
 
-        if self.params['catastrophic_outliers'] != '0':
-            # np.append(grid_amps, [self.params['outlier_fraction'] / self.n_tot])
-            self.outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
-            # out_amps = np.ones(self.n_tot) * self.params['outlier_fraction'] / self.n_items
-            # grid_amps *= (1. - out_amp) / self.n_items
-            # grid_amps.append(out_amp)
+        if self.params['ez_bias']:
+            if self.params['variable_bias']:
+                y_means = x_vals + self.params['ez_bias_val'] * (1. + x_vals)
+            else:
+                y_means = x_vals + self.params['ez_bias_val']
+        else:
+            y_means = x_vals
 
-            in_amps = np.ones(self.n_tot)#grid_amps# * (1. - self.params['outlier_fraction'])
-            # out_amps = np.ones(self.n_tot)#grid_amps# * self.params['outlier_fraction']
-            if self.params['catastrophic_outliers'] == 'template':
-                out_funcs = [multi_dist([uniform_lfs[kk], self.outlier_lf]) for kk in range(self.n_tot)]
-                out_amps = uniform_lf.pdf(grid_means)
+        vert_funcs = [gauss(y_means[kk], sigmas[kk]) for kk in range(self.n_tot)]
 
-            elif self.params['catastrophic_outliers'] == 'training':
-                out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
-                out_amps = self.outlier_lf.pdf(grid_means)
+        # grid_amps = self.truth.evaluate(x_vals)
+        #
+        # grid_means, grid_amps, uniform_lfs = self._setup_prob_space(true_func)
+        #
+        # pdf_means = self._make_bias(grid_means)
 
-            out_amps /= np.dot(out_amps, self.bin_difs_fine)
-            in_amps *= (1. - self.params['outlier_fraction'])
-            out_amps *= self.params['outlier_fraction']
-            try:
-                test_out_frac = np.dot(out_amps, self.bin_difs_fine)
-                assert np.isclose(test_out_frac, self.params['outlier_fraction'])
-            except:
-                print('outlier fraction not normalized: '+str(test_out_frac))
-            grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_funcs[kk]]) for kk in range(self.n_tot)]
-                # np.append(grid_means, [self.params['outlier_mean'], self.uniform_lf.sample_one()])
+        # WILL REFACTOR THIS TO ADD BACK CATASTROPHIC OUTLIER SUPPORT
+        # if self.params['catastrophic_outliers'] != '0':
+        #     if self.params['catastrophic_outliers'] == 'uniform':
+        #
+        #     else:
+        #         self.outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
+        #         in_amps = np.ones(self.n_tot)
+        #         if self.params['catastrophic_outliers'] == 'template':
+        #             out_funcs = [multi_dist([uniform_lfs[kk], self.outlier_lf]) for kk in range(self.n_tot)]
+        #             out_amps = uniform_lf.pdf(grid_means)
+        #
+        #         elif self.params['catastrophic_outliers'] == 'training':
+        #             out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
+        #             out_amps = self.outlier_lf.pdf(grid_means)
+        #
+        #         out_amps /= np.dot(out_amps, self.bin_difs_fine)
+        #         in_amps *= (1. - self.params['outlier_fraction'])
+        #         out_amps *= self.params['outlier_fraction']
+        #         try:
+        #             test_out_frac = np.dot(out_amps, self.bin_difs_fine)
+        #             assert np.isclose(test_out_frac, self.params['outlier_fraction'])
+        #         except:
+        #             print('outlier fraction not normalized: '+str(test_out_frac))
+        #         grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_funcs[kk]]) for kk in range(self.n_tot)]
+        #         # np.append(grid_means, [self.params['outlier_mean'], self.uniform_lf.sample_one()])
 
         # true n(z) in z_spec, uniform in z_phot
         # grid_amps *= true_func.evaluate(grid_means)
-        p_space = gmix(grid_amps, grid_funcs)
+        p_space = gmix(hor_amps, [multi_dist([hor_funcs[kk], vert_funcs[kk]]) for kk in range(self.n_tot)])
 
         return p_space
+
+    # def _setup_prob_space(self):
+    #     """
+    #     Helper function for make_probs
+    #
+    #     Parameters
+    #     ----------
+    #
+    #     Returns
+    #     -------
+    #     grid_means: numpy.ndarray, float
+    #         average redshift of a bin, not weighted by probability
+    #     grid_amps: numpy.ndarray, float
+    #         model probabilities at grid_means
+    #     uniform_lfs: chippr.discrete object
+    #         uniform distribution for each redshift bin
+    #     """
+    #     x_grid = self.z_fine
+    #
+    #     if self.params['ez_bias']:
+    #         if self.params['variable_bias']:
+    #             means = x_grid + self.params['ez_bias_val'] * (1. + x_grid)
+    #         else:
+    #             means = x_grid + self.params['ez_bias_val']
+    #     else:
+    #         means = x_grid
+    #
+    #     sigma = self.params['constant_sigma']
+    #     if not self.params['variable_sigmas']:
+    #         sigmas = np.ones(self.N) * sigma
+    #     else:
+    #         sigmas = sigma * (1. + means)
+    #
+    #
+    #
+    #     if self.params['catastrophic_outliers'] != '0':
+    #         if self.params['catastrophic_outliers'] == 'uniform':
+    #             uniform_lf = discrete(np.array([self.z_min, self.z_max]), np.array([1.]))
+    #             out_amps =
+    #         else:
+    #             self.outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
+    #             in_amps = np.ones(self.n_tot)
+    #             if self.params['catastrophic_outliers'] == 'template':
+    #                 out_funcs = [multi_dist([uniform_lfs[kk], self.outlier_lf]) for kk in range(self.n_tot)]
+    #                 out_amps = uniform_lf.pdf(grid_means)
+    #
+    #             elif self.params['catastrophic_outliers'] == 'training':
+    #                 out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
+    #                 out_amps = self.outlier_lf.pdf(grid_means)
+    #
+    #             out_amps /= np.dot(out_amps, self.bin_difs_fine)
+    #             in_amps *= (1. - self.params['outlier_fraction'])
+    #             out_amps *= self.params['outlier_fraction']
+    #             try:
+    #                 test_out_frac = np.dot(out_amps, self.bin_difs_fine)
+    #                 assert np.isclose(test_out_frac, self.params['outlier_fraction'])
+    #             except:
+    #                 print('outlier fraction not normalized: '+str(test_out_frac))
+    #             grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_funcs[kk]]) for kk in range(self.n_tot)]
+    #
+    #     # grid_means = self.z_fine#np.array([(self.z_fine[kk], self.z_fine[kk]]) for kk in range(self.n_tot)])
+    #     # grid_amps = true_func.pdf(grid_means)
+    #     # grid_amps /= np.dot(grid_amps, self.bin_difs_fine)
+    #     # try:
+    #     #     test_norm = np.dot(grid_amps, self.bin_difs_fine)
+    #     #     assert np.isclose(test_norm, 1.)
+    #     # except:
+    #     #     print('n(z) PDF amplitudes not normalized: '+str(test_norm))
+    #
+    #     # uniform_lf = discrete(np.array([self.z_min, self.z_max]), np.array([1.]))
+    #     uniform_lfs = [discrete(np.array([grid_means[kk] - self.dz_fine / 2., grid_means[kk] + self.dz_fine / 2.]), np.array([1.])) for kk in range(self.n_tot)]
+    #     # return(x_grid, x_amps)
+    #     return(grid_means, grid_amps, uniform_lfs)
+
+    # def _make_bias(self, grid_means):
+        # """
+        # Introduces global redshift bias
+        #
+        # Parameters
+        # ----------
+        # grid_means: numpy.ndarray, float
+        #     cental redshifts of each bin
+        #
+        # Returns
+        # -------
+        # pdf_means: numpy.ndarray, float
+        #     cental redshifts to use as Gaussian means
+        # """
+        # pdf_means = grid_means
+        # if self.params['ez_bias']:
+        #     pdf_means += self.params['ez_bias_val'] * (1. + grid_means)
+        # return(pdf_means)
+
+    # def _make_scatter(self):
+    #     """
+    #     """
 
     def sample(self, N, vb=False):
         """

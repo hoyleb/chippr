@@ -44,7 +44,7 @@ class gamma(object):
 
         Parameters
         ----------
-        x: float
+        x: float or array
             value at which to check boundedness
 
         Returns
@@ -52,10 +52,13 @@ class gamma(object):
         y: boolean
             true if within bounds
         """
+        x = np.asarray(x)
         if self.bounds is not None:
-            y = ((np.asarray(x) >= self.bounds[0]).all() and (np.asarray(x) <= self.bounds[1]).all())
+            low = x >= self.bounds[0]
+            high = x <= self.bounds[1]
+            y = low * high
         else:
-            y = True
+            y = np.ones_like(x, dtype=bool)
         return y
 
     def pdf(self, xs):
@@ -102,7 +105,7 @@ class gamma(object):
         # ps = np.zeros_like(xs)
         # for n, x in enumerate(xs):
         #     ps[n] += self.evaluate_one(x)
-        if self.check_bounds(xs):
+        if self.check_bounds(xs).all():
             ps = self.scale * self.dist.probability(xs)
         else:
             ps = d.eps * np.ones(len(xs))
@@ -141,16 +144,21 @@ class gamma(object):
         # print('gauss trying to sample '+str(n_samps)+' from '+str(self.dist))
         # xs = np.array([self.sample_one() for n in range(n_samps)])
         def partial_sample(n_s, x=None):
+            # if x is None:
+            #     x = np.array(self.dist.sample(n_s))
+            # elif type(x) is not np.ndarray:
+            # #     x = np.asarray(x)
+            # else:
+            x_again = np.array([self.dist.sample() for i in range(n_s)]).flatten()
             if x is None:
-                x = np.array(self.dist.sample(n_s))
+                x = x_again
             else:
-                x_again = np.array(self.dist.sample(n_s))
                 x = np.concatenate((x, x_again))
-            return (n, x)
+            return (n_s, x)
         i = 0
-        xs = np.empty(0)
+        xs = None
         while i < n_samps:
-            (i, xs) = partial_sample(n_samps - i, xs=xs)
+            (i, xs) = partial_sample(n_samps - i, x=xs)
             xs = xs[self.check_bounds(xs)]
             i = len(xs)
         # print('gauss sampled '+str(n_samps)+' from '+str(self.dist))

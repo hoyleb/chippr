@@ -93,7 +93,7 @@ class multi_dist(object):
 
     def sample(self, n_samps):
         """
-        Function to sample from multivariate Gaussian probability distribution
+        Function to sample from multivariate probability distribution with independent components
 
         Parameters
         ----------
@@ -107,6 +107,6 @@ class multi_dist(object):
         """
         # print('multi_dist trying to sample '+str(n_samps)+' from '+str(self.dist))
         # points = np.array([self.sample_one() for n in range(n_samps)])
-        points = np.array(self.dist.sample(n_samps))
+        points = np.array([self.dist.sample() for n in range(n_samps)])
         # print('multi_dist sampled '+str(n_samps)+' from '+str(self.dist))
         return points
