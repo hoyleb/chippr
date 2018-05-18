@@ -104,7 +104,7 @@ def check_bias_params(params):
     if 'variable_bias' not in params:
         params['variable bias'] = 0
     else:
-        params['variable bias'] = int(params['ez_bias'][0])
+        params['variable bias'] = int(params['ez_bias'])
     return params
 
 def check_variable_sigmas(params):
