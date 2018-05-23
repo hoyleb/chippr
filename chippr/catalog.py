@@ -187,19 +187,9 @@ class catalog(object):
         hor_amps = self.truth.evaluate(x_vals) * self.bin_difs_fine
         hor_funcs = [discrete(np.array([self.z_all[kk], self.z_all[kk+1]]), np.array([1.])) for kk in range(self.n_tot)]
 
-        sigma = self.params['constant_sigma']
-        if not self.params['variable_sigmas']:
-            sigmas = np.ones(self.N) * sigma
-        else:
-            sigmas = sigma * (1. + x_vals)
+        y_means = self._make_bias(x_vals)
 
-        if self.params['ez_bias']:
-            if self.params['variable_bias']:
-                y_means = x_vals + self.params['ez_bias_val'] * (1. + x_vals)
-            else:
-                y_means = x_vals + self.params['ez_bias_val']
-        else:
-            y_means = x_vals
+        sigmas = self._make_scatter(x_vals)
 
         vert_funcs = [gauss(y_means[kk], sigmas[kk]) for kk in range(self.n_tot)]
 
@@ -314,28 +304,49 @@ class catalog(object):
     #     # return(x_grid, x_amps)
     #     return(grid_means, grid_amps, uniform_lfs)
 
-    # def _make_bias(self, grid_means):
-        # """
-        # Introduces global redshift bias
-        #
-        # Parameters
-        # ----------
-        # grid_means: numpy.ndarray, float
-        #     cental redshifts of each bin
-        #
-        # Returns
-        # -------
-        # pdf_means: numpy.ndarray, float
-        #     cental redshifts to use as Gaussian means
-        # """
-        # pdf_means = grid_means
-        # if self.params['ez_bias']:
-        #     pdf_means += self.params['ez_bias_val'] * (1. + grid_means)
-        # return(pdf_means)
+    def _make_bias(self, x):
+        """
+        Introduces global redshift bias
 
-    # def _make_scatter(self):
-    #     """
-    #     """
+        Parameters
+        ----------
+        x: numpy.ndarray, float
+            cental redshifts of each bin
+
+        Returns
+        -------
+        y: numpy.ndarray, float
+            cental redshifts to use as Gaussian means
+        """
+        if self.params['ez_bias']:
+            bias = np.asarray(self.params['ez_bias_val'])
+            if self.params['variable_bias']:
+                y = x + (np.ones_like(x) + x) * bias[np.newaxis]
+            else:
+                y = x + bias[np.newaxis]
+        else:
+            y = x
+        return(y)
+
+    def _make_scatter(self, x):
+        """
+        Makes the intrinsic scatter
+
+        Parameters
+        ----------
+        x: numpy.ndarray, float
+            the x-coordinate values upon which to base the intrinsic scatter
+
+        Returns
+        -------
+        sigmas: numpy.ndarray, float
+            the intrinsic scatter values for each galaxy
+        """
+        sigma = np.asarray(self.params['constant_sigma'])
+        sigmas = np.ones(self.n_tot) * sigma[np.newaxis]
+        if self.params['variable_sigmas']:
+            sigmas = sigmas * (np.ones_like(x) + x)
+        return(sigmas)
 
     def sample(self, N, vb=False):
         """
