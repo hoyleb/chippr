@@ -20,7 +20,7 @@ from chippr import catalog_plots as plots
 
 class catalog(object):
 
-    def __init__(self, params={}, vb=True, loc='.'):
+    def __init__(self, params={}, vb=True, loc='.', prepend=''):
         """
         Object containing catalog of photo-z interim posteriors
 
@@ -33,7 +33,10 @@ class catalog(object):
             True to print progress messages to stdout, False to suppress
         loc: string, optional
             directory into which to save data and plots made along the way
+        prepend: str, optional
+            prepend string to file names
         """
+        self.cat_name = prepend + '_'
         if type(params) == str:
             self.params = u.ingest(params)
         else:
@@ -138,20 +141,20 @@ class catalog(object):
         self.prob_space = self.make_probs()
         # print('make_probs returns '+str(type(self.prob_space)))
         if vb:
-            plots.plot_prob_space(self.z_fine, self.prob_space, plot_loc=self.plot_dir)
+            plots.plot_prob_space(self.z_fine, self.prob_space, plot_loc=self.plot_dir, prepend=self.cat_name)
 
         ## next, sample discrete to get z_true, z_obs
         self.samps = self.prob_space.sample(self.N)
         self.cat['true_vals'] = self.samps
         if vb:
-            plots.plot_true_histogram(self.samps.T[0], plot_loc=self.plot_dir)
+            plots.plot_true_histogram(self.samps.T[0], plot_loc=self.plot_dir, prepend=self.cat_name)
 
         ## then literally take slices (evaluate at constant z_phot)
         self.obs_lfs = self.evaluate_lfs()
         #self.obs_lfs /= np.sum(self.obs_lfs, axis=1)[:, np.newaxis] * self.dz_fine
 
         if vb:
-            plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir)
+            plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir, prepend=self.cat_name)
 
         self.int_pr = int_pr
         int_pr_fine = np.array([self.int_pr.pdf(self.z_fine)])

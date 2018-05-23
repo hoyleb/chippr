@@ -18,7 +18,7 @@ from chippr import log_z_dens_plots as plots
 
 class log_z_dens(object):
 
-    def __init__(self, catalog, hyperprior, truth=None, loc='.', vb=True):
+    def __init__(self, catalog, hyperprior, truth=None, loc='.', prepend='', vb=True):
         """
         An object representing the redshift density function (normalized
         redshift distribution function)
@@ -35,10 +35,13 @@ class log_z_dens(object):
             mixture
         loc: string, optional
             directory into which to save results and plots made along the way
+        prepend: str, optional
+            prepend string to file names
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
         self.info = {}
+        self.add_text = prepend + '_'
 
         self.bin_ends = np.array(catalog['bin_ends'])
         self.bin_range = self.bin_ends[:-1]-self.bin_ends[0]
@@ -420,8 +423,8 @@ class log_z_dens(object):
             vals = ivals
             vals -= u.safe_log(np.sum(np.exp(ivals) * self.bin_difs[np.newaxis, :], axis=1))[:, np.newaxis]
             if vb:
-                plots.plot_ivals(vals, self.info, self.plot_dir)
-                canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers)
+                plots.plot_ivals(vals, self.info, self.plot_dir, prepend=self.add_text)
+                canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers, prepend=self.add_text)
             full_chain = np.array([[vals[w]] for w in range(self.n_walkers)])
             while self.burning_in:
                 if vb:
@@ -433,7 +436,7 @@ class log_z_dens(object):
                     cpkl.dump(burn_in_mcmc_outputs, file_location)
                 full_chain = np.concatenate((full_chain, burn_in_mcmc_outputs['chains']), axis=1)
                 if vb:
-                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, full_chain, self.burn_ins, self.plot_dir)
+                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, full_chain, self.burn_ins, self.plot_dir, prepend=self.add_text)
                 self.burning_in = s.gr_test(full_chain)
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
                 self.burn_ins += 1
@@ -503,7 +506,7 @@ class log_z_dens(object):
         """
         Plots all available estimators of the redshift density function.
         """
-        plots.plot_estimators(self.info, self.plot_dir)
+        plots.plot_estimators(self.info, self.plot_dir, prepend=self.add_text)
         return
 
     def read(self, read_loc, style='pickle', vb=True):

@@ -27,7 +27,7 @@ s_mle, w_mle, a_mle, c_mle, d_mle, l_mle = '-', 2., 0.5, 'b', [(0, (1, 2))], 'CH
 s_bfe, w_bfe, a_bfe, c_bfe, d_bfe, l_bfe = '-', 2., 0.5, 'b', [(0, (2, 1))], 'CHIPPR Samples \n'
 s_smp, w_smp, a_smp, c_smp, d_smp, l_smp = '-', 2., 1., 'k', [(0, (1, 1))], 'Sampled '
 
-def plot_ivals(ivals, info, plot_dir):
+def plot_ivals(ivals, info, plot_dir, prepend=''):
     """
     Plots the initial values given to the sampler
 
@@ -39,6 +39,8 @@ def plot_ivals(ivals, info, plot_dir):
         dictionary of stored information from log_z_dens object
     plot_dir: string
         location into which the plot will be saved
+    prepend: str, optional
+        prepend string to file names
 
     Returns
     -------
@@ -70,7 +72,7 @@ def plot_ivals(ivals, info, plot_dir):
     sps_sum.set_xlabel(r'$\ln\left[\int n(z)dz\right]$')
     sps_sum.set_ylabel(r'$p\left(\ln\left[\int n(z)dz\right]\right)$')
 
-    f.savefig(os.path.join(plot_dir, 'ivals.png'), bbox_inches='tight', pad_inches = 0)
+    f.savefig(os.path.join(plot_dir, prepend+'ivals.png'), bbox_inches='tight', pad_inches = 0)
 
     return
 
@@ -138,7 +140,7 @@ def set_up_burn_in_plots(n_bins, n_walkers):
 
     return plot_information
 
-def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins, plot_dir):
+def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins, plot_dir, prepend=''):
     """
     Plots new information into burn-in progress plots
 
@@ -159,6 +161,8 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
         performed
     plot_dir: string
         location in which to store the plots
+    prepend: str, optional
+        prepend string to file names
 
     Returns
     -------
@@ -185,7 +189,7 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
                            s=2)
     sps_gelman_rubin_evolution.set_xlim(0, (burn_ins + 2) * n_burn_test)
     gelman_rubin_evolution_plot = [f_gelman_rubin_evolution, sps_gelman_rubin_evolution]
-    f_gelman_rubin_evolution.savefig(os.path.join(plot_dir, 'gelman_rubin_evolution.png'), bbox_inches='tight', pad_inches = 0)
+    f_gelman_rubin_evolution.savefig(os.path.join(plot_dir, prepend+'gelman_rubin_evolution.png'), bbox_inches='tight', pad_inches = 0)
 
     [f_autocorrelation_times, sps_autocorrelation_times] = autocorrelation_times_plot
     autocorrelation_times = s.acors(full_chain)# sampler_output['acors']
@@ -202,7 +206,7 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
                            s=2)
     sps_autocorrelation_times.set_xlim(0, (burn_ins + 2) * n_burn_test)
     autocorrelation_times_plot = [f_autocorrelation_times, sps_autocorrelation_times]
-    f_autocorrelation_times.savefig(os.path.join(plot_dir, 'autocorrelation_times.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f_autocorrelation_times.savefig(os.path.join(plot_dir, prepend+'autocorrelation_times.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     [f_acceptance_fractions, sps_acceptance_fractions] = acceptance_fractions_plot
     acceptance_fractions = sampler_output['fracs'].T
@@ -214,7 +218,7 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
                                    s=n_bins)
     sps_acceptance_fractions.set_xlim(0, (burn_ins + 2) * n_burn_test)
     acceptance_fractions_plot = [f_acceptance_fractions, sps_acceptance_fractions]
-    f_acceptance_fractions.savefig(os.path.join(plot_dir, 'acceptance_fractions.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f_acceptance_fractions.savefig(os.path.join(plot_dir, prepend+'acceptance_fractions.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     [f_posterior_probabilities, sps_posterior_probabilities] = posterior_probabilities_plot
     posterior_probabilities = np.swapaxes(sampler_output['probs'], 0, 1)
@@ -236,7 +240,7 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
     sps_posterior_probabilities.fill(x_cor, y_cor2, color='k', alpha=0.25, linewidth=0.)
     sps_posterior_probabilities.set_xlim(0, (burn_ins + 1) * n_burn_test)
     posterior_probabilities_plot = [f_posterior_probabilities, sps_posterior_probabilities]
-    f_posterior_probabilities.savefig(os.path.join(plot_dir, 'posterior_probabilities.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f_posterior_probabilities.savefig(os.path.join(plot_dir, prepend+'posterior_probabilities.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     [f_chain_evolution, sps_chain_evolution, random_walkers] = chain_evolution_plot
     chains = sampler_output['chains']
@@ -248,7 +252,7 @@ def plot_sampler_progress(plot_information, sampler_output, full_chain, burn_ins
             sps_chain_evolution[k].plot(x_all, chains[random_walkers[i]][k], c=pu.colors[i])
             sps_chain_evolution[k].set_xlim(0, (burn_ins + 1) * n_burn_test)
     chain_evolution_plot = [f_chain_evolution, sps_chain_evolution, random_walkers]
-    f_chain_evolution.savefig(os.path.join(plot_dir, 'chain_evolution.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f_chain_evolution.savefig(os.path.join(plot_dir, prepend+'chain_evolution.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     plot_information = (gelman_rubin_evolution_plot, autocorrelation_times_plot, acceptance_fractions_plot, posterior_probabilities_plot, chain_evolution_plot)
 
@@ -260,7 +264,7 @@ def make_err_txt(info, key):
     plot_txt = r'(KLD='+kld+', RMSE='+rms+')'
     return plot_txt
 
-def plot_estimators(info, plot_dir):
+def plot_estimators(info, plot_dir, prepend=''):
     """
     Makes a log and linear plot of n(z) estimators from a log_z_dens object
 
@@ -270,6 +274,8 @@ def plot_estimators(info, plot_dir):
         dictionary of stored information from log_z_dens object
     plot_dir: string
         location where the plot will be saved
+    prepend: str, optional
+        prepend string to file names
     """
     pu.set_up_plot()
     # black_plots = []
@@ -434,11 +440,11 @@ def plot_estimators(info, plot_dir):
     # sps_log.legend(handles=color_plots[:-1], fontsize='x-small', loc='lower center', frameon=False)
     sps_log.legend(fontsize='x-small', loc='upper right', frameon=False)
     f.subplots_adjust(hspace=0, wspace=0)
-    f.savefig(os.path.join(plot_dir, 'estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f.savefig(os.path.join(plot_dir, prepend+'estimators.png'), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
     print(info['stats'])
     return
 
-def plot_samples(info, plot_dir):
+def plot_samples(info, plot_dir, prepend=''):
     """
     Plots a few random samples from the posterior distribution
 
@@ -448,6 +454,8 @@ def plot_samples(info, plot_dir):
         dictionary of stored information from log_z_dens object
     plot_dir: string
         directory where plot should be stored
+    prepend: str, optional
+        prepend string to file names
     """
     pu.set_up_plot()
 
@@ -489,6 +497,6 @@ def plot_samples(info, plot_dir):
     sps.set_xlabel('x')
     sps_log.set_ylabel('Log probability density')
     sps.set_ylabel('Probability density')
-    f.savefig(os.path.join(plot_dir, 'samples.png'), bbox_inches='tight', pad_inches = 0)
+    f.savefig(os.path.join(plot_dir, prepend+'samples.png'), bbox_inches='tight', pad_inches = 0)
 
     return

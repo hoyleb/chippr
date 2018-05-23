@@ -10,7 +10,7 @@ from chippr import defaults as d
 from chippr import utils as u
 from chippr import plot_utils as pu
 
-def plot_true_histogram(true_samps, n_bins=50, plot_loc='', plot_name='true_hist.png'):
+def plot_true_histogram(true_samps, n_bins=50, plot_loc='', prepend='', plot_name='true_hist.png'):
     """
     Plots a histogram of true input values
 
@@ -24,6 +24,8 @@ def plot_true_histogram(true_samps, n_bins=50, plot_loc='', plot_name='true_hist
         location in which to store plot
     plot_name: string, optional
         filename for plot
+    prepend: str, optional
+        prepend string to plot name
     """
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
@@ -31,11 +33,11 @@ def plot_true_histogram(true_samps, n_bins=50, plot_loc='', plot_name='true_hist
     sps.hist(true_samps, bins=n_bins, normed=1, color='k')
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$n(z_{true})$')
-    f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     return
 
-def plot_prob_space(z_grid, p_space, plot_loc='', plot_name='prob_space.png'):
+def plot_prob_space(z_grid, p_space, plot_loc='', prepend='', plot_name='prob_space.png'):
     """
     Plots the 2D probability space of z_spec, z_phot
 
@@ -49,6 +51,8 @@ def plot_prob_space(z_grid, p_space, plot_loc='', plot_name='prob_space.png'):
         location in which to store plot
     plot_name: string, optional
         filename for plot
+    prepend: str, optional
+        prepend string to plot name
     """
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
@@ -68,10 +72,10 @@ def plot_prob_space(z_grid, p_space, plot_loc='', plot_name='prob_space.png'):
     plt.xlabel(r'$z_{spec}$')
     plt.ylabel(r'$z_{phot}$')
     plt.axis([z_grid[0], z_grid[-1], z_grid[0], z_grid[-1]])
-    f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
     return
 
-def plot_scatter(zs, pfs, z_grid, plot_loc='', plot_name='scatter.png'):
+def plot_scatter(zs, pfs, z_grid, plot_loc='', prepend='', plot_name='scatter.png'):
     """
     Plots a scatterplot of true and observed redshift values
 
@@ -87,6 +91,8 @@ def plot_scatter(zs, pfs, z_grid, plot_loc='', plot_name='scatter.png'):
         location in which to store plot
     plot_name: string, optional
         filename for plot
+    prepend: str, optional
+        prepend string to plot name
     """
     n = len(zs)
     zs = zs.T
@@ -111,11 +117,11 @@ def plot_scatter(zs, pfs, z_grid, plot_loc='', plot_name='scatter.png'):
         plt.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c='r')
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$z_{obs}$')
-    f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     return
 
-def plot_obs_scatter(true_vals, pfs, z_grid, plot_loc='', plot_name='obs_scatter.png'):
+def plot_obs_scatter(true_vals, pfs, z_grid, plot_loc='', prepend='', plot_name='obs_scatter.png'):
     """
     Plots a scatterplot of true and observed redshift values
 
@@ -131,6 +137,8 @@ def plot_obs_scatter(true_vals, pfs, z_grid, plot_loc='', plot_name='obs_scatter
         location in which to store plot
     plot_name: string, optional
         filename for plot
+    prepend: str, optional
+        prepend string to plot name
     """
     true_zs = true_vals[0]
     obs_zs = true_vals[1]#np.array([z_grid[np.argmax(pf)] for pf in pfs])
@@ -157,6 +165,6 @@ def plot_obs_scatter(true_vals, pfs, z_grid, plot_loc='', plot_name='obs_scatter
         plt.hlines(sorted_obs[randos[r]], min(z_grid), max(z_grid), color='k', alpha=0.5, linestyle='--')
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$\hat{z}_{MAP}$')
-    f.savefig(os.path.join(plot_loc, plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
+    f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
 
     return
