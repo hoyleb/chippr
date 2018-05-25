@@ -138,35 +138,54 @@ class catalog(object):
 
         self.proc_bins()
 
-        self.prob_space = self.make_probs()
-        # print('make_probs returns '+str(type(self.prob_space)))
+        # samps_prep  = np.empty((2, self.N))
+        # samps_prep[0] = self.truth.sample(self.N)
+
+        prob_components = self.make_probs()
+        hor_amps = self.truth.evaluate(self.z_fine) * self.bin_difs_fine
+        print ("making gmix for psace_draw")
+        self.pspace_draw = gmix(hor_amps, prob_components)
         if vb:
-            plots.plot_prob_space(self.z_fine, self.prob_space, plot_loc=self.plot_dir, prepend=self.cat_name)
+            plots.plot_prob_space(self.z_fine, self.pspace_draw, plot_loc=self.plot_dir, prepend=self.cat_name+'draw_')
+
+        # self.prob_space = self.make_probs()
+        # print('make_probs returns '+str(type(self.prob_space)))
+        # if vb:
+        #     plots.plot_prob_space(self.z_fine, self.prob_space, plot_loc=self.plot_dir, prepend=self.cat_name)
 
         ## next, sample discrete to get z_true, z_obs
-        self.samps = self.prob_space.sample(self.N)
+        self.samps = self.pspace_draw.sample(self.N)
+        print(len(self.samps))
+        print("samps="+str(self.samps))
         self.cat['true_vals'] = self.samps
         if vb:
-            plots.plot_true_histogram(self.samps.T[0], plot_loc=self.plot_dir, prepend=self.cat_name)
+            plots.plot_true_histogram(self.samps.T[0], n_bins=(self.n_coarse, self.n_tot), plot_loc=self.plot_dir, prepend=self.cat_name)
 
         ## then literally take slices (evaluate at constant z_phot)
-        self.obs_lfs = self.evaluate_lfs()
         #self.obs_lfs /= np.sum(self.obs_lfs, axis=1)[:, np.newaxis] * self.dz_fine
-
-        if vb:
-            plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir, prepend=self.cat_name)
 
         self.int_pr = int_pr
         int_pr_fine = np.array([self.int_pr.pdf(self.z_fine)])
-        int_pr_coarse = self.coarsify(int_pr_fine)
-        truth_fine = self.truth.pdf(self.z_fine)
+        print("making gmix for pspace_eval")
+        self.pspace_eval = gmix(int_pr_fine, prob_components)
+        if vb:
+            plots.plot_prob_space(self.z_fine, self.pspace_eval, plot_loc=self.plot_dir, prepend=self.cat_name+'eval_')
 
-        pfs_fine = self.obs_lfs * int_pr_fine[np.newaxis, :] / truth_fine[np.newaxis, :]
-        pfs_coarse = self.coarsify(pfs_fine)
+        self.obs_lfs = self.evaluate_lfs(self.pspace_eval)
+        print((type(self.obs_lfs), len(self.obs_lfs)))
+        print(self.obs_lfs[200])
+        if vb:
+            plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir, prepend=self.cat_name)
+
+        # truth_fine = self.truth.pdf(self.z_fine)
+        #
+        # pfs_fine = self.obs_lfs * int_pr_fine[np.newaxis, :] / truth_fine[np.newaxis, :]
+        pfs_coarse = self.coarsify(self.obs_lfs)
+        int_pr_coarse = self.coarsify(int_pr_fine)
 
         self.cat['bin_ends'] = self.bin_ends
         self.cat['log_interim_prior'] = u.safe_log(int_pr_coarse[0])
-        self.cat['log_interim_posteriors'] = u.safe_log(pfs_coarse[0])
+        self.cat['log_interim_posteriors'] = u.safe_log(pfs_coarse)
 
         return self.cat
 
@@ -186,15 +205,14 @@ class catalog(object):
         -----
         only one outlier population at a time for now
         """
-        x_vals = self.z_fine#self.truth.sample(self.N)
-        hor_amps = self.truth.evaluate(x_vals) * self.bin_difs_fine
         hor_funcs = [discrete(np.array([self.z_all[kk], self.z_all[kk+1]]), np.array([1.])) for kk in range(self.n_tot)]
 
-        y_means = self._make_bias(x_vals)
+        # x_alt = self._make_bias(self.z_all)
 
-        sigmas = self._make_scatter(x_vals)
-
-        vert_funcs = [gauss(y_means[kk], sigmas[kk]) for kk in range(self.n_tot)]
+        x_alt = self._make_bias(self.z_fine)
+        sigmas = self._make_scatter(x_alt)
+        vert_funcs = [gauss(x_alt[kk], sigmas[kk]) for kk in range(self.n_tot)]
+        print([vert_func.evaluate_one(0) for vert_func in vert_funcs])
 
         # grid_amps = self.truth.evaluate(x_vals)
         #
@@ -230,7 +248,7 @@ class catalog(object):
 
         # true n(z) in z_spec, uniform in z_phot
         # grid_amps *= true_func.evaluate(grid_means)
-        p_space = gmix(hor_amps, [multi_dist([hor_funcs[kk], vert_funcs[kk]]) for kk in range(self.n_tot)])
+        p_space = [multi_dist([hor_funcs[kk], vert_funcs[kk]]) for kk in range(self.n_tot)]
 
         return p_space
 
@@ -321,14 +339,20 @@ class catalog(object):
         y: numpy.ndarray, float
             cental redshifts to use as Gaussian means
         """
-        if self.params['ez_bias']:
-            bias = np.asarray(self.params['ez_bias_val'])
-            if self.params['variable_bias']:
-                y = x + (np.ones_like(x) + x) * bias[np.newaxis]
-            else:
-                y = x + bias[np.newaxis]
+        print('what?')
+        if not self.params['ez_bias']:
+            print('5/24 no bias for '+self.cat_name)
+            return(x)
         else:
-            y = x
+            bias = np.asarray(self.params['ez_bias_val'])
+        if not self.params['variable_bias']:
+            y = x + (np.ones_like(x) * bias[np.newaxis])
+            print("x=" + str(x))
+            print("y=" + str(y))
+            print('5/24 constant bias of '+str(bias)+' for '+self.cat_name)
+        else:
+            y = x + ((np.ones_like(x) + x) * bias[np.newaxis])
+            print('5/24 variable bias of '+str(bias)+' for '+self.cat_name)
         return(y)
 
     def _make_scatter(self, x):
@@ -368,16 +392,17 @@ class catalog(object):
             (z_spec, z_phot) pairs
         """
         self.n_gals = N
-        if vb: print(self.n_gals)
         samps = self.prob_space.sample(self.n_gals)
         return samps
 
-    def evaluate_lfs(self, vb=True):
+    def evaluate_lfs(self, pspace,  vb=True):
         """
         Evaluates likelihoods based on observed sample values
 
         Parameters
         ----------
+        pspace: chippr.gauss or chippr.gmix or chippr.gamma or chippr.multi object
+            the probability function to evaluate
         vb: boolean
             print progress to stdout?
 
@@ -390,7 +415,11 @@ class catalog(object):
         lfs = []
         for n in self.N_range:
             points = zip(self.z_fine, [self.samps[n][1]] * self.n_tot)
-            lfs.append(self.prob_space.pdf(np.array(points)))
+            cur=pspace.pdf(np.array(points))
+            if(n==200):
+                print("points="+str(points))
+                print("cur="+str(cur))
+            lfs.append(cur)
         lfs = np.array(lfs)
         lfs /= np.sum(lfs, axis=-1)[:, np.newaxis] * self.dz_fine
         return lfs
@@ -406,9 +435,10 @@ class catalog(object):
         style: string, optional
             file format in which to save the catalog
         """
+        # print('5/23 catalog writes bin ends '+str(self.cat['bin_ends']))
         if style == '.txt':
             with open(os.path.join(self.data_dir, loc + style), 'wb') as csvfile:
-                out = csv.writer(csvfile, delimiter=' ')
+                out = csv.writer(csvfile, delimiter=',')
                 out.writerow(self.cat['bin_ends'])
                 out.writerow(self.cat['log_interim_prior'])
                 for line in self.cat['log_interim_posteriors']:
@@ -431,7 +461,7 @@ class catalog(object):
         if style == '.txt':
             with open(os.path.join(self.data_dir, loc + style), 'rb') as csvfile:
                 tuples = (line.split(None) for line in csvfile)
-                alldata = [[float(pair[k]) for k in range(0,len(pair))] for pair in tuples]
+                alldata = [[float(pair[k]) for k in range(0, len(pair))] for pair in tuples]
         self.cat['bin_ends'] = np.array(alldata[0])
         self.cat['log_interim_prior'] = np.array(alldata[1])
         self.cat['log_interim_posteriors'] = np.array(alldata[2:])

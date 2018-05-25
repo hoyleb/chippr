@@ -23,8 +23,8 @@ class multi_dist(object):
         """
         self.funcs = funcs
         self.dims = len(funcs)
-        # for d in range(self.dims):
-        #     print('multi dist '+str((d, type(self.funcs[d]))))
+        #for d in range(self.dims):
+        #    print('multi dist '+str((d, type(self.funcs[d]))))
         self.funcs = [func.dist for func in self.funcs]
         self.dist = ICD(self.funcs)
 
@@ -50,6 +50,7 @@ class multi_dist(object):
         # for d in range(self.dims):
         #     prob *= self.funcs[d].evaluate_one(point[d])
         prob = self.dist.probability(point)
+
         return prob
 
     def evaluate(self, points):

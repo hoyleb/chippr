@@ -41,7 +41,7 @@ class gmix(object):
         self.dims = np.shape(np.array(limits).T)[0]
         self.min_x = limits[0]
         self.max_x = limits[1]
-
+        print("amps="+str(self.amps))
         self.dist = GMM(self.funcs, weights=self.amps)
 
     def pdf(self, xs):

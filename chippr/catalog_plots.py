@@ -10,7 +10,7 @@ from chippr import defaults as d
 from chippr import utils as u
 from chippr import plot_utils as pu
 
-def plot_true_histogram(true_samps, n_bins=50, plot_loc='', prepend='', plot_name='true_hist.png'):
+def plot_true_histogram(true_samps, n_bins=(10, 50), plot_loc='', prepend='', plot_name='true_hist.png'):
     """
     Plots a histogram of true input values
 
@@ -18,8 +18,8 @@ def plot_true_histogram(true_samps, n_bins=50, plot_loc='', prepend='', plot_nam
     ----------
     true_samps: numpy.ndarray, float
         vector of true values of scalar input
-    n_bins: int, optional
-        number of histogram bins in which to place input values
+    n_bins: tuple, int, optional
+        number of histogram bins in which to place input values, coarse and fine
     plot_loc: string, optional
         location in which to store plot
     plot_name: string, optional
@@ -30,7 +30,8 @@ def plot_true_histogram(true_samps, n_bins=50, plot_loc='', prepend='', plot_nam
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
     sps = f.add_subplot(1, 1, 1)
-    sps.hist(true_samps, bins=n_bins, normed=1, color='k')
+    sps.hist(true_samps, bins=n_bins[1], normed=1, color='k', alpha=0.5, log=True)
+    sps.hist(true_samps, bins=n_bins[0], normed=1, color='y', alpha=0.5, log=True)
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$n(z_{true})$')
     f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
@@ -68,6 +69,7 @@ def plot_prob_space(z_grid, p_space, plot_loc='', prepend='', plot_name='prob_sp
     # all_vals = np.array([[p_space.evaluate_one(np.array([z_grid[jj], z_grid[kk]])) for jj in range(len(z_grid))] for kk in range(len(z_grid))])
     all_vals = p_space.evaluate(all_points.reshape((orig_shape[0]*orig_shape[1], orig_shape[2]))).reshape((orig_shape[0], orig_shape[1]))
     plt.pcolormesh(z_grid, z_grid, u.safe_log(all_vals), cmap='viridis')
+    plt.plot(z_grid, z_grid, color='k')
     plt.colorbar()
     plt.xlabel(r'$z_{spec}$')
     plt.ylabel(r'$z_{phot}$')
@@ -101,7 +103,8 @@ def plot_scatter(zs, pfs, z_grid, plot_loc='', prepend='', plot_name='scatter.pn
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
     sps = f.add_subplot(1, 1, 1)
-    sps.scatter(true_zs, obs_zs, c='k', marker='.', s = 1., alpha=0.1)
+    sps.plot(z_grid, z_grid, color='r', alpha=0.5, linewidth=2.)
+    sps.scatter(true_zs, obs_zs, c='g', marker='.', s = 1., alpha=0.1)
     randos = np.floor(n / (d.plot_colors + 1)) * np.arange(1., d.plot_colors + 1)# np.random.choice(range(len(z_grid)), d.plot_colors)
     randos = randos.astype(int)
     max_pfs = np.max(pfs)

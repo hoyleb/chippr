@@ -94,17 +94,18 @@ def check_bias_params(params):
         dictionary containing key/value pairs for simulation
     """
     if 'ez_bias' not in params:
-        params['ez_bias'] = 0
+        params['ez_bias'] = False
     else:
-        params['ez_bias'] = int(params['ez_bias'][0])
+        params['ez_bias'] = bool(int(params['ez_bias'][0]))
     if 'ez_bias_val' not in params:
         params['ez_bias_val'] = constant_bias
     else:
         params['ez_bias_val'] = float(params['ez_bias_val'][0])
     if 'variable_bias' not in params:
-        params['variable bias'] = 0
+        params['variable_bias'] = False
     else:
-        params['variable bias'] = int(params['ez_bias'])
+        params['variable_bias'] = bool(int(params['variable_bias'][0]))
+        # print(params['variable_bias'])
     return params
 
 def check_variable_sigmas(params):

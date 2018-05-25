@@ -194,7 +194,7 @@ def make_catalog(given_key):
 
     interim_prior = make_interim_prior(given_key)
 
-    posteriors = chippr.catalog(param_file_name, loc=test_dir)
+    posteriors = chippr.catalog(param_file_name, loc=test_dir, prepend=test_name)
     output = posteriors.create(true_nz, interim_prior, N=test_info['params']['n_gals'])
     # data = np.exp(output['log_interim_posteriors'])
     posteriors.write()
