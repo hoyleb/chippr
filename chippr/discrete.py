@@ -59,21 +59,7 @@ class discrete(object):
         p: float
             value of discrete probability distribution at x
         """
-# <<<<<<< HEAD
-#         p = d.eps
-#         for k in self.bin_range:
-#             try:
-#                 if x > self.bin_ends[k] and x < self.bin_ends[k+1]:
-#                     p = self.distweights[k]
-#             except ValueError:
-#                 print('x should be a float: '+str(x))
-# =======
-        # p = d.eps
-        # for k in self.bin_range:
-        #     if x > self.bin_ends[k] and x < self.bin_ends[k+1]:
-        #         p = self.distweights[k]
         p = self.dist.probability(x)
-# >>>>>>> 36e0405ccf793555ef4a20c9b763ca00ac75d5c5
         return p
 
     def evaluate(self, xs):

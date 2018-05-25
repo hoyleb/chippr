@@ -143,7 +143,7 @@ class catalog(object):
 
         prob_components = self.make_probs()
         hor_amps = self.truth.evaluate(self.z_fine) * self.bin_difs_fine
-        print ("making gmix for psace_draw")
+        # print ("making gmix for psace_draw")
         self.pspace_draw = gmix(hor_amps, prob_components)
         if vb:
             plots.plot_prob_space(self.z_fine, self.pspace_draw, plot_loc=self.plot_dir, prepend=self.cat_name+'draw_')
@@ -155,8 +155,8 @@ class catalog(object):
 
         ## next, sample discrete to get z_true, z_obs
         self.samps = self.pspace_draw.sample(self.N)
-        print(len(self.samps))
-        print("samps="+str(self.samps))
+        # print(len(self.samps))
+        # print("samps="+str(self.samps))
         self.cat['true_vals'] = self.samps
         if vb:
             plots.plot_true_histogram(self.samps.T[0], n_bins=(self.n_coarse, self.n_tot), plot_loc=self.plot_dir, prepend=self.cat_name)
@@ -166,14 +166,14 @@ class catalog(object):
 
         self.int_pr = int_pr
         int_pr_fine = np.array([self.int_pr.pdf(self.z_fine)])
-        print("making gmix for pspace_eval")
+        # print("making gmix for pspace_eval")
         self.pspace_eval = gmix(int_pr_fine, prob_components)
         if vb:
             plots.plot_prob_space(self.z_fine, self.pspace_eval, plot_loc=self.plot_dir, prepend=self.cat_name+'eval_')
 
         self.obs_lfs = self.evaluate_lfs(self.pspace_eval)
-        print((type(self.obs_lfs), len(self.obs_lfs)))
-        print(self.obs_lfs[200])
+        # print((type(self.obs_lfs), len(self.obs_lfs)))
+        # print(self.obs_lfs[200])
         if vb:
             plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir, prepend=self.cat_name)
 
@@ -210,9 +210,12 @@ class catalog(object):
         # x_alt = self._make_bias(self.z_all)
 
         x_alt = self._make_bias(self.z_fine)
-        sigmas = self._make_scatter(x_alt)
+
+        # should sigmas be proportional to z_true or bias*(1+z_true)?
+        sigmas = self._make_scatter(self.x_alt)
+
         vert_funcs = [gauss(x_alt[kk], sigmas[kk]) for kk in range(self.n_tot)]
-        print([vert_func.evaluate_one(0) for vert_func in vert_funcs])
+        # print([vert_func.evaluate_one(0) for vert_func in vert_funcs])
 
         # grid_amps = self.truth.evaluate(x_vals)
         #
@@ -339,9 +342,9 @@ class catalog(object):
         y: numpy.ndarray, float
             cental redshifts to use as Gaussian means
         """
-        print('what?')
+        # print('what?')
         if not self.params['ez_bias']:
-            print('5/24 no bias for '+self.cat_name)
+            # print('5/24 no bias for '+self.cat_name)
             return(x)
         else:
             bias = np.asarray(self.params['ez_bias_val'])
@@ -349,10 +352,10 @@ class catalog(object):
             y = x + (np.ones_like(x) * bias[np.newaxis])
             print("x=" + str(x))
             print("y=" + str(y))
-            print('5/24 constant bias of '+str(bias)+' for '+self.cat_name)
+            # print('5/24 constant bias of '+str(bias)+' for '+self.cat_name)
         else:
             y = x + ((np.ones_like(x) + x) * bias[np.newaxis])
-            print('5/24 variable bias of '+str(bias)+' for '+self.cat_name)
+            # print('5/24 variable bias of '+str(bias)+' for '+self.cat_name)
         return(y)
 
     def _make_scatter(self, x):
@@ -416,9 +419,9 @@ class catalog(object):
         for n in self.N_range:
             points = zip(self.z_fine, [self.samps[n][1]] * self.n_tot)
             cur=pspace.pdf(np.array(points))
-            if(n==200):
-                print("points="+str(points))
-                print("cur="+str(cur))
+            # if(n==200):
+            #     print("points="+str(points))
+            #     print("cur="+str(cur))
             lfs.append(cur)
         lfs = np.array(lfs)
         lfs /= np.sum(lfs, axis=-1)[:, np.newaxis] * self.dz_fine
@@ -437,16 +440,21 @@ class catalog(object):
         """
         # print('5/23 catalog writes bin ends '+str(self.cat['bin_ends']))
         if style == '.txt':
-            with open(os.path.join(self.data_dir, loc + style), 'wb') as csvfile:
-                out = csv.writer(csvfile, delimiter=',')
-                out.writerow(self.cat['bin_ends'])
-                out.writerow(self.cat['log_interim_prior'])
-                for line in self.cat['log_interim_posteriors']:
-                    out.writerow(line)
-            with open(os.path.join(self.data_dir, 'true_vals' + style), 'wb') as csvfile:
-                out = csv.writer(csvfile, delimiter=' ')
-                for line in self.cat['true_vals']:
-                    out.writerow(line)
+            np.savetxt(os.path.join(self.data_dir, 'meta'+loc + style), self.cat['bin_ends'])
+            output = np.vstack((self.cat['log_interim_prior'], self.cat['log_interim_posteriors']))
+            np.savetxt(os.path.join(self.data_dir, loc + style), output)
+            # with open(os.path.join(self.data_dir, loc + style), 'wb') as csvfile:
+            #     out = csv.writer(csvfile, delimiter=',')
+            #     print(type(self.cat['bin_ends']))
+            #     out.writerow(self.cat['bin_ends'])
+            #     out.writerow(self.cat['log_interim_prior'])
+            #     for line in self.cat['log_interim_posteriors']:
+            #         out.writerow(line)
+            np.savetxt(os.path.join(self.data_dir, 'true_vals' + style), self.cat['true_vals'])
+            # with open(os.path.join(self.data_dir, 'true_vals' + style), 'wb') as csvfile:
+            #     out = csv.writer(csvfile, delimiter=' ')
+            #     for line in self.cat['true_vals']:
+            #         out.writerow(line)
         return
 
     def read(self, loc='data', style='.txt'):
@@ -459,10 +467,12 @@ class catalog(object):
             location of catalog file
         """
         if style == '.txt':
-            with open(os.path.join(self.data_dir, loc + style), 'rb') as csvfile:
-                tuples = (line.split(None) for line in csvfile)
-                alldata = [[float(pair[k]) for k in range(0, len(pair))] for pair in tuples]
-        self.cat['bin_ends'] = np.array(alldata[0])
-        self.cat['log_interim_prior'] = np.array(alldata[1])
-        self.cat['log_interim_posteriors'] = np.array(alldata[2:])
+            self.cat['bin_ends'] = np.loadtxt(os.path.join(self.data_dir, 'meta'+loc + style))
+            alldata = np.loadtxt(os.path.join(self.data_dir, loc + style))
+            # with open(os.path.join(self.data_dir, loc + style), 'rb') as csvfile:
+            #     tuples = (line.split(None) for line in csvfile)
+            #     alldata = [[float(pair[k]) for k in range(0, len(pair))] for pair in tuples]
+        # self.cat['bin_ends'] = np.array(alldata[0])
+        self.cat['log_interim_prior'] = np.array(alldata[0])
+        self.cat['log_interim_posteriors'] = np.array(alldata[1:])
         return self.cat
