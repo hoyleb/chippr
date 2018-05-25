@@ -424,7 +424,7 @@ class log_z_dens(object):
             vals -= u.safe_log(np.sum(np.exp(ivals) * self.bin_difs[np.newaxis, :], axis=1))[:, np.newaxis]
             if vb:
                 plots.plot_ivals(vals, self.info, self.plot_dir, prepend=self.add_text)
-                canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers, prepend=self.add_text)
+                canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers)
             full_chain = np.array([[vals[w]] for w in range(self.n_walkers)])
             while self.burning_in:
                 if vb:
