@@ -212,7 +212,7 @@ class catalog(object):
         x_alt = self._make_bias(self.z_fine)
 
         # should sigmas be proportional to z_true or bias*(1+z_true)?
-        sigmas = self._make_scatter(self.x_alt)
+        sigmas = self._make_scatter(x_alt)
 
         vert_funcs = [gauss(x_alt[kk], sigmas[kk]) for kk in range(self.n_tot)]
         # print([vert_func.evaluate_one(0) for vert_func in vert_funcs])
