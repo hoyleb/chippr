@@ -4,6 +4,7 @@ import os
 import matplotlib as mpl
 mpl.use('PS')
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import chippr
 from chippr import defaults as d
@@ -77,6 +78,78 @@ def plot_prob_space(z_grid, p_space, plot_loc='', prepend='', plot_name='prob_sp
     f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
     return
 
+def plot_mega_scatter(zs, pfs, z_grid, grid_ends, plot_loc='', prepend='', plot_name='mega_scatter.png'):
+    """
+    Plots a scatterplot of true and observed redshift values
+
+    Parameters
+    ----------
+    zs: numpy.ndarray, float
+        matrix of spec, phot values
+    z_grid: numpy.ndarray, float
+        fine grid of redshifts
+    grid_ends: numpy.ndarray, float
+        coarse bin ends
+    pfs: numpy.ndarray, float
+        matrix of posteriors evaluated on a fine grid
+    plot_loc: string, optional
+        location in which to store plot
+    plot_name: string, optional
+        filename for plot
+    prepend: str, optional
+        prepend string to plot name
+    """
+    n = len(zs)
+    zs = zs.T
+    true_zs = zs[0]
+    obs_zs = zs[1]
+
+    pu.set_up_plot()
+    f, scatplot = plt.subplots(figsize=(7.5, 7.5))
+    f.subplots_adjust(hspace=0)
+
+    # true_hist = np.hist(true_zs, grid_ends)
+    # sps_x.step(true_hist[0], true_hist[1], c='k', where='mid')
+    # sps_x.hist(obs_zs, bins=info['bin_ends'][0])
+    # sps_y.hist(true_zs)
+
+    scatplot.plot(z_grid, z_grid, color='k', alpha=0.5, linewidth=1.)
+    scatplot.scatter(true_zs, obs_zs, c='k', marker='.', s=1., alpha=0.1)
+    randos = np.floor(n / (d.plot_colors + 1)) * np.arange(1., d.plot_colors + 1)# np.random.choice(range(len(z_grid)), d.plot_colors)
+    randos = randos.astype(int)
+    max_pfs = np.max(pfs)
+    sort_inds = np.argsort(obs_zs)
+    sorted_pfs = pfs[sort_inds]
+    sorted_true = true_zs[sort_inds]
+    sorted_obs = obs_zs[sort_inds]
+    for r in range(d.plot_colors):
+        pf = sorted_pfs[randos[r]]
+        norm_pf = pf / max_pfs
+        scatplot.step(z_grid, norm_pf + sorted_obs[randos[r]], c=pu.colors[r], where='mid')# plt.plot(z_grid, norm_pf + sorted_obs[randos[r]], c='k')
+        scatplot.hlines(sorted_obs[randos[r]], min(z_grid), max(z_grid), color='k', alpha=0.1, linestyle='--', linewidth=0.5)
+        scatplot.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c=pu.colors[r])
+    scatplot.set_xlabel(r'$z_{true}$')
+    scatplot.set_ylabel(r'$z_{obs}$')
+
+    scatplot.set_aspect(1.)
+    # gs = gridspec.GridSpec(3, 3)
+    # sps = f.add_subplot(gs[:-1, :-1])
+    # sps_x = f.add_subplot(gs[:-1, -1], share)
+    # sps_y = f.add_subplot(gs[-1, :-1])
+    divider = make_axes_locatable(scatplot)
+    histx = divider.append_axes('top', 1.2, pad=0., sharex=scatplot)
+    histy = divider.append_axes('right', 1.2, pad=0., sharey=scatplot)
+
+    histx.xaxis.set_tick_params(labelbottom=False)
+    histy.yaxis.set_tick_params(labelleft=False)
+    histx.hist(true_zs, bins=grid_ends)
+    histy.hist(obs_zs, bins=grid_ends, orientation='horizontal')
+
+    # plt.draw()
+    f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches=0, dpi=d.dpi)
+    # plt.close()
+    return
+
 def plot_scatter(zs, pfs, z_grid, plot_loc='', prepend='', plot_name='scatter.png'):
     """
     Plots a scatterplot of true and observed redshift values
@@ -121,7 +194,7 @@ def plot_scatter(zs, pfs, z_grid, plot_loc='', prepend='', plot_name='scatter.pn
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$z_{obs}$')
     f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
-
+    # plt.close()
     return
 
 def plot_obs_scatter(true_vals, pfs, z_grid, plot_loc='', prepend='', plot_name='obs_scatter.png'):
