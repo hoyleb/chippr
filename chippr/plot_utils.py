@@ -15,8 +15,8 @@ def set_up_plot():
     """
     Sets up plots to look decent
     """
-    title = 10
-    label = 10
+    title = 16
+    label = 14
     mpl.rcParams['text.usetex'] = True
     mpl.rcParams['axes.titlesize'] = title
     mpl.rcParams['axes.labelsize'] = label

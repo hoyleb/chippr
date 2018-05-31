@@ -176,7 +176,7 @@ class catalog(object):
         # print(self.obs_lfs[200])
         if vb:
             # plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir, prepend=self.cat_name)
-            plots.plot_mega_scatter(self.samps, self.obs_lfs, self.z_fine, self.bin_ends, plot_loc=self.plot_dir, prepend=self.cat_name)
+            plots.plot_mega_scatter(self.samps, self.obs_lfs, self.z_fine, self.bin_ends, truth=[self.z_fine, hor_amps], plot_loc=self.plot_dir, prepend=self.cat_name)
 
         # truth_fine = self.truth.pdf(self.z_fine)
         #

@@ -31,8 +31,8 @@ def plot_true_histogram(true_samps, n_bins=(10, 50), plot_loc='', prepend='', pl
     pu.set_up_plot()
     f = plt.figure(figsize=(5, 5))
     sps = f.add_subplot(1, 1, 1)
-    sps.hist(true_samps, bins=n_bins[1], normed=1, color='k', alpha=0.5, log=True)
-    sps.hist(true_samps, bins=n_bins[0], normed=1, color='y', alpha=0.5, log=True)
+    sps.hist(true_samps, bins=n_bins[1], density=1, color='k', alpha=0.5, log=True)
+    sps.hist(true_samps, bins=n_bins[0], density=1, color='y', alpha=0.5, log=True)
     sps.set_xlabel(r'$z_{true}$')
     sps.set_ylabel(r'$n(z_{true})$')
     f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
@@ -78,7 +78,7 @@ def plot_prob_space(z_grid, p_space, plot_loc='', prepend='', plot_name='prob_sp
     f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
     return
 
-def plot_mega_scatter(zs, pfs, z_grid, grid_ends, plot_loc='', prepend='', plot_name='mega_scatter.png'):
+def plot_mega_scatter(zs, pfs, z_grid, grid_ends, truth=None, plot_loc='', prepend='', plot_name='mega_scatter.png'):
     """
     Plots a scatterplot of true and observed redshift values
 
@@ -92,6 +92,8 @@ def plot_mega_scatter(zs, pfs, z_grid, grid_ends, plot_loc='', prepend='', plot_
         coarse bin ends
     pfs: numpy.ndarray, float
         matrix of posteriors evaluated on a fine grid
+    truth: numpy.ndarray, float
+        (x, y) coordinates of the true distribution on a fine grid
     plot_loc: string, optional
         location in which to store plot
     plot_name: string, optional
@@ -113,7 +115,7 @@ def plot_mega_scatter(zs, pfs, z_grid, grid_ends, plot_loc='', prepend='', plot_
     # sps_x.hist(obs_zs, bins=info['bin_ends'][0])
     # sps_y.hist(true_zs)
 
-    scatplot.plot(z_grid, z_grid, color='k', alpha=0.5, linewidth=1.)
+    scatplot.plot(z_grid, z_grid, color='r', alpha=0.5, linewidth=1.)
     scatplot.scatter(true_zs, obs_zs, c='k', marker='.', s=1., alpha=0.1)
     randos = np.floor(n / (d.plot_colors + 1)) * np.arange(1., d.plot_colors + 1)# np.random.choice(range(len(z_grid)), d.plot_colors)
     randos = randos.astype(int)
@@ -127,27 +129,26 @@ def plot_mega_scatter(zs, pfs, z_grid, grid_ends, plot_loc='', prepend='', plot_
         norm_pf = pf / max_pfs
         scatplot.step(z_grid, norm_pf + sorted_obs[randos[r]], c=pu.colors[r], where='mid')# plt.plot(z_grid, norm_pf + sorted_obs[randos[r]], c='k')
         scatplot.hlines(sorted_obs[randos[r]], min(z_grid), max(z_grid), color='k', alpha=0.1, linestyle='--', linewidth=0.5)
-        scatplot.scatter(sorted_true[randos[r]], sorted_obs[randos[r]], marker='+', c=pu.colors[r])
-    scatplot.set_xlabel(r'$z_{true}$')
-    scatplot.set_ylabel(r'$z_{obs}$')
+        scatplot.vlines(sorted_true[randos[r]], sorted_obs[randos[r]], max(norm_pf)+sorted_obs[randos[r]], color=pu.colors[r], linestyle='dotted', linewidth=0.5, alpha=0.5)
+    scatplot.set_xlabel(r'$z_{spec}$')
+    scatplot.set_ylabel(r'$z_{phot}$')
 
     scatplot.set_aspect(1.)
-    # gs = gridspec.GridSpec(3, 3)
-    # sps = f.add_subplot(gs[:-1, :-1])
-    # sps_x = f.add_subplot(gs[:-1, -1], share)
-    # sps_y = f.add_subplot(gs[-1, :-1])
     divider = make_axes_locatable(scatplot)
     histx = divider.append_axes('top', 1.2, pad=0., sharex=scatplot)
     histy = divider.append_axes('right', 1.2, pad=0., sharey=scatplot)
 
     histx.xaxis.set_tick_params(labelbottom=False)
     histy.yaxis.set_tick_params(labelleft=False)
-    histx.hist(true_zs, bins=grid_ends)
-    histy.hist(obs_zs, bins=grid_ends, orientation='horizontal')
+    histx.hist(true_zs, bins=grid_ends, alpha=0.5, color='k', density=True, stacked=False)
+    histy.hist(obs_zs, bins=grid_ends, orientation='horizontal', alpha=0.5, color='k', density=True, stacked=False)
+    if truth is not None:
+        histx.plot(truth[0], truth[1] / np.max(truth[1]), color='r')
+        histy.plot(truth[1] / np.max(truth[1]), truth[0], color='r')
+    histx.set_yticks([])
+    histy.set_xticks([])
 
-    # plt.draw()
     f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches=0, dpi=d.dpi)
-    # plt.close()
     return
 
 def plot_scatter(zs, pfs, z_grid, plot_loc='', prepend='', plot_name='scatter.png'):
