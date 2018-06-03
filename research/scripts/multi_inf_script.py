@@ -152,7 +152,8 @@ def do_inference(given_key):
     print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs))+' in '+str(end_mmle))
 
     nz_stats = nz.compare()
-    nz.plot_estimators()
+    nz.plot_estimators(log=True)
+    nz.plot_estimators(log=False)
     nz.write('nz.p')
 
 if __name__ == "__main__":

@@ -127,9 +127,9 @@ def plot_mega_scatter(zs, pfs, z_grid, grid_ends, truth=None, plot_loc='', prepe
     for r in range(d.plot_colors):
         pf = sorted_pfs[randos[r]]
         norm_pf = pf / max_pfs
+        pu.plot_h(scatplot, [min(z_grid), max(z_grid)], [sorted_obs[randos[r]], sorted_obs[randos[r]]], c='k', s=':', w=0.75)
+        pu.plot_v(scatplot, [min(z_grid), sorted_true[randos[r]], max(z_grid)], [sorted_obs[randos[r]], max(norm_pf)+sorted_obs[randos[r]]], c='k', s=':', w=0.75)
         scatplot.step(z_grid, norm_pf + sorted_obs[randos[r]], c=pu.colors[r], where='mid')# plt.plot(z_grid, norm_pf + sorted_obs[randos[r]], c='k')
-        scatplot.hlines(sorted_obs[randos[r]], min(z_grid), max(z_grid), color='k', alpha=0.1, linestyle='--', linewidth=0.5)
-        scatplot.vlines(sorted_true[randos[r]], sorted_obs[randos[r]], max(norm_pf)+sorted_obs[randos[r]], color=pu.colors[r], linestyle='dotted', linewidth=0.5, alpha=0.5)
     scatplot.set_xlabel(r'$z_{spec}$')
     scatplot.set_ylabel(r'$z_{phot}$')
 

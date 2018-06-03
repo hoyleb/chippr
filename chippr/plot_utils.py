@@ -10,6 +10,7 @@ from chippr import defaults as d
 
 cmap = np.linspace(0., 1., d.plot_colors)
 colors = [cm.viridis(i) for i in cmap]
+# colors = # TODO: fill this in from qp!
 
 def set_up_plot():
     """

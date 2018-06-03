@@ -76,7 +76,9 @@ def just_plot(given_key):
     nz = log_z_dens(data, prior, truth=true_nz, loc=test_dir, vb=True)
 
     nz.info = nz.read('nz.p')
-    nz.plot_estimators()
+
+    nz.plot_estimators(log=True)
+    nz.plot_estimators(log=False)
 
     nz.write('nz.p')
 
