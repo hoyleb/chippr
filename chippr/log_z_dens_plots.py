@@ -292,6 +292,8 @@ def plot_estimators(info, plot_dir, log=True, prepend='', metrics=True, mini=Tru
     # color_labels = [0]
 
     if info['truth'] is not None:
+        bin_log_true = info['log_tru_nz']
+        bin_true = np.exp(bin_log_true)
         if mini:
             f = plt.figure(figsize=(5, 7.5))
             gs = gridspec.GridSpec(3, 1)
@@ -310,8 +312,6 @@ def plot_estimators(info, plot_dir, log=True, prepend='', metrics=True, mini=Tru
             sps_log = f.add_subplot(1, 1, 1)
             sps_log.set_xlabel(r'$z$')
         # mini_sps.ticklabel_format(style='sci',axis='y')
-        bin_log_true = info['log_tru_nz']
-        bin_true = np.exp(bin_log_true)
 
         # tru, =
         # sps_log.plot(info['truth']['z_grid'], u.safe_log(info['truth']['nz_grid']),
