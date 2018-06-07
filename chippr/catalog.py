@@ -174,15 +174,16 @@ class catalog(object):
         self.obs_lfs = self.evaluate_lfs(self.pspace_eval)
         # print((type(self.obs_lfs), len(self.obs_lfs)))
         # print(self.obs_lfs[200])
-        if vb:
-            # plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir, prepend=self.cat_name)
-            plots.plot_mega_scatter(self.samps, self.obs_lfs, self.z_fine, self.bin_ends, truth=[self.z_fine, hor_amps], plot_loc=self.plot_dir, prepend=self.cat_name)
 
         # truth_fine = self.truth.pdf(self.z_fine)
         #
         # pfs_fine = self.obs_lfs * int_pr_fine[np.newaxis, :] / truth_fine[np.newaxis, :]
         pfs_coarse = self.coarsify(self.obs_lfs)
         int_pr_coarse = self.coarsify(int_pr_fine)
+
+        if vb:
+            # plots.plot_scatter(self.samps, self.obs_lfs, self.z_fine, plot_loc=self.plot_dir, prepend=self.cat_name)
+            plots.plot_mega_scatter(self.samps, self.obs_lfs, self.z_fine, self.bin_ends, truth=[self.z_fine, hor_amps], plot_loc=self.plot_dir, prepend=self.cat_name, int_pr=[self.z_fine, int_pr_fine[0]])
 
         self.cat['bin_ends'] = self.bin_ends
         self.cat['log_interim_prior'] = u.safe_log(int_pr_coarse[0])

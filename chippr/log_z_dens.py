@@ -502,14 +502,18 @@ class log_z_dens(object):
             print(out_info)
         return out_info
 
-    def plot_estimators(self, log=True):
+    def plot_estimators(self, log=True, mini=True):
         """
         Plots all available estimators of the redshift density function.
         """
-        if log:
-            plots.plot_estimators(self.info, self.plot_dir, prepend=self.add_text+'log')
+        if mini:
+            also = 'mini'
         else:
-            plots.plot_estimators(self.info, self.plot_dir, log=False, prepend=self.add_text+'lin')
+            also = ''
+        if log:
+            plots.plot_estimators(self.info, self.plot_dir, prepend=self.add_text+also+'log_', mini=mini)
+        else:
+            plots.plot_estimators(self.info, self.plot_dir, log=False, prepend=self.add_text+also+'lin_', mini=mini)
         return
 
     def read(self, read_loc, style='pickle', vb=True):

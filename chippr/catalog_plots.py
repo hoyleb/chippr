@@ -72,13 +72,13 @@ def plot_prob_space(z_grid, p_space, plot_loc='', prepend='', plot_name='prob_sp
     plt.pcolormesh(z_grid, z_grid, u.safe_log(all_vals), cmap='viridis')
     plt.plot(z_grid, z_grid, color='k')
     plt.colorbar()
-    plt.xlabel(r'$z_{spec}$')
-    plt.ylabel(r'$z_{phot}$')
+    plt.xlabel(r'$z_{\mathrm{true}}$')
+    plt.ylabel(r'$\mathrm{``data"}$')#z_{\mathrm{phot}}$')
     plt.axis([z_grid[0], z_grid[-1], z_grid[0], z_grid[-1]])
     f.savefig(os.path.join(plot_loc, prepend+plot_name), bbox_inches='tight', pad_inches = 0, dpi=d.dpi)
     return
 
-def plot_mega_scatter(zs, pfs, z_grid, grid_ends, truth=None, plot_loc='', prepend='', plot_name='mega_scatter.png'):
+def plot_mega_scatter(zs, pfs, z_grid, grid_ends, truth=None, plot_loc='', prepend='', plot_name='mega_scatter.png', int_pr=None):
     """
     Plots a scatterplot of true and observed redshift values
 
@@ -100,6 +100,8 @@ def plot_mega_scatter(zs, pfs, z_grid, grid_ends, truth=None, plot_loc='', prepe
         filename for plot
     prepend: str, optional
         prepend string to plot name
+    int_pr: numpy.ndarray, float, optional
+        plit the interim prior with the histograms?
     """
     n = len(zs)
     zs = zs.T
@@ -143,8 +145,11 @@ def plot_mega_scatter(zs, pfs, z_grid, grid_ends, truth=None, plot_loc='', prepe
     histx.hist(true_zs, bins=grid_ends, alpha=0.5, color='k', density=True, stacked=False)
     histy.hist(obs_zs, bins=grid_ends, orientation='horizontal', alpha=0.5, color='k', density=True, stacked=False)
     if truth is not None:
-        histx.plot(truth[0], truth[1] / np.max(truth[1]), color='r')
-        histy.plot(truth[1] / np.max(truth[1]), truth[0], color='r')
+        histx.plot(truth[0], truth[1] / np.max(truth[1]), color='b', alpha=0.75)
+        histy.plot(truth[1] / np.max(truth[1]), truth[0], color='b', alpha=0.75)
+    if int_pr is not None:
+        histx.plot(int_pr[0], int_pr[1] / np.max(int_pr[1]), color='r', alpha=0.75)
+        histy.plot(int_pr[1] / np.max(int_pr[1]), int_pr[0], color='r', alpha=0.75)
     histx.set_yticks([])
     histy.set_xticks([])
 

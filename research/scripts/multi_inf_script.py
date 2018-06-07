@@ -152,8 +152,28 @@ def do_inference(given_key):
     print('MMLE: '+str(np.dot(np.exp(nz_mmle), z_difs))+' in '+str(end_mmle))
 
     nz_stats = nz.compare()
-    nz.plot_estimators(log=True)
-    nz.plot_estimators(log=False)
+    nz.plot_estimators(log=True, mini=False)
+    nz.plot_estimators(log=False, mini=False)
+    nz.write('nz.p')
+
+    #start_mean = mvn(nz_mmle, cov).sample_one()
+    start = prior#mvn(data['log_interim_prior'], cov)
+
+    n_bins = len(zs) - 1
+    if params['n_walkers'] is not None:
+        n_ivals = params['n_walkers']
+    else:
+        n_ivals = 10 * n_bins
+    initial_values = start.sample(n_ivals)
+
+    start_samps = timeit.default_timer()
+    nz_samps = nz.calculate_samples(initial_values, no_data=params['no_data'], no_prior=params['no_prior'], n_procs=1)
+    time_samps = timeit.default_timer()-start_samps
+    print('Sampled '+str(params['n_accepted'])+' after '+str(nz.burn_ins * params['n_burned'])+' in '+str(time_samps))
+
+    nz_stats = nz.compare()
+    nz.plot_estimators(log=True, mini=False)
+    nz.plot_estimators(log=False, mini=False)
     nz.write('nz.p')
 
 if __name__ == "__main__":
