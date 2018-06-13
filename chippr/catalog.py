@@ -225,23 +225,26 @@ class catalog(object):
         #
         # pdf_means = self._make_bias(grid_means)
 
-        # WILL REFACTOR THIS TO ADD BACK CATASTROPHIC OUTLIER SUPPORT
+        # WILL REFACTOR THIS TO ADD SUPPORT FOR MULTIPLE OUTLIER POPULATIONS
         if self.params['catastrophic_outliers'] != '0':
             frac = self.params['outlier_fraction']
             rel_fracs = np.array([frac, 1. - frac])
+            uniform_lf = discrete(np.array([self.bin_ends[0], self.bin_ends[-1]]), np.array([1.]))
             if self.params['catastrophic_outliers'] == 'uniform':
-                uniform_component = discrete(np.array([self.bin_ends[0], self.bin_ends[-1]]), np.array([1.]))
                 # use_frac = np.max((0., frac-0.01))
-                grid_funcs = [gmix(rel_fracs, [uniform_component, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
+                grid_funcs = [gmix(rel_fracs, [uniform_lf, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
             else:
                 # print('NOT READY FOR OTHER TYPES OF OUTLIERS YET!')
-                self.outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
-                in_amps = np.ones(self.n_tot)
+                outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
+                # in_amps = np.ones(self.n_tot)
                 if self.params['catastrophic_outliers'] == 'template':
-                    grid_funcs = [gmix(rel_fracs, [self.outlier_lf, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
+                    grid_funcs = [gmix(rel_fracs, [outlier_lf, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
                     # out_amps = uniform_lf.pdf(grid_means)
                 elif self.params['catastrophic_outliers'] == 'training':
-                    print('NOT READY FOR OTHER TYPES OF OUTLIERS YET!')
+                    full_pdf = np.exp(u.safe_log(outlier_lf.pdf(self.z_fine)))
+                    flat_pdf = np.exp(u.safe_log(uniform_lf.pdf(self.z_fine)))
+                    fracs = np.array([frac * full_pdf / np.dot(full_pdf, self.dz_fine), (1-frac) * flat_pdf / np.dot(flat_pdf, self.dz_fine)]).T
+                    grid_funcs = [gmix(fracs[kk], [uniform_lf, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
                     # out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
                     # out_amps = self.outlier_lf.pdf(grid_means)
 
