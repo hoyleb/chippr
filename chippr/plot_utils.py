@@ -8,9 +8,9 @@ import matplotlib.cm as cm
 import chippr
 from chippr import defaults as d
 
-cmap = np.linspace(0., 1., d.plot_colors)
-colors = [cm.viridis(i) for i in cmap]
-# colors = np.array([(213, 94, 0), (0, 158, 115), (0, 114, 178), (86, 180, 233), (230, 159, 0), (204, 121, 167), (240, 228, 66)])/256.
+# cmap = np.linspace(0., 1., d.plot_colors)
+# colors = [cm.viridis(i) for i in cmap]
+colors = np.array([(213, 94, 0), (0, 158, 115), (0, 114, 178), (86, 180, 233), (230, 159, 0), (204, 121, 167), (240, 228, 66)])/256.
 # ['Vermilion', 'Bluish green', 'Blue', 'Sky blue', 'Orange', 'Reddish purple', 'Yellow']
 
 def set_up_plot():

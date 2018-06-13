@@ -226,34 +226,40 @@ class catalog(object):
         # pdf_means = self._make_bias(grid_means)
 
         # WILL REFACTOR THIS TO ADD BACK CATASTROPHIC OUTLIER SUPPORT
-        # if self.params['catastrophic_outliers'] != '0':
-        #     if self.params['catastrophic_outliers'] == 'uniform':
-        #
-        #     else:
-        #         self.outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
-        #         in_amps = np.ones(self.n_tot)
-        #         if self.params['catastrophic_outliers'] == 'template':
-        #             out_funcs = [multi_dist([uniform_lfs[kk], self.outlier_lf]) for kk in range(self.n_tot)]
-        #             out_amps = uniform_lf.pdf(grid_means)
-        #
-        #         elif self.params['catastrophic_outliers'] == 'training':
-        #             out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
-        #             out_amps = self.outlier_lf.pdf(grid_means)
-        #
-        #         out_amps /= np.dot(out_amps, self.bin_difs_fine)
-        #         in_amps *= (1. - self.params['outlier_fraction'])
-        #         out_amps *= self.params['outlier_fraction']
-        #         try:
-        #             test_out_frac = np.dot(out_amps, self.bin_difs_fine)
-        #             assert np.isclose(test_out_frac, self.params['outlier_fraction'])
-        #         except:
-        #             print('outlier fraction not normalized: '+str(test_out_frac))
-        #         grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_funcs[kk]]) for kk in range(self.n_tot)]
-        #         # np.append(grid_means, [self.params['outlier_mean'], self.uniform_lf.sample_one()])
+        if self.params['catastrophic_outliers'] != '0':
+            frac = self.params['outlier_fraction']
+            rel_fracs = np.array([frac, 1. - frac])
+            if self.params['catastrophic_outliers'] == 'uniform':
+                uniform_component = discrete(np.array([self.bin_ends[0], self.bin_ends[-1]]), np.array([1.]))
+                # use_frac = np.max((0., frac-0.01))
+                grid_funcs = [gmix(rel_fracs, [uniform_component, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
+            else:
+                # print('NOT READY FOR OTHER TYPES OF OUTLIERS YET!')
+                self.outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
+                in_amps = np.ones(self.n_tot)
+                if self.params['catastrophic_outliers'] == 'template':
+                    grid_funcs = [gmix(rel_fracs, [self.outlier_lf, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
+                    # out_amps = uniform_lf.pdf(grid_means)
+                elif self.params['catastrophic_outliers'] == 'training':
+                    print('NOT READY FOR OTHER TYPES OF OUTLIERS YET!')
+                    # out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
+                    # out_amps = self.outlier_lf.pdf(grid_means)
 
+                # out_amps /= np.dot(out_amps, self.bin_difs_fine)
+                # in_amps *= (1. - self.params['outlier_fraction'])
+                # out_amps *= self.params['outlier_fraction']
+                # try:
+                #     test_out_frac = np.dot(out_amps, self.bin_difs_fine)
+                #     assert np.isclose(test_out_frac, self.params['outlier_fraction'])
+                # except:
+                #     print('outlier fraction not normalized: '+str(test_out_frac))
+                # grid_funcs = [gmix(np.array([in_amps[kk], out_amps[kk]]), [grid_funcs[kk], out_funcs[kk]]) for kk in range(self.n_tot)]
+                # np.append(grid_means, [self.params['outlier_mean'], self.uniform_lf.sample_one()])
+        else:
+            grid_funcs = vert_funcs
         # true n(z) in z_spec, uniform in z_phot
         # grid_amps *= true_func.evaluate(grid_means)
-        p_space = [multi_dist([hor_funcs[kk], vert_funcs[kk]]) for kk in range(self.n_tot)]
+        p_space = [multi_dist([hor_funcs[kk], grid_funcs[kk]]) for kk in range(self.n_tot)]
 
         return p_space
 
