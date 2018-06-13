@@ -39,7 +39,7 @@ def just_plot(given_key):
     test_info = all_tests[given_key]
     test_name = test_info['name']
 
-    test_name = test_name[:-1]
+    test_name = test_name
     param_file_name = test_name + '.txt'
 
     test_dir = os.path.join(result_dir, test_name)
@@ -66,7 +66,7 @@ def just_plot(given_key):
         alldata = [[float(pair[k]) for k in range(0,len(pair))] for pair in tuples]
     true_vals = np.array(alldata).T
     bin_mids = (data['bin_ends'][1:] + data['bin_ends'][:-1]) / 2.
-    catalog_plots.plot_obs_scatter(true_vals.T, np.exp(data['log_interim_posteriors']), bin_mids, plot_loc=os.path.join(test_dir, 'plots'))
+    catalog_plots.plot_obs_scatter(true_vals, np.exp(data['log_interim_posteriors']), bin_mids, plot_loc=os.path.join(test_dir, 'plots'))
 
     prior = set_up_prior(data)
     n_bins = len(data['log_interim_prior'])
@@ -100,15 +100,11 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    name_file = 'which_inf_tests.txt'
+    test_name = 'single_varbias'
 
-    with open(name_file) as tests_to_run:
-        all_tests = {}
-        for test_name in tests_to_run:
-            test_info = {}
-            test_info['name'] = test_name
-            all_tests[test_name] = test_info
+    all_tests = {}
+    test_info = {}
+    test_info['name'] = test_name
+    all_tests[test_name] = test_info
 
-    nps = mp.cpu_count()
-    pool = mp.Pool(nps)
-    pool.map(just_plot, all_tests.keys())
+    just_plot(test_name)
