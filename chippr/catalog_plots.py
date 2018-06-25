@@ -63,7 +63,6 @@ def plot_prob_space(z_grid, p_space, plot_loc='', prepend='', plot_name='prob_sp
     grid_range = range(grid_len)
     # to_plot = u.safe_log(p_space.evaluate(all_points.reshape((grid_len**2, 2))).reshape((grid_len, grid_len)))
     # to_plot.reshape((len(z_grid), len(z_grid)))
-    # print('trying to plot '+str(np.shape(to_plot)))
     # plt.pcolormesh(z_grid, z_grid, to_plot, cmap='viridis')
     all_points = np.array([[(z_grid[kk], z_grid[jj]) for kk in grid_range] for jj in grid_range])
     orig_shape = np.shape(all_points)

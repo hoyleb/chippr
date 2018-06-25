@@ -143,20 +143,16 @@ class catalog(object):
 
         prob_components = self.make_probs()
         hor_amps = self.truth.evaluate(self.z_fine) * self.bin_difs_fine
-        # print ("making gmix for psace_draw")
         self.pspace_draw = gmix(hor_amps, prob_components)
         if vb:
             plots.plot_prob_space(self.z_fine, self.pspace_draw, plot_loc=self.plot_dir, prepend=self.cat_name+'draw_')
 
         # self.prob_space = self.make_probs()
-        # print('make_probs returns '+str(type(self.prob_space)))
         # if vb:
         #     plots.plot_prob_space(self.z_fine, self.prob_space, plot_loc=self.plot_dir, prepend=self.cat_name)
 
         ## next, sample discrete to get z_true, z_obs
         self.samps = self.pspace_draw.sample(self.N)
-        # print(len(self.samps))
-        # print("samps="+str(self.samps))
         self.cat['true_vals'] = self.samps
         if vb:
             plots.plot_true_histogram(self.samps.T[0], n_bins=(self.n_coarse, self.n_tot), plot_loc=self.plot_dir, prepend=self.cat_name)
@@ -166,14 +162,11 @@ class catalog(object):
 
         self.int_pr = int_pr
         int_pr_fine = np.array([self.int_pr.pdf(self.z_fine)])
-        # print("making gmix for pspace_eval")
         self.pspace_eval = gmix(int_pr_fine, prob_components)
         if vb:
             plots.plot_prob_space(self.z_fine, self.pspace_eval, plot_loc=self.plot_dir, prepend=self.cat_name+'eval_')
 
         self.obs_lfs = self.evaluate_lfs(self.pspace_eval)
-        # print((type(self.obs_lfs), len(self.obs_lfs)))
-        # print(self.obs_lfs[200])
 
         # truth_fine = self.truth.pdf(self.z_fine)
         #
@@ -217,7 +210,6 @@ class catalog(object):
         sigmas = self._make_scatter(x_alt)
 
         vert_funcs = [gauss(x_alt[kk], sigmas[kk]) for kk in range(self.n_tot)]
-        # print([vert_func.evaluate_one(0) for vert_func in vert_funcs])
 
         # grid_amps = self.truth.evaluate(x_vals)
         #
@@ -234,7 +226,6 @@ class catalog(object):
                 # use_frac = np.max((0., frac-0.01))
                 grid_funcs = [gmix(rel_fracs, [uniform_lf, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
             else:
-                # print('NOT READY FOR OTHER TYPES OF OUTLIERS YET!')
                 outlier_lf = gauss(self.params['outlier_mean'], self.params['outlier_sigma']**2)
                 # in_amps = np.ones(self.n_tot)
                 if self.params['catastrophic_outliers'] == 'template':
@@ -242,8 +233,17 @@ class catalog(object):
                     # out_amps = uniform_lf.pdf(grid_means)
                 elif self.params['catastrophic_outliers'] == 'training':
                     full_pdf = np.exp(u.safe_log(outlier_lf.pdf(self.z_fine)))
-                    flat_pdf = np.exp(u.safe_log(uniform_lf.pdf(self.z_fine)))
-                    fracs = np.array([frac * full_pdf / np.dot(full_pdf, self.dz_fine), (1-frac) * flat_pdf / np.dot(flat_pdf, self.dz_fine)]).T
+                    # print(full_pdf)
+                    intermediate = np.dot(full_pdf, np.ones(self.n_tot) * self.dz_fine)
+                    # print(intermediate)
+                    full_pdf = full_pdf / intermediate[np.newaxis]
+                    # print(full_pdf)
+                    # flat_pdf = np.exp(u.safe_log(uniform_lf.pdf(self.z_fine)))
+                    # flat_pdf = flat_pdf / np.dot(flat_pdf, self.dz_fine)
+                    # items = np.array([vert_funcs[kk].pdf(self.z_fine[kk]) for kk in range(self.n_tot)])
+                    fracs = np.array([full_pdf, np.ones(self.n_tot)]).T
+                    fracs = fracs * np.array([frac, 1.-frac])[np.newaxis, :]
+                    # print(fracs)
                     grid_funcs = [gmix(fracs[kk], [uniform_lf, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
                     # out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
                     # out_amps = self.outlier_lf.pdf(grid_means)
@@ -353,20 +353,14 @@ class catalog(object):
         y: numpy.ndarray, float
             cental redshifts to use as Gaussian means
         """
-        # print('what?')
         if not self.params['ez_bias']:
-            # print('5/24 no bias for '+self.cat_name)
             return(x)
         else:
             bias = np.asarray(self.params['ez_bias_val'])
         if not self.params['variable_bias']:
             y = x + (np.ones_like(x) * bias[np.newaxis])
-            print("x=" + str(x))
-            print("y=" + str(y))
-            # print('5/24 constant bias of '+str(bias)+' for '+self.cat_name)
         else:
             y = x + ((np.ones_like(x) + x) * bias[np.newaxis])
-            # print('5/24 variable bias of '+str(bias)+' for '+self.cat_name)
         return(y)
 
     def _make_scatter(self, x):
@@ -430,9 +424,6 @@ class catalog(object):
         for n in self.N_range:
             points = zip(self.z_fine, [self.samps[n][1]] * self.n_tot)
             cur=pspace.pdf(np.array(points))
-            # if(n==200):
-            #     print("points="+str(points))
-            #     print("cur="+str(cur))
             lfs.append(cur)
         lfs = np.array(lfs)
         lfs /= np.sum(lfs, axis=-1)[:, np.newaxis] * self.dz_fine
@@ -449,7 +440,6 @@ class catalog(object):
         style: string, optional
             file format in which to save the catalog
         """
-        # print('5/23 catalog writes bin ends '+str(self.cat['bin_ends']))
         if style == '.txt':
             np.savetxt(os.path.join(self.data_dir, 'meta'+loc + style), self.cat['bin_ends'])
             output = np.vstack((self.cat['log_interim_prior'], self.cat['log_interim_posteriors']))
