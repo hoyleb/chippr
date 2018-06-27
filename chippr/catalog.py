@@ -233,17 +233,13 @@ class catalog(object):
                     # out_amps = uniform_lf.pdf(grid_means)
                 elif self.params['catastrophic_outliers'] == 'training':
                     full_pdf = np.exp(u.safe_log(outlier_lf.pdf(self.z_fine)))
-                    # print(full_pdf)
                     intermediate = np.dot(full_pdf, np.ones(self.n_tot) * self.dz_fine)
-                    # print(intermediate)
                     full_pdf = full_pdf / intermediate[np.newaxis]
-                    # print(full_pdf)
                     # flat_pdf = np.exp(u.safe_log(uniform_lf.pdf(self.z_fine)))
                     # flat_pdf = flat_pdf / np.dot(flat_pdf, self.dz_fine)
                     # items = np.array([vert_funcs[kk].pdf(self.z_fine[kk]) for kk in range(self.n_tot)])
                     fracs = np.array([full_pdf, np.ones(self.n_tot)]).T
                     fracs = fracs * np.array([frac, 1.-frac])[np.newaxis, :]
-                    # print(fracs)
                     grid_funcs = [gmix(fracs[kk], [uniform_lf, vert_funcs[kk]], limits=(self.bin_ends[0], self.bin_ends[-1])) for kk in range(self.n_tot)]
                     # out_funcs = [multi_dist([uniform_lfs[kk], uniform_lf]) for kk in range(self.n_tot)]
                     # out_amps = self.outlier_lf.pdf(grid_means)

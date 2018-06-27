@@ -33,8 +33,14 @@ class discrete(object):
         self.bin_range = range(self.n_bins)
 
         self.weights = weights
+        # print('dbins: '+str(self.dbins))
+        # print('weights: '+str((self.weights)))
+        # print('sumweights: '+str((np.sum(self.weights))))
+        # print('dotweights: '+str((np.dot(self.weights, self.dbins))))
         self.normweights = np.cumsum(self.weights) / np.sum(self.weights)
+        # print('normweights: '+str(self.normweights))
         self.distweights = np.cumsum(self.weights) / np.dot(self.weights, self.dbins)
+        # print('distweights: '+str(self.distweights))
 
         self.funcs = [UD(self.bin_ends[i], self.bin_ends[i+1]) for i in self.bin_range]
         if self.n_bins > 1:
