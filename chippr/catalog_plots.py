@@ -134,7 +134,7 @@ def plot_mega_scatter(zs, pfs, z_grid, grid_ends, truth=None, plot_loc='', prepe
     scatplot.set_xlabel(r'$z_{spec}$')
     scatplot.set_ylabel(r'$z_{phot}$')
 
-    scatplot.set_aspect(1.)
+    # scatplot.set_aspect(1.)
     divider = make_axes_locatable(scatplot)
     histx = divider.append_axes('top', 1.2, pad=0., sharex=scatplot)
     histy = divider.append_axes('right', 1.2, pad=0., sharey=scatplot)

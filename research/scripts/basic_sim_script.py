@@ -258,7 +258,7 @@ if __name__ == "__main__":
     from chippr import *
 
     result_dir = os.path.join('..', 'results')
-    test_name = 'single'
+    test_name = 'single_lsst'
     all_tests = {}
     test_info = {}
     test_info['name'] = test_name

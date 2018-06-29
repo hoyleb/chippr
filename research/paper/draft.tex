@@ -16,7 +16,7 @@
 \usepackage[title]{appendix}
 
 \newcommand{\myemail}{aimalz@nyu.edu}
-\newcommand{\mathul}{\underline}
+\newcommand{\mathul}[1]{\underline{#1}}
 \newcommand{\chippr}{CHIPPR}
 \newcommand{\nz}{$n(z)$}
 \newcommand{\pz}{photo-$z$}
@@ -26,15 +26,14 @@
 \begin{document}
 
 \title{How to obtain the redshift distribution from probabilistic redshift 
-estimates}%:\\
+estimates}
 
 \author{Alex Malz\altaffilmark{1}}
 \author{David W. Hogg\altaffilmark{1,2,3,4}}
 \email{aimalz@nyu.edu}
 
 \altaffiltext{1}{Center for Cosmology and Particle Physics, Department of 
-Physics,
-  New York University, 726 Broadway, 9th floor, New York, NY 10003, USA}
+Physics, New York University, 726 Broadway, 9th floor, New York, NY 10003, USA}
 \altaffiltext{2}{Simons Center for Computational Astrophysics, 162 Fifth 
 Avenue, 7th floor, New York, NY 10010, USA}
 \altaffiltext{3}{Center for Data Science, New York University, 60 Fifth Avenue, 
@@ -85,9 +84,9 @@ don't hold when the data is as bad as we anticipate.  Cite pedantic doc?}
 
 overview of next questions: How can we improve the effectiveness of using 
 \pzpdf s in inference?  How does the result of \chippr\ compare to established 
-estimators in terms of the accuracy of \nz ?  \textcolor{blue}{Reach goal: How 
-significant is the effect of the discrepancy between \nz\ estimators on 
-cosmological constraints?}
+estimators in terms of the accuracy of \nz ?
+\textcolor{blue}{Reach goal: How significant is the effect of the discrepancy 
+between \nz\ estimators on cosmological constraints?}
 
 \section{Methods}
 \label{sec:methods}
@@ -96,13 +95,6 @@ cosmological constraints?}
 inference?\\
 A: Hierarchical inference is the only self-consistent way.}
 
-This paper presents the Cosmological Hierarchical Inference with Probabilistic 
-Photometric Redshifts (\chippr ) model as a mathematically consistent method 
-for constraining \nz s using a catalog of \pzpdf s.
-In Section~\ref{sec:model}, we introduce the \chippr\ formalism; in 
-Section~\ref{sec:application}, we outline how to use \chippr\ to constrain \nz\ 
-from a catalog of \pzpdf s; in Section~\ref{sec:limitations} we document the 
-assumptions that must hold for \chippr\ to be valid.
 
 \subsection{Model generalities}
 \label{sec:model}
@@ -125,7 +117,7 @@ f_{\phi}(z)\ \equiv\ n(z)
 in terms of some parameter vector $\phi$.
 We believe that galaxy redshifts are indeed drawn from \nz, making it a 
 probability density over redshift; this fact can also be confirmed from 
-dimensional analysis of Equation \ref{eqn:nz}.
+dimensional analysis of Equation~\ref{eqn:nz}.
 Therefore, it can be rewritten as
 \begin{equation}
 \label{eqn:pz}
@@ -253,15 +245,19 @@ ten times the tolerance of the upcoming Large Synoptic Survey Telescope (LSST).
 \begin{figure*}
 	\begin{center}
 		
-\includegraphics[width=0.3\textwidth]{fig/forward_model_example.png}
-    \includegraphics[width=0.3\textwidth]{fig/forward_model_example.png}
-    \includegraphics[width=0.3\textwidth]{fig/forward_model_example.png}
-		\caption{Show this for each individually.}
+\includegraphics[width=0.3\textwidth]{fig/hivarsigmas_scatter.png}
+    \includegraphics[width=0.3\textwidth]{fig/uouthi_scatter.png}
+    \includegraphics[width=0.3\textwidth]{fig/neghivarbias_scatter.png}
+		\caption{intrinsic scatter (left), uniform outliers (center), 
+bias (right);
+    Not sure how best to broach the subject of nonuniform outliers and bias as 
+model misspecification
+    }
 		\label{fig:mega_scatter}
 	\end{center}
 \end{figure*}
-Tests including all three effects at the tolerance levels of LSST and at twice 
-the tolerance levels of LSST are presented in Section~\ref{sec:results}.
+Tests including all three effects at the tolerance levels of LSST are presented 
+in Section~\ref{sec:results}.
 
 \subsection{Limitations}
 \label{sec:limitations}
@@ -270,9 +266,7 @@ Finally, we explicitly review the assumptions made by this approach.
 \begin{itemize}
   \item prior $\Pr(\phi)$
   \item implicit prior $\phi^{*}$ known
-	\item \pzpdf s are accurate posteriors %draws from photo-$z$ PDFs do 
-not match marginal distributions in $z_true$ vs. $z_phot$ space, i.e. toy model 
-with $z_phot$ drawn from an uglier space but pdfs evaluated in lsst-limits space
+	\item \pzpdf s are accurate posteriors
 	\end{itemize}
 
 
@@ -283,40 +277,24 @@ with $z_phot$ drawn from an uglier space but pdfs evaluated in lsst-limits space
 \section{Results}
 \label{sec:results}
 
-\textcolor{blue}{Q: How does the result of \chippr compare to established 
+\textcolor{blue}{Q: How does the result of \chippr\ compare to established 
 estimators in terms of the accuracy of $n(z)$?\\
-A: \chippr yields the best possible $n(z)$, conditional on the accuracy of the 
+A: \chippr\ yields the best possible $n(z)$, conditional on the accuracy of the 
 photo-$z$ PDFs used.}
 
-\subsection{Idealized example}
-\label{sec:idealized}
+\subsection{LSST Requirements}
+\label{sec:lsstdemo}
 
-\textcolor{blue}{LSST specs: unbiased, uniform outliers, medium z-dependent 
-scatter}
-
-\begin{figure*}
-	\begin{center}
-		
-\includegraphics[width=0.45\textwidth]{fig/forward_model_example.png}
-		\includegraphics[width=0.45\textwidth]{fig/results_example.png}
-		\caption{Show this for idealized case.}
-		\label{fig:idealized}
-	\end{center}
-\end{figure*}
-
-\subsection{Realistic example}
-\label{sec:realistic}
-
-\textcolor{blue}{DES(?) specs: biased to enhance true $n(z)$, systematic 
-outliers, high z-dependent scatter}
+\textcolor{blue}{LSST specs: biased to 0.003, 10\% uniform outliers, 
+z-dependent scatter of 0.05}
 
 \begin{figure*}
 	\begin{center}
+		\includegraphics[width=0.45\textwidth]{fig/lsst_scatter.png}
 		
-\includegraphics[width=0.45\textwidth]{fig/forward_model_example.png}
-		\includegraphics[width=0.45\textwidth]{fig/results_example.png}
-		\caption{Show this for realistic case.}
-		\label{fig:realistic}
+\includegraphics[width=0.45\textwidth]{fig/lsst_log_estimators.png}
+		\caption{Using LSST numbers}
+		\label{fig:lsstdemo}
 	\end{center}
 \end{figure*}
 
@@ -328,10 +306,11 @@ data?}
 
 \begin{figure*}
 	\begin{center}
+		\includegraphics[width=0.45\textwidth]{fig/wrong_scatter.png}
 		
-\includegraphics[width=0.45\textwidth]{fig/forward_model_example.png}
-		\includegraphics[width=0.45\textwidth]{fig/results_example.png}
-		\caption{Show this for mischaracterized case.}
+\includegraphics[width=0.45\textwidth]{fig/wrong_log_estimators.png}
+		\caption{this is for wrong implicit prior, not bias, haven't 
+done that one yet}
 		\label{fig:mischaracterized}
 	\end{center}
 \end{figure*}
@@ -378,6 +357,5 @@ for Computational Astrophysics.
 \end{acknowledgements}
 
 \bibliographystyle{apj}
-\bibliography{references}
 
 \end{document}
