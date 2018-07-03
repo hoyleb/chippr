@@ -8,15 +8,17 @@ import matplotlib.cm as cm
 import chippr
 from chippr import defaults as d
 
-cmap = np.linspace(0., 1., d.plot_colors)
-colors = [cm.viridis(i) for i in cmap]
+# cmap = np.linspace(0., 1., d.plot_colors)
+# colors = [cm.viridis(i) for i in cmap]
+colors = np.array([(213, 94, 0), (0, 158, 115), (0, 114, 178), (86, 180, 233), (230, 159, 0), (204, 121, 167), (240, 228, 66)])/256.
+# ['Vermilion', 'Bluish green', 'Blue', 'Sky blue', 'Orange', 'Reddish purple', 'Yellow']
 
 def set_up_plot():
     """
     Sets up plots to look decent
     """
-    title = 10
-    label = 10
+    title = 16
+    label = 14
     mpl.rcParams['text.usetex'] = True
     mpl.rcParams['axes.titlesize'] = title
     mpl.rcParams['axes.labelsize'] = label
@@ -56,6 +58,10 @@ def plot_step(sub_plot, bin_ends, to_plot, s='--', c='k', a=1, w=1, d=[(0,(1,0.0
         label for function
     r: boolean, optional
         True for rasterized, False for vectorized
+
+    Notes
+    -----
+    Make this not need a subplot
     """
 
     plot_h(sub_plot, bin_ends, to_plot, s, c, a, w, d, l, r)

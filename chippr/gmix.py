@@ -1,5 +1,9 @@
-import numpy as np
+# Wrapper for pomegranate.GeneralMixtureModel
+
 import sys
+import numpy as np
+
+from pomegranate import GeneralMixtureModel as GMM
 
 import chippr
 from chippr import defaults as d
@@ -26,12 +30,22 @@ class gmix(object):
         self.n_comps = len(self.amps)
 
         self.funcs = funcs#[chippr.gauss(self.means[c], self.sigmas[c]**2) for c in range(self.n_comps)]
+        # print('gmix before:')
+        # for c in range(self.n_comps):
+        #     print('gmix '+str((c, type(self.funcs[c]))))
+        self.funcs = [func.dist for func in self.funcs]
+        # print('gmix after:')
         # for c in range(self.n_comps):
         #     print('gmix '+str((c, type(self.funcs[c]))))
 
         self.dims = np.shape(np.array(limits).T)[0]
         self.min_x = limits[0]
         self.max_x = limits[1]
+        # print("amps="+str(self.amps))
+        self.dist = GMM(self.funcs, weights=self.amps)
+
+    def pdf(self, xs):
+        return self.evaluate(xs)
 
     def evaluate_one(self, x):
         """
@@ -48,9 +62,10 @@ class gmix(object):
         p: float
             probability associated with x
         """
-        p = 0.
-        for c in range(self.n_comps):
-            p += self.amps[c] * self.funcs[c].evaluate_one(x)
+        # p = 0.
+        # for c in range(self.n_comps):
+        #     p += self.amps[c] * self.funcs[c].evaluate_one(x)
+        p = self.dist.probability(x)
         return p
 
     def evaluate(self, xs):
@@ -67,9 +82,10 @@ class gmix(object):
         ps: ndarray, float
             values of Gaussian mixture probability distribution at xs
         """
-        ps = np.zeros(len(xs))
-        for c in range(self.n_comps):
-            ps += self.amps[c] * self.funcs[c].evaluate(xs)
+        # ps = np.zeros(len(xs))
+        # for c in range(self.n_comps):
+        #     ps += self.amps[c] * self.funcs[c].evaluate(xs)
+        ps = self.dist.probability(xs)
         return ps
 
     def sample_one(self):
@@ -82,18 +98,19 @@ class gmix(object):
             a single point sampled from the Gaussian mixture probability distribution
         """
 
-        x = -1. * np.ones(self.dims)
-        #don't do this every time!
-        min_x = self.min_x * np.ones(self.dims)
-        max_x = self.max_x * np.ones(self.dims)
-
-        while np.any(np.less(x, min_x)) or np.any(np.greater(x, max_x)):
-            r = np.random.uniform(0., self.cumamps[-1])
-            c = 0
-            for k in range(1, self.n_comps):
-                if r > self.cumamps[k-1]:
-                    c = k
-            x = self.funcs[c].sample_one()
+        # x = -1. * np.ones(self.dims)
+        # #don't do this every time!
+        # min_x = self.min_x * np.ones(self.dims)
+        # max_x = self.max_x * np.ones(self.dims)
+        #
+        # while np.any(np.less(x, min_x)) or np.any(np.greater(x, max_x)):
+        #     r = np.random.uniform(0., self.cumamps[-1])
+        #     c = 0
+        #     for k in range(1, self.n_comps):
+        #         if r > self.cumamps[k-1]:
+        #             c = k
+        #     x = self.funcs[c].sample_one()
+        x = self.dist.sample(1)
         return x
 
     def sample(self, n_samps):
@@ -110,5 +127,9 @@ class gmix(object):
         xs: ndarray, float
             array of points sampled from the Gaussian mixture probability distribution
         """
-        xs = np.array([self.sample_one() for n in range(n_samps)])
+        # print('gmix trying to sample '+str(n_samps)+' from '+str(self.dist))
+        # xs = np.array([self.sample_one() for n in range(n_samps)])
+        # print(self.dist.to_json)
+        xs = np.array(self.dist.sample(n_samps))
+        # print('gmix sampled '+str(n_samps)+' from '+str(self.dist))
         return xs

@@ -24,6 +24,7 @@ def safe_log(arr, threshold=d.eps):
     logged: ndarray
         logged values, with small value replacing un-loggable values
     """
+    arr = np.asarray(arr)
     # if type(arr) == np.ndarray:
     arr[arr < threshold] = threshold
     # else:

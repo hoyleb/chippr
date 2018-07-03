@@ -1,5 +1,10 @@
-import numpy as np
+# Wrapper for pomegranate.distributions.MultivariateGaussianDistribution
+
 import sys
+
+import numpy as np
+
+from pomegranate.distributions import MultivariateGaussianDistribution as MGD
 
 import chippr
 from chippr import defaults as d
@@ -26,6 +31,8 @@ class mvn(object):
 
         assert np.linalg.eig(self.var) > 0.
 
+        self.dist = MGD(self.mean, self.var)
+
     def norm_var(self):
         """
         Function to normalize covariance matrix
@@ -50,6 +57,9 @@ class mvn(object):
         inv = np.linalg.inv(self.var)
         return inv
 
+    def pdf(self, points):
+        return self.evaluate(points)
+
     def evaluate_one(self, z):
         """
         Function to evaluate multivariate Gaussian probability distribution
@@ -66,9 +76,10 @@ class mvn(object):
         p: float
             probability associated with z
         """
-        norm_z = z - self.mean
-        p = max(d.eps, 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
-                np.exp(-0.5 * np.dot(np.dot(norm_z, self.invvar), norm_z)))
+        # norm_z = z - self.mean
+        # p = max(d.eps, 1. / (np.sqrt(2. * np.pi) * self.sigma) * \
+        #         np.exp(-0.5 * np.dot(np.dot(norm_z, self.invvar), norm_z)))
+        p = self.dist.probability(z)
         return p
 
     def evaluate(self, zs):
@@ -86,9 +97,10 @@ class mvn(object):
         ps: ndarray, float
             output probabilities
         """
-        ps = np.zeros(len(zs))
-        for n, z in enumerate(zs):
-            ps[n] += self.evaluate_one(z)
+        # ps = np.zeros(len(zs))
+        # for n, z in enumerate(zs):
+        #     ps[n] += self.evaluate_one(z)
+        ps = self.dist.probability(zs)
         return ps
 
     def sample_one(self):
@@ -101,7 +113,8 @@ class mvn(object):
         z: numpy.ndarray, float
             single sample from multivariate Gaussian probability distribution
         """
-        z = np.random.multivariate_normal(self.mean, self.var, 1)[0]#self.mean + np.dot(self.var, np.random.normal(size = self.dim))
+        # z = np.random.multivariate_normal(self.mean, self.var, 1)[0]#self.mean + np.dot(self.var, np.random.normal(size = self.dim))
+        z = self.dist.sample(1)
         return z
 
     def sample(self, n_samps):
@@ -119,5 +132,8 @@ class mvn(object):
             array of n_samps samples from multivariate Gaussian probability
             distribution
         """
-        zs = np.array([self.sample_one() for n in range(n_samps)])
+        # print('mvn trying to sample '+str(n_samps)+' from '+str(self.dist))
+        # zs = np.array([self.sample_one() for n in range(n_samps)])
+        zs = np.array(self.dist.sample(n_samps))
+        # print('mvn sampled '+str(n_samps)+' from '+str(self.dist))
         return zs

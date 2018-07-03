@@ -18,7 +18,7 @@ from chippr import log_z_dens_plots as plots
 
 class log_z_dens(object):
 
-    def __init__(self, catalog, hyperprior, truth=None, loc='.', vb=True):
+    def __init__(self, catalog, hyperprior, truth=None, loc='.', prepend='', vb=True):
         """
         An object representing the redshift density function (normalized
         redshift distribution function)
@@ -35,10 +35,13 @@ class log_z_dens(object):
             mixture
         loc: string, optional
             directory into which to save results and plots made along the way
+        prepend: str, optional
+            prepend string to file names
         vb: boolean, optional
             True to print progress messages to stdout, False to suppress
         """
         self.info = {}
+        self.add_text = prepend + '_'
 
         self.bin_ends = np.array(catalog['bin_ends'])
         self.bin_range = self.bin_ends[:-1]-self.bin_ends[0]
@@ -96,6 +99,20 @@ class log_z_dens(object):
             os.makedirs(self.res_dir)
 
         return
+    #
+    # def precompute(self):
+    #     """
+    #     Function to precompute values that show up in posterior that are independent of n(z) params
+    #
+    #     Returns
+    #     -------
+    #     precomputed: float
+    #         log-probability component independent of test params
+    #     """
+    #     integrated_int_pr = np.log(np.dot(self.int_pr, self.bin_difs))
+    #     integrated_int_posts = np.log(np.dot(self.pdfs, axis=0)
+    #     precomputed = integrated_int_posts - integrated_int_pr
+    #     return precomputed
 
     def evaluate_log_hyper_likelihood(self, log_nz):
         """
@@ -114,8 +131,13 @@ class log_z_dens(object):
         """
         nz = np.exp(log_nz)
         norm_nz = nz / np.dot(nz, self.bin_difs)
+
+        # testing whether the norm step is still necessary
         hyper_lfs = np.sum(norm_nz[None,:] * self.pdfs / self.int_pr[None,:] * self.bin_difs, axis=1)
-        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - np.dot(norm_nz, self.bin_difs)
+        log_hyper_likelihood = np.sum(u.safe_log(hyper_lfs)) - np.log(np.dot(norm_nz, self.bin_difs))
+
+        # this used to work...
+        # log_hyper_likelihood = np.dot(np.exp(log_nz + self.precomputed), self.bin_difs)
         return log_hyper_likelihood
 
     def evaluate_log_hyper_prior(self, log_nz):
@@ -179,12 +201,15 @@ class log_z_dens(object):
             hyperposterior
         """
         if no_data:
+            if vb: print('only optimizing prior')
             def _objective(log_nz):
                 return -2. * self.evaluate_log_hyper_prior(log_nz)
         elif no_prior:
+            if vb: print('only optimizing likelihood')
             def _objective(log_nz):
                 return -2. * self.evaluate_log_hyper_likelihood(log_nz)
         else:
+            if vb: print('optimizing posterior')
             def _objective(log_nz):
                 return -2. * self.evaluate_log_hyper_posterior(log_nz)
 
@@ -220,8 +245,9 @@ class log_z_dens(object):
             array of logged redshift density function bin values maximizing
             hyperposterior
         """
+        # self.precomputed = self.precompute()
         if 'log_mmle_nz' not in self.info['estimators']:
-            log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior)
+            log_mle = self.optimize(start, no_data=no_data, no_prior=no_prior, vb=vb)
             mle_nz = np.exp(log_mle)
             self.mle_nz = mle_nz / np.dot(mle_nz, self.bin_difs)
             self.log_mle_nz = u.safe_log(self.mle_nz)
@@ -376,6 +402,7 @@ class log_z_dens(object):
         log_samples_nz: ndarray, float
             array of sampled log redshift density function bin values
         """
+        # self.precomputed = self.precompute()
         if 'log_mean_sampled_nz' not in self.info['estimators']:
             self.n_walkers = len(ivals)
             if no_data:
@@ -396,7 +423,7 @@ class log_z_dens(object):
             vals = ivals
             vals -= u.safe_log(np.sum(np.exp(ivals) * self.bin_difs[np.newaxis, :], axis=1))[:, np.newaxis]
             if vb:
-                plots.plot_ivals(vals, self.info, self.plot_dir)
+                plots.plot_ivals(vals, self.info, self.plot_dir, prepend=self.add_text)
                 canvas = plots.set_up_burn_in_plots(self.n_bins, self.n_walkers)
             full_chain = np.array([[vals[w]] for w in range(self.n_walkers)])
             while self.burning_in:
@@ -409,7 +436,7 @@ class log_z_dens(object):
                     cpkl.dump(burn_in_mcmc_outputs, file_location)
                 full_chain = np.concatenate((full_chain, burn_in_mcmc_outputs['chains']), axis=1)
                 if vb:
-                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, full_chain, self.burn_ins, self.plot_dir)
+                    canvas = plots.plot_sampler_progress(canvas, burn_in_mcmc_outputs, full_chain, self.burn_ins, self.plot_dir, prepend=self.add_text)
                 self.burning_in = s.gr_test(full_chain)
                 vals = np.array([item[-1] for item in burn_in_mcmc_outputs['chains']])
                 self.burn_ins += 1
@@ -433,8 +460,8 @@ class log_z_dens(object):
             self.log_bfe_nz = self.info['estimators']['log_mean_sampled_nz']
             self.bfe_nz = np.exp(self.log_smp_nz)
 
-        if vb:
-            plots.plot_samples(self.info, self.plot_dir)
+        # if vb:
+            # plots.plot_samples(self.info, self.plot_dir)
 
         return self.log_smp_nz
 
@@ -452,14 +479,21 @@ class log_z_dens(object):
         out_info: dict
             dictionary of all available statistics
         """
-        self.info['stats']['kld'] = {}
+        self.info['stats']['kld'], self.info['stats']['log_kld'] = {}, {}
+        self.info['stats']['rms'], self.info['stats']['log_rms'] = {}, {}
+
         if self.truth is not None:
             for key in self.info['estimators']:
-                self.info['stats']['kld'][key] = s.calculate_kld(self.tru_nz, self.info['estimators'][key])
+                self.info['stats']['kld'][key] = s.calculate_kld(np.exp(self.info['log_tru_nz']), np.exp(self.info['estimators'][key]))
+                # self.info['stats']['log_kld'][key] = s.calculate_kld(self.log_tru_nz, self.info['estimators'][key])
+                self.info['stats']['rms']['true_nz' + '__' + key[4:]] = s.calculate_rms(np.exp(self.info['log_tru_nz']), np.exp(self.info['estimators'][key]))
+                self.info['stats']['log_rms']['log_true_nz'+ '__' + key] = s.calculate_rms(self.info['log_tru_nz'], self.info['estimators'][key])
 
-        self.info['stats']['rms'], self.info['stats']['log_rms'] = {}, {}
-        for key_1 in self.info['estimators']:
-            for key_2 in self.info['estimators']:
+        for i in range(len(self.info['estimators'].keys())):
+            key_1 = self.info['estimators'].keys()[i]
+            for j in range(len(self.info['estimators'].keys()[:i])):
+                key_2 = self.info['estimators'].keys()[j]
+                # print(((i,j), (key_1, key_2)))
                 self.info['stats']['log_rms'][key_1 + '__' + key_2] = s.calculate_rms(self.info['estimators'][key_1], self.info['estimators'][key_2])
                 self.info['stats']['rms'][key_1[4:] + '__' + key_2[4:]] = s.calculate_rms(np.exp(self.info['estimators'][key_1]), np.exp(self.info['estimators'][key_2]))
 
@@ -468,11 +502,18 @@ class log_z_dens(object):
             print(out_info)
         return out_info
 
-    def plot_estimators(self):
+    def plot_estimators(self, log=True, mini=True):
         """
         Plots all available estimators of the redshift density function.
         """
-        plots.plot_estimators(self.info, self.plot_dir)
+        if mini:
+            also = 'mini'
+        else:
+            also = ''
+        if log:
+            plots.plot_estimators(self.info, self.plot_dir, prepend=self.add_text+also+'log_', mini=mini)
+        else:
+            plots.plot_estimators(self.info, self.plot_dir, log=False, prepend=self.add_text+also+'lin_', mini=mini)
         return
 
     def read(self, read_loc, style='pickle', vb=True):
