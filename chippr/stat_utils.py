@@ -51,7 +51,7 @@ def norm_fit(population):
     norm_stats = (locs, scales)
     return norm_stats
 
-def calculate_kld(pe, qe, vb=True):
+def calculate_kld(pe, qe, vb=False):
     """
     Calculates the Kullback-Leibler Divergence between two PDFs.
 
@@ -82,7 +82,7 @@ def calculate_kld(pe, qe, vb=True):
     Dpq = np.sum(pn * (logp - logq))
     return Dpq
 
-def calculate_rms(pe, qe, vb=True):
+def calculate_rms(pe, qe, vb=False):
     """
     Calculates the Root Mean Square Error between two PDFs.
 

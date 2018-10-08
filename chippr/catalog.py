@@ -20,7 +20,7 @@ from chippr import catalog_plots as plots
 
 class catalog(object):
 
-    def __init__(self, params={}, vb=True, loc='.', prepend=''):
+    def __init__(self, params={}, vb=False, loc='.', prepend=''):
         """
         Object containing catalog of photo-z interim posteriors
 
@@ -61,7 +61,7 @@ class catalog(object):
         with open(os.path.join(self.data_dir, 'params.p'), 'wb') as paramfile:
             pkl.dump(self.params, paramfile)
 
-    def proc_bins(self, vb=True):
+    def proc_bins(self, vb=False):
         """
         Function to process binning
 
@@ -111,7 +111,7 @@ class catalog(object):
         coarse = coarse.T
         return coarse
 
-    def create(self, truth, int_pr, N=d.n_gals, vb=True):
+    def create(self, truth, int_pr, N=d.n_gals, vb=False):
         """
         Function creating a catalog of interim posterior probability
         distributions, will split this up into helper functions
@@ -184,7 +184,7 @@ class catalog(object):
 
         return self.cat
 
-    def make_probs(self, vb=True):
+    def make_probs(self, vb=False):
         """
         Makes the continuous 2D probability distribution over z_spec, z_phot
 
@@ -399,7 +399,7 @@ class catalog(object):
         samps = self.prob_space.sample(self.n_gals)
         return samps
 
-    def evaluate_lfs(self, pspace,  vb=True):
+    def evaluate_lfs(self, pspace,  vb=False):
         """
         Evaluates likelihoods based on observed sample values
 
