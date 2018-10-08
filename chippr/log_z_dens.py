@@ -6,7 +6,7 @@ import cPickle as cpkl
 import emcee
 
 import matplotlib as mpl
-mpl.use('PS')
+# mpl.use('PS')
 import matplotlib.pyplot as plt
 
 import chippr

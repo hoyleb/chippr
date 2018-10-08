@@ -5,7 +5,7 @@ import os
 import pickle as pkl
 
 import matplotlib as mpl
-mpl.use('PS')
+# mpl.use('PS')
 import matplotlib.pyplot as plt
 
 import chippr
