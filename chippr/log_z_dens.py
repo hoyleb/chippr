@@ -18,7 +18,7 @@ from chippr import log_z_dens_plots as plots
 
 class log_z_dens(object):
 
-    def __init__(self, catalog, hyperprior, truth=None, loc='.', prepend='', vb=True):
+    def __init__(self, catalog, hyperprior, truth=None, loc='.', prepend='', vb=False):
         """
         An object representing the redshift density function (normalized
         redshift distribution function)
@@ -178,7 +178,7 @@ class log_z_dens(object):
         log_hyper_posterior = log_hyper_likelihood + log_hyper_prior
         return log_hyper_posterior
 
-    def optimize(self, start, no_data, no_prior, vb=True):
+    def optimize(self, start, no_data, no_prior, vb=False):
         """
         Maximizes the hyperposterior of the redshift density
 
@@ -222,7 +222,7 @@ class log_z_dens(object):
             print(self.dir + ': ' + str(res))
         return res.x
 
-    def calculate_mmle(self, start, vb=True, no_data=0, no_prior=0):
+    def calculate_mmle(self, start, vb=False, no_data=0, no_prior=0):
         """
         Calculates the marginalized maximum likelihood estimator of the
         redshift density function
@@ -258,7 +258,7 @@ class log_z_dens(object):
 
         return self.log_mle_nz
 
-    def calculate_stacked(self, vb=True):
+    def calculate_stacked(self, vb=False):
         """
         Calculates the stacked estimator of the redshift density function
 
@@ -283,7 +283,7 @@ class log_z_dens(object):
 
         return self.log_stk_nz
 
-    def calculate_mmap(self, vb=True):
+    def calculate_mmap(self, vb=False):
         """
         Calculates the marginalized maximum a posteriori estimator of the
         redshift density function
@@ -312,7 +312,7 @@ class log_z_dens(object):
 
         return self.log_map_nz
 
-    def calculate_mexp(self, vb=True):
+    def calculate_mexp(self, vb=False):
         """
         Calculates the marginalized expected value estimator of the redshift
         density function
@@ -343,7 +343,7 @@ class log_z_dens(object):
 
         return self.log_exp_nz
 
-    def sample(self, ivals, n_samps, vb=True):
+    def sample(self, ivals, n_samps, vb=False):
         """
         Samples the redshift density hyperposterior
 
@@ -376,7 +376,7 @@ class log_z_dens(object):
         mcmc_outputs['acors'] = acors
         return mcmc_outputs
 
-    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burned=d.n_burned, vb=True, n_procs=1, no_data=0, no_prior=0):
+    def calculate_samples(self, ivals, n_accepted=d.n_accepted, n_burned=d.n_burned, vb=False, n_procs=1, no_data=0, no_prior=0):
         """
         Calculates samples estimating the redshift density function
 
@@ -465,7 +465,7 @@ class log_z_dens(object):
 
         return self.log_smp_nz
 
-    def compare(self, vb=True):
+    def compare(self, vb=False):
         """
         Calculates all available goodness of fit measures
 
@@ -516,7 +516,7 @@ class log_z_dens(object):
             plots.plot_estimators(self.info, self.plot_dir, log=False, prepend=self.add_text+also+'lin_', mini=mini)
         return
 
-    def read(self, read_loc, style='pickle', vb=True):
+    def read(self, read_loc, style='pickle', vb=False):
         """
         Function to load inferred quantities from files.
 
@@ -544,7 +544,7 @@ class log_z_dens(object):
                 print(self.info['estimators'].keys())
         return self.info
 
-    def write(self, write_loc, style='pickle', vb=True):
+    def write(self, write_loc, style='pickle', vb=False):
         """
         Function to write results of inference to files.
 
